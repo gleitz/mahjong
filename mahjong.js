@@ -360,7 +360,10 @@ shantenSimulation = function (depth, shanten, hist, singles, pairs) {
 			if (hist[i] >= 3) {
 				var copy = hist.slice(0);
 				copy[i] -= 3;
-				var csingles = removeSingles(copy, i - 2, i + 2);
+                var range = getRange(i),
+                    min = range[0],
+                    max = range[1];
+				var csingles = removeSingles(copy, _.max(min, i - 2), _.min(max, i + 2));
                 console.log("first " + csingles);
                 queue.push([depth + 0, copy, singles + csingles, pairs]);
                 var im2r = inRange(i-2, i, vals.color_beg, vals.color_end),
@@ -384,7 +387,10 @@ shantenSimulation = function (depth, shanten, hist, singles, pairs) {
 				copy[i + 0] -= 1;
 				copy[i + 1] -= 1;
 				copy[i + 2] -= 1;
-				var csingles = removeSingles(copy, i - 2, i + 4);
+                var range = getRange(i),
+                    min = range[0],
+                    max = range[1];
+				var csingles = removeSingles(copy, _.max(min, i - 2), _.min(max, i + 4));
                 console.log("second " + csingles);
                 queue.push([depth + 0, copy, singles + csingles, pairs]);
                 
@@ -428,7 +434,9 @@ shantenGeneralized = function (hist) {
         pairs = honors_result[0],
         singles = honors_result[1];
     console.log([singles, pairs]);
-	singles += removeSingles(hist, vals.color_beg, vals.color_end);
+	singles += removeSingles(hist, vals.pin_beg, vals.pin_end);
+    singles += removeSingles(hist, vals.sou_beg, vals.sou_end);
+    singles += removeSingles(hist, vals.honor_beg, vals.honor_end);
 	return shantenSimulation(0, shanten, hist, singles, pairs);
 };
 
