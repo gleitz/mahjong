@@ -13,8 +13,8 @@ var honors = [
 	'White',
 	'Green',
 	'Red',
-	'One',
-	'Nine'
+	'1Man',
+	'9Man'
 ],
     colors = [
 	    'Pin',
@@ -82,12 +82,15 @@ sum = function (arr){
 },
     checkRegularMahjongNoPairColor = function (init_hist, init_beg, init_end) {
         var queue = [],
-        process = function (hist, beg, end) {
+        process = function (hist, index, beg, end) {
             if (sum(hist.slice(beg, end+1)) === 0) {
 				return true;
 			}
             for (var i = beg; i <= end; i++) {
-                    var count = hist[i],
+                if (sum(hist.slice(index, i)) > 0) {
+					return false;
+			    }
+                var count = hist[i],
                     copy;
 			    if (count > 0) {
 				    if (i + 2 <= end) {
@@ -96,27 +99,28 @@ sum = function (arr){
 						    copy[i] -= 1;
 						    copy[i+1] -= 1;
 						    copy[i+2] -= 1;
-                            queue.push([copy, i, end]);
+                            queue.push([copy, index, i, end]);
 					    }
 				    }
 			    }
                 if (count >= 3) {
 				    copy = hist.slice(0);
 				    copy[i] -= 3;
-                    queue.push([copy, i, end]);
+                    queue.push([copy, index, i, end]);
 			    }
             }
             return false;
         };
-        queue.push([init_hist, init_beg, init_end]);
+        queue.push([init_hist, init_beg, init_beg, init_end]);
         while (queue.length > 0) {
             var cur_item = queue[0],
                 hist = cur_item[0],
-                beg = cur_item[1],
-                end = cur_item[2];
+                index = cur_item[1],
+                beg = cur_item[2],
+                end = cur_item[3];
             // console.log(hist.join(','));
             // console.log(sum(hist.slice(beg, end+1)));
-            var worked = process(hist, beg, end);
+            var worked = process(hist, index, beg, end);
             if (worked) {
 				return true;
 			}
@@ -499,6 +503,16 @@ shantenGeneralized = function (hist) {
 	singles += removeSingles(hist, vals.buf_beg, vals.buf_end_no_honors);
 	return shantenSimulation(0, shanten, buffered, singles, pairs);
 },
+toHandString = function(hist) {
+    var i,
+        tiles = [];
+    for (i=0; i<hist.length; i++) {
+        for (var j=0; j<hist[i]; j++) {
+            tiles.push(toString(i));
+        }
+    }
+    return tiles.join(', ');
+},
     toTileSetString = function (tiles) {
         var conv = [],
             buffer = '',
@@ -507,7 +521,8 @@ shantenGeneralized = function (hist) {
             var tile = tiles[i],
                 data = {color: getColor(tile),
                         honor: getHonor(tile),
-                        value: getValue(tile) + 1};
+                        value: getValue(tile) + 1,
+                        number: i};
             // console.log(data);
             conv.push(data);
         }
@@ -526,33 +541,113 @@ shantenGeneralized = function (hist) {
         }
 	},
 main = function (hist) {
+    var return_str = '',
+        i,
+        discard = [];
     if (sum(hist) !== 14) {
-        throw new Error("not enough tiles");
+        return {msg: "must submit 14 tiles (there were " + sum(hist) + ")",
+                discard: []};
+        // throw new Error("not enough tiles");
     }
     if (checkRegularMahjong(hist)) {
-        console.log("looks like you've got a mahjong");
+        return_str += ("looks like you've got a mahjong<br/>");
         var buffer = [],
             mj = findRegularMahjong(hist);
-        for (var i=0; i<mj.length; i++) {
+        for (i=0; i<mj.length; i++) {
             buffer.push(toTileSetString(mj[i]));
         }
-        console.log(buffer.join(', '));
+        return_str += buffer.join(', ');
     } else {
-        var best = 10,
-            discard;
-        for (var i=vals.id_min; i<= vals.id_max; i++) {
+        var best = 10;
+        for (i=vals.id_min; i<= vals.id_max; i++) {
             if (hist[i] > 0) {
                 var new_hist = hist.slice(0);
                 new_hist[i]--;
                 var shanten = shantenGeneralized(new_hist);
                 if (shanten < best) {
-                    discard = i;
+                    best = shanten;
+                    discard = [i];
+                } else if (shanten === best) {
+                    discard.push(i);
                 }
             }
         }
-        console.log("probably throwing " + toString(discard) + " with shanten of " + shanten);
+        return_str += "throwing " + _.map(discard, toString).join(',') + " produces shanten of " + best;
     }
-};
+    return {msg: return_str,
+            discard: discard};
+},
+    addStreetScore = function (score, hist, beg, end)
+		{
+            var i;
+			for (i = beg; i <= end - 1; i++) {
+				score[i] += hist[i + 1] * 100;
+			}
+			for (i = beg; i <= end - 2; i++) {
+				score[i] += hist[i + 2] * 10;
+			}
+			
+			for (i = beg + 1; i <= end; i++) {
+				score[i] += hist[i - 1] * 100;
+			}
+			for (i = beg + 2; i <= end; i++) {
+				score[i] += hist[i - 2] * 10;
+			}
+            return score;
+		},
+findBestDiscard = function (hist, worst_tiles) {
+			/*
+			 * score by combination with other tiles
+			 */
+    var score = [
+				0,1,2,3,4,3,2,1,0, // central tiles are more valuable
+				0,1,2,3,4,3,2,1,0,
+				0,1,2,3,4,3,2,1,0,
+				5,5,5,5, // honors are more valuable
+				5,5,5],
+        i;
+
+	for (i = vals.id_min; i <= vals.id_max; i++) {
+		var add = 1000 * (hist[i] - 1);
+		score[i] += add;
+	}
+
+	score = addStreetScore (score, hist, vals.pin_beg, vals.pin_end);
+	score = addStreetScore (score, hist, vals.sou_beg, vals.sou_end);
+    if (worst_tiles) {
+        for (i=0; i<worst_tiles.length; i++) {
+            score[worst_tiles[i]] -= 1000;
+        }
+    }
+			/*
+			 * debug
+			 */
+			/*
+			Console.WriteLine ("** discard scores:");
+			foreach (var tile in _Hand) {
+				Console.WriteLine (TileInfo.ToString (tile) + "\t" + score[tile]);
+			}
+			*/
+
+			/*
+			 * select worst tile
+			 */
+			var bestI = 0;
+			var bestV = 1000000;
+			for (i = vals.id_min; i <= vals.id_max; i++) {
+				if (hist[i] > 0) {
+					var v = score[i];
+					if (v < bestV) {
+                        console.log("replacing old score of " + bestV + " at " + bestI);
+                        console.log("with " + v + " at " + i);
+						bestV = v;
+						bestI = i;
+					}
+				}
+			}
+    console.log(score.join(','));
+			return bestI;
+		};
 
 module.exports = {
     honors: honors,
@@ -566,5 +661,9 @@ module.exports = {
     findRegularMahjongAcc: findRegularMahjongAcc,
     shantenGeneralized: shantenGeneralized,
     translateToBufferedNoHonors: translateToBufferedNoHonors,
-    main: main
+    main: main,
+    toString: toString,
+    toTileSetString: toTileSetString,
+    toHandString: toHandString,
+    findBestDiscard: findBestDiscard
 };
