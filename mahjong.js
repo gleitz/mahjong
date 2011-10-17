@@ -274,7 +274,163 @@ sum = function (arr){
 				hist[i] += 2;
 			}
         return [[], false];
-		};
+		},
+    calcHonors = function (hist)
+{
+	var singles = 0,
+	pairs = 0;
+
+			for (var i = vals.honor_beg; i <= vals.honor_end; i++) {
+				// always remove triplets
+				if (hist[i] >= 3) {
+					hist[i] -= 3;
+				}
+
+				// extract pairs
+				if (hist[i] === 2) {
+					hist[i] = 0;
+					pairs += 1;
+				}
+
+				// remove singles
+				else if (hist[i] === 1) {
+					hist[i] = 0;
+					singles += 1;
+				}
+			}
+    return [pairs, singles];
+		},
+    getRange = function (base) {
+        var lower = parseInt(base / 9, 10) * 9,
+            upper = lower + 8;
+        return [lower, upper];
+    },
+inRange = function (number, base, lower, upper) {
+    if (number < lower || number > upper) {
+        return false;
+    }
+    var result = getRange(base);
+    lower = result[0];
+    upper = result[1];
+    if (number < lower || number > upper) {
+        return false;
+    }
+    return true;
+},
+    removeSingles = function (hist, beg, end) {
+			var count = 0;
+
+			for (var i = beg; i <= end; i++) {
+				if (hist[i] !== 1) {
+					continue;
+				}
+
+				if (inRange(i-1, i, beg, end) && hist[i - 1] > 0) {
+					continue;
+				}
+
+				if (inRange(i-2, i, beg, end) && hist[i - 2] > 0) {
+					continue;
+				}
+
+				if (inRange(i+1, i, beg, end) && hist[i + 1] > 0) {
+					continue;
+				}
+
+				if (inRange(i+2, i, beg, end) && hist[i + 2] > 0) {
+					continue;
+				}
+                console.log([hist.join(','), i, beg, end]);
+				hist[i]--;
+				count++;
+			}
+
+			return count;
+		},
+shantenSimulation = function (depth, shanten, hist, singles, pairs) {
+    var mjs = [],
+    queue = [],
+    valid = false;
+    var process = function(depth, hist, singles, pairs) {
+        console.log(hist.join(','));
+        if (depth >= shanten) {
+			return false;
+		}
+        for (var i = vals.color_beg; i <= vals.color_end; i++) {
+			if (hist[i] >= 3) {
+				var copy = hist.slice(0);
+				copy[i] -= 3;
+				var csingles = removeSingles(copy, i - 2, i + 2);
+                console.log("first " + csingles);
+                queue.push([depth + 0, copy, singles + csingles, pairs]);
+                var im2r = inRange(i-2, i, vals.color_beg, vals.color_end),
+                    im1r = inRange(i-1, i, vals.color_beg, vals.color_end),
+                    ip1r = inRange(i+1, i, vals.color_beg, vals.color_end),
+                    ip2r = inRange(i+2, i, vals.color_beg, vals.color_end);
+				if ((!im2r || (im2r && copy[i - 2] === 0)) &&
+					(!im1r || (im1r && copy[i - 1] === 0)) &&
+					(copy[i + 0] === 0) &&
+                    (!ip1r || (ip1r && copy[i + 1] === 0)) &&
+                    (!ip2r || (ip2r && copy[i + 2] === 0))) {
+					return false;
+				}
+			}
+            
+			if ((hist[i + 0] >= 1) &&
+                (inRange(i+1, i, vals.color_beg, vals.color_end) && hist[i + 1] >= 1) &&
+                (inRange(i+2, i, vals.color_beg, vals.color_end) && hist[i + 2] >= 1)) {
+                
+				var copy = hist.slice(0);
+				copy[i + 0] -= 1;
+				copy[i + 1] -= 1;
+				copy[i + 2] -= 1;
+				var csingles = removeSingles(copy, i - 2, i + 4);
+                console.log("second " + csingles);
+                queue.push([depth + 0, copy, singles + csingles, pairs]);
+                
+                var im2r = inRange(i-2, i, vals.color_beg, vals.color_end),
+                    im1r = inRange(i-1, i, vals.color_beg, vals.color_end),
+                    ip1r = inRange(i+1, i, vals.color_beg, vals.color_end),
+                    ip2r = inRange(i+2, i, vals.color_beg, vals.color_end),
+                    ip3r = inRange(i+3, i, vals.color_beg, vals.color_end),
+                    ip4r = inRange(i+4, i, vals.color_beg, vals.color_end);
+				if ((!im2r || (im2r && copy[i - 2] === 0)) &&
+					(!im1r || (im1r && copy[i - 1] === 0)) &&
+					(copy[i + 0] === 0) &&
+                    (!ip1r || (ip1r && copy[i + 1] === 0)) &&
+                    (!ip2r || (ip2r && copy[i + 2] === 0)) &&
+                    (!ip3r || (ip3r && copy[i + 3] === 0)) &&
+                    (!ip4r || (ip4r && copy[i + 4] === 0))) {
+                    console.log("returning FALSE");
+					return false;
+				}
+			}
+            var singles_left = sum(hist) + singles;
+			depth += (singles_left - 1) * 2 / 3;
+            
+			if (depth < shanten) {
+				shanten = depth;
+			}
+        }
+        
+	};
+    queue.push([depth, hist, singles, pairs]);
+    while (queue.length > 0) {
+        var cur_item = queue[0];
+        process(cur_item[0], cur_item[1], cur_item[2], cur_item[3]);
+        queue.shift();
+    }
+    return shanten;
+},
+shantenGeneralized = function (hist) {
+	var shanten = sum(hist) * 2 / 3,
+        honors_result = calcHonors(hist),
+        pairs = honors_result[0],
+        singles = honors_result[1];
+    console.log([singles, pairs]);
+	singles += removeSingles(hist, vals.color_beg, vals.color_end);
+	return shantenSimulation(0, shanten, hist, singles, pairs);
+};
 
 module.exports = {
     honors: honors,
@@ -285,5 +441,7 @@ module.exports = {
     getValue: getValue,
     checkRegularMahjong: checkRegularMahjong,
     findRegularMahjong: findRegularMahjong,
-    findRegularMahjongAcc: findRegularMahjongAcc
+    findRegularMahjongAcc: findRegularMahjongAcc,
+    shantenGeneralized: shantenGeneralized,
+    inRange: inRange
 };
