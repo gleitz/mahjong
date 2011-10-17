@@ -390,6 +390,7 @@ shantenSimulation = function (depth, shanten, hist, singles, pairs) {
                 var range = getRange(i),
                     min = range[0],
                     max = range[1];
+                console.log([min, max]);
 				var csingles = removeSingles(copy, _.max(min, i - 2), _.min(max, i + 4));
                 console.log("second " + csingles);
                 queue.push([depth + 0, copy, singles + csingles, pairs]);
