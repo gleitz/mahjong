@@ -2,7 +2,7 @@
 
 "use strict";
 
-var sys = require('sys');
+var util = require('util');
 var _ = require('underscore');
 
 var honors = [
@@ -58,7 +58,7 @@ isHonor = function (tile) {
 	return tile >= vals.honor_beg;
 },
 toString = function (tile) {
-    
+
     if (isHonor(tile)) {
         return getHonor(tile);
 	} else {
@@ -118,8 +118,6 @@ sum = function (arr){
                 index = cur_item[1],
                 beg = cur_item[2],
                 end = cur_item[3];
-            // console.log(hist.join(','));
-            // console.log(sum(hist.slice(beg, end+1)));
             var worked = process(hist, index, beg, end);
             if (worked) {
 				return true;
@@ -159,7 +157,6 @@ sum = function (arr){
             queue = [],
             valid = false;
         var process = function(hist, sets, index, beg, end) {
-            // console.log(hist.join(','));
             var copy;
             if (sum(hist.slice(beg, end+1)) === 0) {
 				mjs.push(sets);
@@ -258,11 +255,10 @@ sum = function (arr){
 				hist[i] += 2;
 			}
         return false;
-		},
-    calcHonors = function (hist)
-{
-	var singles = 0,
-	pairs = 0;
+	},
+    calcHonors = function (hist) {
+	    var singles = 0,
+	        pairs = 0;
 
 			for (var i = vals.honor_beg; i <= vals.honor_end; i++) {
 				// always remove triplets
@@ -317,13 +313,22 @@ sum = function (arr){
 shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
     var mjs = [],
     queue = [],
-    valid = false;
+    valid = false,
+    seen = {};
     var process = function(depth, buffered, singles, pairs) {
+        var key = buffered.slice(0);
+        key.push(singles);
+        key.push(pairs);
+        key.push(depth);
+        key = key.join('.');
+        if (seen[key]) {
+            return false;
+        }
+        seen[key] = 1;
         var copy,
             csingles,
             i,
             discard;
-        // console.log(buffered.join(','));
         if (depth >= shanten) {
 			return false;
 		}
@@ -333,7 +338,7 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 				copy[i] -= 3;
 				csingles = removeSingles(copy, i - 2, i + 2);
                 queue.push([depth + 0, copy, singles + csingles, pairs]);
-                
+
 				if ((copy[i - 2] === 0) &&
 					(copy[i - 1] === 0) &&
 					(copy[i + 0] === 0) &&
@@ -346,7 +351,7 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 			if ((buffered[i + 0] >= 1) &&
                 (buffered[i + 1] >= 1) &&
                 (buffered[i + 2] >= 1)) {
-                
+
 				copy = buffered.slice(0);
 				copy[i + 0]--;
 				copy[i + 1]--;
@@ -366,7 +371,8 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 			}
 		}
 
-        /*
+
+                /*
 			 * 2-sets
 			 */
 		for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
@@ -393,7 +399,7 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 					}
 				}
 			}
-            
+
 			if ((buffered[i + 0] >= 1) && (buffered[i + 1] >= 1)) {
 				if (singles > 0) {
 					copy = buffered.slice(0);
@@ -409,7 +415,7 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 						if (discard === i + 1) {
 							continue;
 						}
-                        
+
 						if (buffered[discard] >= 1) {
 							copy = buffered.slice(0);
 							copy[i + 0] -= 1;
@@ -438,7 +444,7 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 						if (discard === i + 2) {
 							continue;
 						}
-                        
+
 						if (buffered[discard] >= 1) {
 							copy = buffered.slice(0);
 							copy[i + 0] -= 1;
@@ -452,29 +458,39 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 				}
 			}
 		}
-
         /*
 			 * direct pairs
 			 */
 		if (pairs > 0) {
 			if (singles > 0) { // >1?
                 queue.push([depth + 1, buffered, singles - 1, pairs - 1]);
+                return false;
 			} else {
+                var found = false;
 				for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
 					if (buffered[discard] >= 1) {
 						copy = buffered.slice(0);
 						copy[discard]--;
 						csingles = removeSingles(copy, discard - 2, discard + 2);
                         queue.push([depth + 1, copy, singles + csingles, pairs - 1]);
+                        found = true;
 					}
 				}
+                if (found) {
+                    return false;
+                }
 			}
-			return false;
+            if (pairs === 0) {
+                singles += 2 * pairs;
+            } else {
+                queue.push([depth, buffered, singles + 2, pairs - 1]);
+                return false;
+            }
+			// return false;
 		}
-        
         var singles_left = sum(buffered) + singles;
 		depth += parseInt((singles_left - 1) * 2 / 3, 10);
-        
+
 		if (depth < shanten) {
 			shanten = depth;
 		}
@@ -497,10 +513,10 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 shantenGeneralized = function (hist) {
 	var shanten = sum(hist) * 2 / 3,
         buffered = translateToBufferedNoHonors(hist),
-        honors_result = calcHonors(hist),
+        honors_result = calcHonors(hist.slice(0)),
         pairs = honors_result[0],
         singles = honors_result[1];
-	singles += removeSingles(hist, vals.buf_beg, vals.buf_end_no_honors);
+	singles += removeSingles(buffered, vals.buf_beg, vals.buf_end_no_honors);
 	return shantenSimulation(0, shanten, buffered, singles, pairs);
 },
 toHandString = function(hist) {
@@ -523,7 +539,6 @@ toHandString = function(hist) {
                         honor: getHonor(tile),
                         value: getValue(tile) + 1,
                         number: i};
-            // console.log(data);
             conv.push(data);
         }
         var first = conv[0];
@@ -543,22 +558,22 @@ toHandString = function(hist) {
 main = function (hist) {
     var return_str = '',
         i,
-        discard = [];
+        discard = [],
+        best = 10;
     if (sum(hist) !== 14) {
         return {msg: "must submit 14 tiles (there were " + sum(hist) + ")",
                 discard: []};
         // throw new Error("not enough tiles");
     }
     if (checkRegularMahjong(hist)) {
-        return_str += ("looks like you've got a mahjong<br/>");
-        var buffer = [],
-            mj = findRegularMahjong(hist);
-        for (i=0; i<mj.length; i++) {
-            buffer.push(toTileSetString(mj[i]));
-        }
-        return_str += buffer.join(', ');
+        return_str += ("Tsumo! You've got a mahjong");
+        // var buffer = [],
+            // mj = findRegularMahjong(hist);
+        // for (i=0; i<mj.length; i++) {
+            // buffer.push(toTileSetString(mj[i]));
+        // }
+        // return_str += buffer.join(', ');
     } else {
-        var best = 10;
         for (i=vals.id_min; i<= vals.id_max; i++) {
             if (hist[i] > 0) {
                 var new_hist = hist.slice(0);
@@ -572,10 +587,11 @@ main = function (hist) {
                 }
             }
         }
-        return_str += "throwing " + _.map(discard, toString).join(',') + " produces shanten of " + best;
+        // return_str += "throwing " + _.map(discard, toString).join(',') + " produces shanten of " + best;
     }
     return {msg: return_str,
-            discard: discard};
+            discard: discard,
+            shanten: best};
 },
     addStreetScore = function (score, hist, beg, end)
 		{
@@ -586,7 +602,7 @@ main = function (hist) {
 			for (i = beg; i <= end - 2; i++) {
 				score[i] += hist[i + 2] * 10;
 			}
-			
+
 			for (i = beg + 1; i <= end; i++) {
 				score[i] += hist[i - 1] * 100;
 			}
@@ -600,11 +616,11 @@ findBestDiscard = function (hist, worst_tiles) {
 			 * score by combination with other tiles
 			 */
     var score = [
-				0,1,2,3,4,3,2,1,0, // central tiles are more valuable
-				0,1,2,3,4,3,2,1,0,
-				0,1,2,3,4,3,2,1,0,
-				5,5,5,5, // honors are more valuable
-				5,5,5],
+		0,1,2,3,4,3,2,1,0, // central tiles are more valuable
+		0,1,2,3,4,3,2,1,0,
+		5,-1,-1,5, // winds are more valuable
+		5,5,5, // honors
+        -1, -1],
         i;
 
 	for (i = vals.id_min; i <= vals.id_max; i++) {
@@ -638,16 +654,83 @@ findBestDiscard = function (hist, worst_tiles) {
 				if (hist[i] > 0) {
 					var v = score[i];
 					if (v < bestV) {
-                        console.log("replacing old score of " + bestV + " at " + bestI);
-                        console.log("with " + v + " at " + i);
 						bestV = v;
 						bestI = i;
 					}
 				}
 			}
-    console.log(score.join(','));
-			return bestI;
-		};
+			return {discard: bestI,
+                    score: score};
+		},
+generateWall = function() {
+    var wall = [];
+    for (var plr = 0; plr < 4; plr++) {
+		for (var i = vals.id_min; i <= vals.id_max; i++) {
+            wall.push(i);
+		}
+	}
+    wall.sort(function() {return 0.5 - Math.random();});
+    return wall;
+}, generateHand = function() {
+    var hand = [];
+    for (var i = vals.id_min; i<=vals.id_max; i++) {
+        hand.push(0);
+    }
+    return hand.slice(0);
+},
+generateHands = function (num) {
+    var wall = generateWall();
+    var hands = [];
+    for (var plr = 0; plr < num; plr++) {
+		hands[plr] = generateHand();
+		for (var i = 0; i <= 13; i++) { //TODO: switch to < 13 when actually dealing
+            hands[plr][wall.pop()] += 1;
+		}
+	}
+    return {hands: hands,
+            wall: wall};
+},
+getWaits = function (hist) {
+    var count = sum(hist),
+        i,
+        waits = [];
+    if (count !== 13) {
+        throw new Error("invalid tile count (" + count + ")");
+    }
+    for (i=vals.id_min; i<=vals.id_max; i++) {
+        var hand = hist.slice(0);
+        hand[i] += 1;
+        if (checkRegularMahjong(hand)) {
+            for (var j=0; j<(4 - hist[i]); j++) {
+                waits.push(i);
+            }
+        }
+    }
+    return waits;
+},
+findBestDiscardWait = function (hist) {
+    var waits = 0,
+        i,
+        discard = [];
+    for (i=vals.id_min; i<=vals.id_max; i++) {
+        if (hist[i] > 0) {
+            var hand = hist.slice(0);
+                hand[i] -= 1;
+            var num_waits = getWaits(hand);
+            if (num_waits.length === 0) {
+                continue;
+            }
+            if (num_waits.length === waits) {
+                discard.push(i);
+            } else if (num_waits.length > waits) {
+                waits = num_waits.length;
+                discard = [];
+                discard.push(i);
+            }
+        }
+    }
+    return discard;
+};
 
 module.exports = {
     honors: honors,
@@ -665,5 +748,10 @@ module.exports = {
     toString: toString,
     toTileSetString: toTileSetString,
     toHandString: toHandString,
-    findBestDiscard: findBestDiscard
+    findBestDiscard: findBestDiscard,
+    generateHands: generateHands,
+    generateHand: generateHand,
+    getWaits: getWaits,
+    findBestDiscardWait: findBestDiscardWait,
+    isHonor: isHonor
 };
