@@ -10,7 +10,10 @@ var mahjong = require('./mahjong'),
     _ = require('underscore');
 
 
-var app = express.createServer();
+var cfg = {
+};
+
+var app = express();
 
 app.configure(function(){
   // app.set('views', __dirname + '/views');
@@ -81,6 +84,7 @@ app.get('/game', function(req, res) {
         shanten,
         new_tile;
     if (tile && wall && hand) {
+        tile = parseInt(tile, 10);
         if (thrown.length) {
             thrown = _(thrown.split(',')).map(function (n) {return parseInt(n, 10);});
         }
@@ -111,6 +115,8 @@ app.get('/game', function(req, res) {
                 if (shanten > 0) {
                     best_waits = [recommended.discard];
                 }
+            } else {
+                best_waits = inter;
             }
         } else {
             best_waits = [recommended.discard];
@@ -123,6 +129,7 @@ app.get('/game', function(req, res) {
         for (i=0; i<obj.discard.length; i++) {
             var throw_tile = obj.discard[i];
             var new_hand = hand.slice(0);
+            var total_waits = 0;
             new_hand[throw_tile] -= 1;
             for (var j=mahjong.vals.id_min; j<=mahjong.vals.id_max; j++) {
                 if (throw_tile === j) {
@@ -131,14 +138,15 @@ app.get('/game', function(req, res) {
                 var new_full_hand = new_hand.slice(0);
                 new_full_hand[j] += 1;
                 best_waits = mahjong.findBestDiscardWait(new_full_hand);
-                if (best_waits.length === num_waits) {
-                    if (_.indexOf(best_discard, throw_tile) === -1) {
-                        best_discard.push(throw_tile);
-                    }
-                } else if (best_waits.length > num_waits) {
-                    best_discard = [throw_tile];
-                    num_waits = best_waits.length;
+                total_waits += best_waits;
+            }
+            if (total_waits.length === num_waits) {
+                if (_.indexOf(best_discard, throw_tile) === -1) {
+                    best_discard.push(throw_tile);
                 }
+            } else if (total_waits.length > num_waits) {
+                best_discard = [throw_tile];
+                num_waits = total_waits.length;
             }
         }
         if (best_discard.length > 0) {
@@ -166,14 +174,22 @@ app.get('/game', function(req, res) {
                     best_waits: mahjong.findBestDiscardWait(hand),
                     shanten: obj.shanten,
                     new_tile: new_tile,
+                    tile_width: cfg.tile_width,
                     recommended: {discard_tile: [recommended.discard],
                                   discard: mahjong.toString(recommended.discard),
                                   score: recommended.score}};
     if (req.param('ajax')) {
         res.json(response);
     } else {
-        fs.readFile(__dirname + '/views/index.html', 'utf8', function(err, text){
-            res.send(text);
+        fs.readFile(__dirname + '/views/index_top.html', 'utf8', function(err, top){
+            fs.readFile(__dirname + '/views/index_bottom.html', 'utf8', function(err, bottom){
+                var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
+                cfg = {
+                    mobile: mobile,
+                    tile_width: mobile ? 53 : 71 //width + 16
+                };
+                res.send(top + JSON.stringify(cfg) + bottom);
+            });
         });
     }
 });
@@ -183,17 +199,17 @@ app.listen(3000);
 /*
 var hands = [
     [0,0,0,1,2,3,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
-	[1,1,1,0,1,2,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
-	[0,0,0,3,3,1,1,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
-	[3,0,0,0,1,1,1,0,0,  0,0,2,0,0,0,0,0,0,  0,0,3,3,0,0,0,0,0],
-	[0,0,2,1,1,1,2,2,2,  0,0,0,0,0,0,0,0,0,  0,0,0,0,3,0,0,0,0]];
+    [1,1,1,0,1,2,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
+    [0,0,0,3,3,1,1,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
+    [3,0,0,0,1,1,1,0,0,  0,0,2,0,0,0,0,0,0,  0,0,3,3,0,0,0,0,0],
+    [0,0,2,1,1,1,2,2,2,  0,0,0,0,0,0,0,0,0,  0,0,0,0,3,0,0,0,0]];
 for (var i=0; i<hands.length; i++) {
     assert.ok(mahjong.checkRegularMahjong(hands[i]), hands[i]);
 }
 
 var hands = [
-	[1,1,1,0,1,2,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,1,1,0,0,0,0,0],
-	[1,1,1,1,1,0,0,0,0,  0,1,1,1,1,1,1,1,0,  0,0,2,0,0,0,0,0,0]
+    [1,1,1,0,1,2,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,1,1,0,0,0,0,0],
+    [1,1,1,1,1,0,0,0,0,  0,1,1,1,1,1,1,1,0,  0,0,2,0,0,0,0,0,0]
 ];
 for (i=0; i<hands.length; i++) {
     assert.ok(!mahjong.checkRegularMahjong(hands[i]));
