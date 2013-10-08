@@ -4,15 +4,15 @@
 var _ = require('underscore');
 
 var honors = [
-    'East',
-    'South',
-    'West',
-    'North',
-    'White',
-    'Green',
-    'Red',
-    '1Man',
-    '9Man'
+    'E',
+    'S',
+    'W',
+    'N',
+    'B',
+    'G',
+    'R',
+    '1',
+    '9'
 ],
     colors = [
         'Pin',
@@ -40,7 +40,9 @@ var honors = [
         buf_end_no_honors: 21,
         buf_end: 32
     },
-
+    arrayOf = function(n, times) {
+        return Array.apply(null, new Array(times)).map(Number.prototype.valueOf,n);
+    };
     getColor = function (tile) {
         if (tile < 0) {
             return null;
@@ -57,6 +59,12 @@ var honors = [
     },
     isHonor = function (tile) {
         return tile >= vals.honor_beg;
+    },
+    isPin = function (tile) {
+        return tile >= vals.pin_beg && tile <= vals.pin_end;
+    },
+    isSou = function (tile) {
+        return tile >= vals.sou_beg && tile <= vals.sou_end;
     },
     toString = function (tile) {
         if (isHonor(tile)) {
@@ -204,7 +212,7 @@ var honors = [
             queue.shift();
         }
         return [mjs, valid];
-    },
+    },  // WRITE TESTS
     findHonors = function (hist) {
         hist = hist.slice(0);
         var sets = [];
@@ -521,13 +529,56 @@ var honors = [
     },
     toHandString = function(hist) {
         var i,
-            tiles = [];
+            pins = [],
+            sous = [],
+            honors = [],
+            handStr = '';
         for (i=0; i<hist.length; i++) {
             for (var j=0; j<hist[i]; j++) {
-                tiles.push(toString(i));
+                if (isPin(i)) {
+                    pins.push(getValue(i) + 1);
+                } else if (isSou(i)) {
+                    sous.push(getValue(i) + 1);
+                } else {
+                    honors.push(i);
+                }
             }
         }
-        return tiles.join(', ');
+        if (pins) {
+            handStr = handStr + pins.join('') + 'p ';
+        }
+        if (sous) {
+            handStr = handStr + sous.join('') + 's ';
+        }
+        if (honors) {
+            handStr = handStr + _.map(honors, function(h) { return getHonor(h) }).join('');
+        }
+        return handStr;
+    },
+    toTileString = function(hand) {
+        var matches = /(\d+p)?\s?(\d+s)?\s?([ESWNBGR19]+)?/g.exec(hand),
+            tiles = arrayOf(0, 27);
+        if (!matches || matches.length != 4) {
+            return '';
+        }
+        var pins = matches[1] || [],
+            sous = matches[2] || [],
+            honors = matches[3] || [],
+            i, tile;
+        console.log(pins, sous, honors);
+        for (i=0; i<pins.length-1; i++) {
+            tile = parseInt(pins[i], 10);
+            tiles[tile-1] += 1;
+        }
+        for (i=0; i<sous.length-1; i++) {
+            tile = parseInt(sous[i], 10);
+            tiles[tile+9-1] += 1;
+        }
+        for (i=0; i<honors.length; i++) {
+            tile = honors.indexOf(honors[i]);
+            tiles[tile+18] += 1;
+        }
+        return tiles;
     },
     toTileSetString = function (tiles) {
         var conv = [],
@@ -748,6 +799,7 @@ module.exports = {
     main: main,
     toString: toString,
     toTileSetString: toTileSetString,
+    toTileString: toTileString,
     toHandString: toHandString,
     findBestDiscard: findBestDiscard,
     generateHands: generateHands,

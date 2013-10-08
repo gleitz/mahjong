@@ -5,7 +5,7 @@ var myrepl = require("repl").start({useGlobal:true});
 myrepl.context.require.uncache = function (moduleName) {
     // Run over the cache looking for the files
     // loaded by the specified module name
-    require.searchCache(moduleName, function (mod) {
+    myrepl.context.require.searchCache(moduleName, function (mod) {
         delete require.cache[mod.id];
     });
 };
@@ -14,7 +14,7 @@ myrepl.context.require.uncache = function (moduleName) {
  * Runs over the cache to search for all the cached
  * files
  */
-myrepl.context.require.uncache = function (moduleName, callback) {
+myrepl.context.require.searchCache = function (moduleName, callback) {
     // Resolve the module identified by the specified name
     var mod = require.resolve(moduleName);
 
@@ -35,3 +35,8 @@ myrepl.context.require.uncache = function (moduleName, callback) {
         })(mod);
     }
 };
+
+myrepl.context.require.reload = function(moduleName) {
+    myrepl.context.require.uncache(moduleName);
+    return myrepl.context.require(moduleName);
+}
