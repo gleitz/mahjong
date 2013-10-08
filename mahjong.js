@@ -1,6 +1,6 @@
-/*global console: false, require: false, module: false */
+/*global console, require, module */
 
-var util = require('util');
+// var util = require('util');
 var _ = require('underscore');
 
 var honors = [
@@ -22,9 +22,9 @@ var honors = [
     vals = {
         // id = value + (9 * color);
         // name     id      buffered
-        // pin		00-08	02-10
-        // sou		09-17	13-21
-        // honors	18-26	24-32
+        // pin      00-08   02-10
+        // sou      09-17   13-21
+        // honors   18-26   24-32
         id_min: 0,
         color_beg: 0,
         pin_beg: 0,
