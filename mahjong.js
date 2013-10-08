@@ -45,70 +45,70 @@ var honors = [
         tile = tile - (tile % 9);
         tile /= 9;
         return colors[tile];
-        },
-getValue =  function (tile) {
-    return tile % 9;
     },
-getHonor =  function (tile) {
-    return honors[getValue(tile)];
+    getValue =  function (tile) {
+        return tile % 9;
     },
-isHonor = function (tile) {
-    return tile >= vals.honor_beg;
-},
-toString = function (tile) {
+    getHonor =  function (tile) {
+        return honors[getValue(tile)];
+    },
+    isHonor = function (tile) {
+        return tile >= vals.honor_beg;
+    },
+    toString = function (tile) {
 
-    if (isHonor(tile)) {
-        return getHonor(tile);
-    } else {
-        return (getValue(tile) + 1) + getColor(tile);
-    }
-},
-checkRegularMahjongNoPairHonor = function (hist, beg, end) {
-    /*
-             * for honors, check triplets only
-             */
-    for (var i = beg; i <= end; i++) {
-        if ((hist[i] % 3) !== 0) {
-            return false;
+        if (isHonor(tile)) {
+            return getHonor(tile);
+        } else {
+            return (getValue(tile) + 1) + getColor(tile);
         }
-    }
-    return true;
-},
-sum = function (arr){
-    for(var s = 0, i = arr.length; i; s += arr[--i]);
-    return s;
-},
+    },
+    checkRegularMahjongNoPairHonor = function (hist, beg, end) {
+        /*
+         * for honors, check triplets only
+         */
+        for (var i = beg; i <= end; i++) {
+            if ((hist[i] % 3) !== 0) {
+                return false;
+            }
+        }
+        return true;
+    },
+    sum = function (arr){
+        for(var s = 0, i = arr.length; i; s += arr[--i]);
+        return s;
+    },
     checkRegularMahjongNoPairColor = function (init_hist, init_beg, init_end) {
         var queue = [],
-        process = function (hist, index, beg, end) {
-            if (sum(hist.slice(beg, end+1)) === 0) {
-                return true;
-            }
-            for (var i = beg; i <= end; i++) {
-                if (sum(hist.slice(index, i)) > 0) {
-                    return false;
+            process = function (hist, index, beg, end) {
+                if (sum(hist.slice(beg, end+1)) === 0) {
+                    return true;
                 }
-                var count = hist[i],
-                    copy;
-                if (count > 0) {
-                    if (i + 2 <= end) {
-                        if (hist[i+1] > 0 && hist[i+2] > 0) {
-                            copy = hist.slice(0);
-                            copy[i] -= 1;
-                            copy[i+1] -= 1;
-                            copy[i+2] -= 1;
-                            queue.push([copy, index, i, end]);
+                for (var i = beg; i <= end; i++) {
+                    if (sum(hist.slice(index, i)) > 0) {
+                        return false;
+                    }
+                    var count = hist[i],
+                        copy;
+                    if (count > 0) {
+                        if (i + 2 <= end) {
+                            if (hist[i+1] > 0 && hist[i+2] > 0) {
+                                copy = hist.slice(0);
+                                copy[i] -= 1;
+                                copy[i+1] -= 1;
+                                copy[i+2] -= 1;
+                                queue.push([copy, index, i, end]);
+                            }
                         }
                     }
+                    if (count >= 3) {
+                        copy = hist.slice(0);
+                        copy[i] -= 3;
+                        queue.push([copy, index, i, end]);
+                    }
                 }
-                if (count >= 3) {
-                    copy = hist.slice(0);
-                    copy[i] -= 3;
-                    queue.push([copy, index, i, end]);
-                }
-            }
-            return false;
-        };
+                return false;
+            };
         queue.push([init_hist, init_beg, init_beg, init_end]);
         while (queue.length > 0) {
             var cur_item = queue[0],
@@ -123,32 +123,32 @@ sum = function (arr){
             queue.shift();
         }
         return false;
-        },
+    },
     checkRegularMahjongNoPair = function (hist) {
         return checkRegularMahjongNoPairHonor(hist, vals.honor_beg, vals.honor_end) &&
-            checkRegularMahjongNoPairColor(hist, vals.pin_beg, vals.pin_end) &&
-            checkRegularMahjongNoPairColor(hist, vals.sou_beg, vals.sou_end);
-        },
+        checkRegularMahjongNoPairColor(hist, vals.pin_beg, vals.pin_end) &&
+        checkRegularMahjongNoPairColor(hist, vals.sou_beg, vals.sou_end);
+    },
     checkRegularMahjong = function (hist) {
         if (sum(hist) !== 14) {
             throw "not enough tiles in hand";
         }
-            /*
-             * enumerate through all possible pairs
-             */
-            for (var i = 0; i < vals.count; i++) {
-                if (hist[i] >= 2) {
-                    hist[i] -= 2;
-                    var pass = checkRegularMahjongNoPair(hist);
-                    hist[i] += 2;
+        /*
+         * enumerate through all possible pairs
+         */
+        for (var i = 0; i < vals.count; i++) {
+            if (hist[i] >= 2) {
+                hist[i] -= 2;
+                var pass = checkRegularMahjongNoPair(hist);
+                hist[i] += 2;
 
-                    if (pass) {
-                        return true;
-                    }
+                if (pass) {
+                    return true;
                 }
             }
-            return false;
-        },
+        }
+        return false;
+    },
 
     findRegularMahjongAcc = function (hist, beg, end) {
         var mjs = [],
@@ -191,8 +191,8 @@ sum = function (arr){
         queue.push([hist, [], beg, beg, end]);
         while (queue.length > 0) {
             var cur_item = queue[0],
-            sets = cur_item[1],
-            index = cur_item[2];
+                sets = cur_item[1],
+                index = cur_item[2];
             hist = cur_item[0];
             beg = cur_item[3];
             end = cur_item[4];
@@ -218,289 +218,289 @@ sum = function (arr){
         return [[sets], false];
     },
     findRegularMahjong = function (hist) {
-            /*
-             * try all pairs
-             */
-            for (var i = vals.id_min; i <= vals.id_max; i++) {
-                if (hist[i] < 2) {
-                    continue;
-                }
-                var pair = i;
-                hist[i] -= 2;
-                var honor_result = findHonors(hist);
-                var pin_result = findRegularMahjongAcc(hist, vals.pin_beg, vals.pin_end);
-                var sou_result = findRegularMahjongAcc(hist, vals.sou_beg, vals.sou_end);
-                if (honor_result[1] && pin_result[1] && sou_result[1]) {
-                    var hand = [];
-                    if (honor_result[0].length) {
-                        for (i=0; i<honor_result[0][0].length; i++) {
-                            hand.push(honor_result[0][0][i]);
-                        }
-                    }
-                    if (pin_result[0].length) {
-                        for (i=0; i<pin_result[0][0].length; i++) {
-                            hand.push(pin_result[0][0][i]);
-                        }
-                    }
-                    if (sou_result[0].length) {
-                        for (i=0; i<sou_result[0][0].length; i++) {
-                            hand.push(sou_result[0][0][i]);
-                        }
-                    }
-                    hand.push([pair, pair]);
-                    return hand;
-                }
-                hist[i] += 2;
+        /*
+         * try all pairs
+         */
+        for (var i = vals.id_min; i <= vals.id_max; i++) {
+            if (hist[i] < 2) {
+                continue;
             }
+            var pair = i;
+            hist[i] -= 2;
+            var honor_result = findHonors(hist);
+            var pin_result = findRegularMahjongAcc(hist, vals.pin_beg, vals.pin_end);
+            var sou_result = findRegularMahjongAcc(hist, vals.sou_beg, vals.sou_end);
+            if (honor_result[1] && pin_result[1] && sou_result[1]) {
+                var hand = [];
+                if (honor_result[0].length) {
+                    for (i=0; i<honor_result[0][0].length; i++) {
+                        hand.push(honor_result[0][0][i]);
+                    }
+                }
+                if (pin_result[0].length) {
+                    for (i=0; i<pin_result[0][0].length; i++) {
+                        hand.push(pin_result[0][0][i]);
+                    }
+                }
+                if (sou_result[0].length) {
+                    for (i=0; i<sou_result[0][0].length; i++) {
+                        hand.push(sou_result[0][0][i]);
+                    }
+                }
+                hand.push([pair, pair]);
+                return hand;
+            }
+            hist[i] += 2;
+        }
         return false;
     },
     calcHonors = function (hist) {
         var singles = 0,
             pairs = 0;
 
-            for (var i = vals.honor_beg; i <= vals.honor_end; i++) {
-                // always remove triplets
-                if (hist[i] >= 3) {
-                    hist[i] -= 3;
-                }
-
-                // extract pairs
-                if (hist[i] === 2) {
-                    hist[i] = 0;
-                    pairs += 1;
-                }
-
-                // remove singles
-                else if (hist[i] === 1) {
-                    hist[i] = 0;
-                    singles += 1;
-                }
+        for (var i = vals.honor_beg; i <= vals.honor_end; i++) {
+            // always remove triplets
+            if (hist[i] >= 3) {
+                hist[i] -= 3;
             }
-    return [pairs, singles];
-        },
+
+            // extract pairs
+            if (hist[i] === 2) {
+                hist[i] = 0;
+                pairs += 1;
+            }
+
+            // remove singles
+            else if (hist[i] === 1) {
+                hist[i] = 0;
+                singles += 1;
+            }
+        }
+        return [pairs, singles];
+    },
     removeSingles = function (buffered, beg, end) {
         var count = 0;
 
-            for (var i = beg; i <= end; i++) {
-                if (buffered[i] !== 1) {
-                    continue;
-                }
-
-                if (buffered[i - 1] > 0) {
-                    continue;
-                }
-
-                if (buffered[i - 2] > 0) {
-                    continue;
-                }
-
-                if (buffered[i + 1] > 0) {
-                    continue;
-                }
-
-                if (buffered[i + 2] > 0) {
-                    continue;
-                }
-
-                buffered[i]--;
-                count++;
+        for (var i = beg; i <= end; i++) {
+            if (buffered[i] !== 1) {
+                continue;
             }
 
-            return count;
-        },
-shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
-    var mjs = [],
-    queue = [],
-    valid = false,
-    seen = {};
-    var process = function(depth, buffered, singles, pairs) {
-        var key = buffered.slice(0);
-        key.push(singles);
-        key.push(pairs);
-        key.push(depth);
-        key = key.join('.');
-        if (seen[key]) {
-            return false;
-        }
-        seen[key] = 1;
-        var copy,
-            csingles,
-            i,
-            discard;
-        if (depth >= shanten) {
-            return false;
-        }
-        for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
-            if (buffered[i] >= 3) {
-                copy = buffered.slice(0);
-                copy[i] -= 3;
-                csingles = removeSingles(copy, i - 2, i + 2);
-                queue.push([depth + 0, copy, singles + csingles, pairs]);
+            if (buffered[i - 1] > 0) {
+                continue;
+            }
 
-                if ((copy[i - 2] === 0) &&
-                    (copy[i - 1] === 0) &&
-                    (copy[i + 0] === 0) &&
-                    (copy[i + 1] === 0) &&
-                    (copy[i + 2] === 0)) {
-                    return false;
+            if (buffered[i - 2] > 0) {
+                continue;
+            }
+
+            if (buffered[i + 1] > 0) {
+                continue;
+            }
+
+            if (buffered[i + 2] > 0) {
+                continue;
+            }
+
+            buffered[i]--;
+            count++;
+        }
+
+        return count;
+    },
+    shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
+        var mjs = [],
+            queue = [],
+            valid = false,
+            seen = {};
+        var process = function(depth, buffered, singles, pairs) {
+            var key = buffered.slice(0);
+            key.push(singles);
+            key.push(pairs);
+            key.push(depth);
+            key = key.join('.');
+            if (seen[key]) {
+                return false;
+            }
+            seen[key] = 1;
+            var copy,
+                csingles,
+                i,
+                discard;
+            if (depth >= shanten) {
+                return false;
+            }
+            for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
+                if (buffered[i] >= 3) {
+                    copy = buffered.slice(0);
+                    copy[i] -= 3;
+                    csingles = removeSingles(copy, i - 2, i + 2);
+                    queue.push([depth + 0, copy, singles + csingles, pairs]);
+
+                    if ((copy[i - 2] === 0) &&
+                        (copy[i - 1] === 0) &&
+                        (copy[i + 0] === 0) &&
+                        (copy[i + 1] === 0) &&
+                        (copy[i + 2] === 0)) {
+                        return false;
+                    }
+                }
+
+                if ((buffered[i + 0] >= 1) &&
+                    (buffered[i + 1] >= 1) &&
+                    (buffered[i + 2] >= 1)) {
+
+                    copy = buffered.slice(0);
+                    copy[i + 0]--;
+                    copy[i + 1]--;
+                    copy[i + 2]--;
+                    csingles = removeSingles(copy, i - 2, i + 4);
+                    queue.push([depth + 0, copy, singles + csingles, pairs]);
+
+                    if ((copy[i - 2] === 0) &&
+                        (copy[i - 1] === 0) &&
+                        (copy[i + 0] === 0) &&
+                        (copy[i + 1] === 0) &&
+                        (copy[i + 2] === 0) &&
+                        (copy[i + 3] === 0) &&
+                        (copy[i + 4] === 0)) {
+                        return false;
+                    }
                 }
             }
 
-            if ((buffered[i + 0] >= 1) &&
-                (buffered[i + 1] >= 1) &&
-                (buffered[i + 2] >= 1)) {
 
-                copy = buffered.slice(0);
-                copy[i + 0]--;
-                copy[i + 1]--;
-                copy[i + 2]--;
-                csingles = removeSingles(copy, i - 2, i + 4);
-                queue.push([depth + 0, copy, singles + csingles, pairs]);
-
-                if ((copy[i - 2] === 0) &&
-                    (copy[i - 1] === 0) &&
-                    (copy[i + 0] === 0) &&
-                    (copy[i + 1] === 0) &&
-                    (copy[i + 2] === 0) &&
-                    (copy[i + 3] === 0) &&
-                    (copy[i + 4] === 0)) {
-                    return false;
-                }
-            }
-        }
-
-
-                /*
+            /*
              * 2-sets
              */
-        for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
-            if (buffered[i] >= 2) {
-                if (singles > 0) {
-                    copy = buffered.slice(0);
-                    copy[i] -= 2;
-                    csingles = removeSingles(copy, i - 2, i + 2);
-                    queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
-                } else {
-                    for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
-                        if (discard === i) {
-                            continue;
-                        }
+            for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
+                if (buffered[i] >= 2) {
+                    if (singles > 0) {
+                        copy = buffered.slice(0);
+                        copy[i] -= 2;
+                        csingles = removeSingles(copy, i - 2, i + 2);
+                        queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
+                    } else {
+                        for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
+                            if (discard === i) {
+                                continue;
+                            }
 
-                        if (buffered[discard] >= 1) {
-                            copy = buffered.slice(0);
-                            copy[i] -= 2;
-                            copy[discard]--;
-                            csingles = removeSingles(copy, i - 2, i + 2);
-                            csingles += removeSingles (copy, discard - 2, discard + 2);
-                            queue.push([depth + 1, copy, singles + csingles, pairs]);
+                            if (buffered[discard] >= 1) {
+                                copy = buffered.slice(0);
+                                copy[i] -= 2;
+                                copy[discard]--;
+                                csingles = removeSingles(copy, i - 2, i + 2);
+                                csingles += removeSingles (copy, discard - 2, discard + 2);
+                                queue.push([depth + 1, copy, singles + csingles, pairs]);
+                            }
+                        }
+                    }
+                }
+
+                if ((buffered[i + 0] >= 1) && (buffered[i + 1] >= 1)) {
+                    if (singles > 0) {
+                        copy = buffered.slice(0);
+                        copy[i + 0] -= 1;
+                        copy[i + 1] -= 1;
+                        csingles = removeSingles (copy, i - 2, i + 3);
+                        queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
+                    } else {
+                        for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
+                            if (discard === i + 0) {
+                                continue;
+                            }
+                            if (discard === i + 1) {
+                                continue;
+                            }
+
+                            if (buffered[discard] >= 1) {
+                                copy = buffered.slice(0);
+                                copy[i + 0] -= 1;
+                                copy[i + 1] -= 1;
+                                copy[discard]--;
+                                csingles = removeSingles(copy, i - 2, i + 3);
+                                csingles += removeSingles(copy, discard - 2, discard + 2);
+                                queue.push([depth + 1, copy, singles + csingles, pairs]);
+                            }
+                        }
+                    }
+                }
+
+                if ((buffered[i + 0] >= 1) && (buffered[i + 2] >= 1)) {
+                    if (singles > 0) {
+                        copy = buffered.slice(0);
+                        copy[i + 0] -= 1;
+                        copy[i + 2] -= 1;
+                        csingles = removeSingles(copy, i - 2, i + 4);
+                        queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
+                    } else {
+                        for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
+                            if (discard === i + 0) {
+                                continue;
+                            }
+                            if (discard === i + 2) {
+                                continue;
+                            }
+
+                            if (buffered[discard] >= 1) {
+                                copy = buffered.slice(0);
+                                copy[i + 0] -= 1;
+                                copy[i + 2] -= 1;
+                                copy[discard]--;
+                                csingles = removeSingles(copy, i - 2, i + 4);
+                                csingles += removeSingles(copy, discard - 2, discard + 2);
+                                queue.push([depth + 1, copy, singles + csingles, pairs]);
+                            }
                         }
                     }
                 }
             }
-
-            if ((buffered[i + 0] >= 1) && (buffered[i + 1] >= 1)) {
-                if (singles > 0) {
-                    copy = buffered.slice(0);
-                    copy[i + 0] -= 1;
-                    copy[i + 1] -= 1;
-                    csingles = removeSingles (copy, i - 2, i + 3);
-                    queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
-                } else {
-                    for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
-                        if (discard === i + 0) {
-                            continue;
-                        }
-                        if (discard === i + 1) {
-                            continue;
-                        }
-
-                        if (buffered[discard] >= 1) {
-                            copy = buffered.slice(0);
-                            copy[i + 0] -= 1;
-                            copy[i + 1] -= 1;
-                            copy[discard]--;
-                            csingles = removeSingles(copy, i - 2, i + 3);
-                            csingles += removeSingles(copy, discard - 2, discard + 2);
-                            queue.push([depth + 1, copy, singles + csingles, pairs]);
-                        }
-                    }
-                }
-            }
-
-            if ((buffered[i + 0] >= 1) && (buffered[i + 2] >= 1)) {
-                if (singles > 0) {
-                    copy = buffered.slice(0);
-                    copy[i + 0] -= 1;
-                    copy[i + 2] -= 1;
-                    csingles = removeSingles(copy, i - 2, i + 4);
-                    queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
-                } else {
-                    for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
-                        if (discard === i + 0) {
-                            continue;
-                        }
-                        if (discard === i + 2) {
-                            continue;
-                        }
-
-                        if (buffered[discard] >= 1) {
-                            copy = buffered.slice(0);
-                            copy[i + 0] -= 1;
-                            copy[i + 2] -= 1;
-                            copy[discard]--;
-                            csingles = removeSingles(copy, i - 2, i + 4);
-                            csingles += removeSingles(copy, discard - 2, discard + 2);
-                            queue.push([depth + 1, copy, singles + csingles, pairs]);
-                        }
-                    }
-                }
-            }
-        }
-        /*
+            /*
              * direct pairs
              */
-        if (pairs > 0) {
-            if (singles > 0) { // >1?
-                queue.push([depth + 1, buffered, singles - 1, pairs - 1]);
-                return false;
-            } else {
-                var found = false;
-                for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
-                    if (buffered[discard] >= 1) {
-                        copy = buffered.slice(0);
-                        copy[discard]--;
-                        csingles = removeSingles(copy, discard - 2, discard + 2);
-                        queue.push([depth + 1, copy, singles + csingles, pairs - 1]);
-                        found = true;
+            if (pairs > 0) {
+                if (singles > 0) { // >1?
+                    queue.push([depth + 1, buffered, singles - 1, pairs - 1]);
+                    return false;
+                } else {
+                    var found = false;
+                    for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
+                        if (buffered[discard] >= 1) {
+                            copy = buffered.slice(0);
+                            copy[discard]--;
+                            csingles = removeSingles(copy, discard - 2, discard + 2);
+                            queue.push([depth + 1, copy, singles + csingles, pairs - 1]);
+                            found = true;
+                        }
+                    }
+                    if (found) {
+                        return false;
                     }
                 }
-                if (found) {
+                if (pairs === 0) {
+                    singles += 2 * pairs;
+                } else {
+                    queue.push([depth, buffered, singles + 2, pairs - 1]);
                     return false;
                 }
+                // return false;
             }
-            if (pairs === 0) {
-                singles += 2 * pairs;
-            } else {
-                queue.push([depth, buffered, singles + 2, pairs - 1]);
-                return false;
-            }
-            // return false;
-        }
-        var singles_left = sum(buffered) + singles;
-        depth += parseInt((singles_left - 1) * 2 / 3, 10);
+            var singles_left = sum(buffered) + singles;
+            depth += parseInt((singles_left - 1) * 2 / 3, 10);
 
-        if (depth < shanten) {
-            shanten = depth;
+            if (depth < shanten) {
+                shanten = depth;
+            }
+        };
+        queue.push([depth, buffered, singles, pairs]);
+        while (queue.length > 0) {
+            var cur_item = queue[0];
+            process(cur_item[0], cur_item[1], cur_item[2], cur_item[3]);
+            queue.shift();
         }
-    };
-    queue.push([depth, buffered, singles, pairs]);
-    while (queue.length > 0) {
-        var cur_item = queue[0];
-        process(cur_item[0], cur_item[1], cur_item[2], cur_item[3]);
-        queue.shift();
-    }
-    return shanten;
-},
+        return shanten;
+    },
     translateToBufferedNoHonors = function (hist) {
         hist = hist.slice(0, vals.honor_beg);
         hist.splice(vals.honor_beg, 0, 0, 0);
@@ -508,25 +508,25 @@ shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
         hist.splice(vals.pin_beg, 0, 0, 0);
         return hist;
     },
-shantenGeneralized = function (hist) {
-    var shanten = sum(hist) * 2 / 3,
-        buffered = translateToBufferedNoHonors(hist),
-        honors_result = calcHonors(hist.slice(0)),
-        pairs = honors_result[0],
-        singles = honors_result[1];
-    singles += removeSingles(buffered, vals.buf_beg, vals.buf_end_no_honors);
-    return shantenSimulation(0, shanten, buffered, singles, pairs);
-},
-toHandString = function(hist) {
-    var i,
-        tiles = [];
-    for (i=0; i<hist.length; i++) {
-        for (var j=0; j<hist[i]; j++) {
-            tiles.push(toString(i));
+    shantenGeneralized = function (hist) {
+        var shanten = sum(hist) * 2 / 3,
+            buffered = translateToBufferedNoHonors(hist),
+            honors_result = calcHonors(hist.slice(0)),
+            pairs = honors_result[0],
+            singles = honors_result[1];
+        singles += removeSingles(buffered, vals.buf_beg, vals.buf_end_no_honors);
+        return shantenSimulation(0, shanten, buffered, singles, pairs);
+    },
+    toHandString = function(hist) {
+        var i,
+            tiles = [];
+        for (i=0; i<hist.length; i++) {
+            for (var j=0; j<hist[i]; j++) {
+                tiles.push(toString(i));
+            }
         }
-    }
-    return tiles.join(', ');
-},
+        return tiles.join(', ');
+    },
     toTileSetString = function (tiles) {
         var conv = [],
             buffer = '',
@@ -553,77 +553,77 @@ toHandString = function(hist) {
             return buffer;
         }
     },
-main = function (hist) {
-    var return_str = '',
-        i,
-        discard = [],
-        best = 10;
-    if (sum(hist) !== 14) {
-        return {msg: "must submit 14 tiles (there were " + sum(hist) + ")",
-                discard: []};
-        // throw new Error("not enough tiles");
-    }
-    if (checkRegularMahjong(hist)) {
-        return_str += ("Tsumo! You've got a mahjong");
-        // var buffer = [],
+    main = function (hist) {
+        var return_str = '',
+            i,
+            discard = [],
+            best = 10;
+        if (sum(hist) !== 14) {
+            return {msg: "must submit 14 tiles (there were " + sum(hist) + ")",
+                    discard: []};
+            // throw new Error("not enough tiles");
+        }
+        if (checkRegularMahjong(hist)) {
+            return_str += ("Tsumo! You've got a mahjong");
+            // var buffer = [],
             // mj = findRegularMahjong(hist);
-        // for (i=0; i<mj.length; i++) {
+            // for (i=0; i<mj.length; i++) {
             // buffer.push(toTileSetString(mj[i]));
-        // }
-        // return_str += buffer.join(', ');
-    } else {
-        for (i=vals.id_min; i<= vals.id_max; i++) {
-            if (hist[i] > 0) {
-                var new_hist = hist.slice(0);
-                new_hist[i]--;
-                var shanten = shantenGeneralized(new_hist);
-                if (shanten < best) {
-                    best = shanten;
-                    discard = [i];
-                } else if (shanten === best) {
-                    discard.push(i);
+            // }
+            // return_str += buffer.join(', ');
+        } else {
+            for (i=vals.id_min; i<= vals.id_max; i++) {
+                if (hist[i] > 0) {
+                    var new_hist = hist.slice(0);
+                    new_hist[i]--;
+                    var shanten = shantenGeneralized(new_hist);
+                    if (shanten < best) {
+                        best = shanten;
+                        discard = [i];
+                    } else if (shanten === best) {
+                        discard.push(i);
+                    }
                 }
             }
+            // return_str += "throwing " + _.map(discard, toString).join(',') + " produces shanten of " + best;
         }
-        // return_str += "throwing " + _.map(discard, toString).join(',') + " produces shanten of " + best;
-    }
-    return {msg: return_str,
-            discard: discard,
-            shanten: best};
-},
+        return {msg: return_str,
+                discard: discard,
+                shanten: best};
+    },
     addStreetScore = function (score, hist, beg, end)
-        {
-            var i;
-            for (i = beg; i <= end - 1; i++) {
-                score[i] += hist[i + 1] * 100;
-            }
+{
+    var i;
+    for (i = beg; i <= end - 1; i++) {
+        score[i] += hist[i + 1] * 100;
+    }
 
-            for (i = beg; i <= end - 2; i++) {
-                score[i] += hist[i + 2] * 10;
-            }
+    for (i = beg; i <= end - 2; i++) {
+        score[i] += hist[i + 2] * 10;
+    }
 
-            for (i = beg; i <= end - 3; i++) {
-                score[i] += hist[i + 3] * 5;
-            }
+    for (i = beg; i <= end - 3; i++) {
+        score[i] += hist[i + 3] * 5;
+    }
 
-            for (i = beg + 1; i <= end; i++) {
-                score[i] += hist[i - 1] * 100;
-            }
+    for (i = beg + 1; i <= end; i++) {
+        score[i] += hist[i - 1] * 100;
+    }
 
-            for (i = beg + 2; i <= end; i++) {
-                score[i] += hist[i - 2] * 10;
-            }
+    for (i = beg + 2; i <= end; i++) {
+        score[i] += hist[i - 2] * 10;
+    }
 
-            for (i = beg + 3; i <= end; i++) {
-                score[i] += hist[i - 3] * 5;
-            }
+    for (i = beg + 3; i <= end; i++) {
+        score[i] += hist[i - 3] * 5;
+    }
 
-            return score;
-        },
+    return score;
+},
 findBestDiscard = function (hist, worst_tiles) {
-            /*
-             * score by combination with other tiles
-             */
+    /*
+     * score by combination with other tiles
+     */
     var score = [
         0,1,2,3,4,3,2,1,0, // central tiles are more valuable
         0,1,2,3,4,3,2,1,0,
@@ -644,23 +644,23 @@ findBestDiscard = function (hist, worst_tiles) {
         }
     }
 
-            /*
-             * select worst tile
-             */
-            var bestI = 0;
-            var bestV = 1000000;
-            for (i = vals.id_min; i <= vals.id_max; i++) {
-                if (hist[i] > 0) {
-                    var v = score[i];
-                    if (v < bestV) {
-                        bestV = v;
-                        bestI = i;
-                    }
-                }
+    /*
+     * select worst tile
+     */
+    var bestI = 0;
+    var bestV = 1000000;
+    for (i = vals.id_min; i <= vals.id_max; i++) {
+        if (hist[i] > 0) {
+            var v = score[i];
+            if (v < bestV) {
+                bestV = v;
+                bestI = i;
             }
-            return {discard: bestI,
-                    score: score};
-        },
+        }
+    }
+    return {discard: bestI,
+            score: score};
+},
 generateWall = function() {
     var wall = [];
     for (var plr = 0; plr < 4; plr++) {
@@ -714,7 +714,7 @@ findBestDiscardWait = function (hist) {
     for (i=vals.id_min; i<=vals.id_max; i++) {
         if (hist[i] > 0) {
             var hand = hist.slice(0);
-                hand[i] -= 1;
+            hand[i] -= 1;
             var num_waits = getWaits(hand);
             if (num_waits.length === 0) {
                 continue;
