@@ -1,0 +1,19 @@
+{
+  "name": "mahjong",
+  "subdomain": "ami",
+  "scripts": {
+    "start": "app.js"
+  },
+  "version": "0.0.0-1",
+  "dependencies": {
+    "underscore": "*",
+    "express": "*",
+    "connect": "*",
+    "qs": "*",
+    "formidable": "*",
+    "mime": "*",
+    "hbs": "*",
+    "handlebars": "*",
+    "mocha": "~1.13.0"
+  }
+}

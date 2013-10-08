@@ -1,4 +1,4 @@
-/*global console, require, module */
+/*global console, require, module, global */
 
 // var util = require('util');
 var _ = require('underscore');
@@ -42,6 +42,9 @@ var honors = [
     },
 
     getColor = function (tile) {
+        if (tile < 0) {
+            return null;
+        }
         tile = tile - (tile % 9);
         tile /= 9;
         return colors[tile];
@@ -56,7 +59,6 @@ var honors = [
         return tile >= vals.honor_beg;
     },
     toString = function (tile) {
-
         if (isHonor(tile)) {
             return getHonor(tile);
         } else {
@@ -752,5 +754,6 @@ module.exports = {
     generateHand: generateHand,
     getWaits: getWaits,
     findBestDiscardWait: findBestDiscardWait,
-    isHonor: isHonor
+    isHonor: isHonor,
+    testing: {getColor: getColor}
 };

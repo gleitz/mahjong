@@ -1,0 +1,44 @@
+<html>
+    <head>
+        <title>Cock-eyed Mahjong</title>
+        <link rel="stylesheet" href="/css/style.css">
+	    <meta name="apple-mobile-web-app-capable" content="yes" />
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+        <script src="/js/jquery.min.js"></script>
+        <script src="/js/handlebars.js"></script>
+        <script src="/js/client.js"></script>
+        <script id="firstTemplate" type="text/x-handlebars-template">
+            <h1>Hand Contains</h1>
+            <div id="hand-tiles" class="clr padded">{{{render_tiles partial_hand}}}</div>
+            <div class="hide small dim">
+                {{{render_score hand recommended.score}}}
+            </div>
+            {{#if msg}}
+            <h1>{{{msg}}}</h1>
+            <a href="/game">play again!</a>
+            {{else}}
+            <h3>AMI suggests (shanten: {{shanten}})</h3>
+            <div class="left">
+                <div class="clr padded">
+                    {{{render_tile recommended.discard_tile}}}
+                </div>
+            </div>
+            <div class="left clr">
+                <div class="clr padded" style="clear: both;">
+                    {{#each discards}}
+                    {{{render_tile this}}}
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
+            <div id="hand" data-hand="{{hand}}"></div>
+            <div id="wall" data-wall="{{wall}}"></div>
+            <div id="thrown" data-thrown="{{thrown}}"></div>
+        </script>
+        <script>INIT.initialize();</script>
+    </head>
+    <body class="mobile">
+        <h1>Okaerinasai</h1>
+        <div>Shuffling...</div>
+    </body>
+</html>

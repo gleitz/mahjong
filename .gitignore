@@ -2,4 +2,7 @@
 .DS_Store
 .gaedata/
 *#*
-.ropeproject/
+.ropeproject
+node_modules
+deploy
+.tern-port
