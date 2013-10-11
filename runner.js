@@ -1,6 +1,23 @@
-var myrepl = require("repl").start({useGlobal:true});
+// Reloading modules from the repl in Node.js
+// Benjamin Gleitzman (gleitz@mit.edu)
+//
+// Inspired by Ben Barkay
+// http://stackoverflow.com/a/14801711/305414
+//
+// Usage: `node reload.js`
+// You can load the module as usual
+// var mymodule = require('./mymodule')
+// And the reload it when needed
+// mymodule = require.reload('./mymodule')
+//
+// I suggest using an alias in your .bashrc/.profile:
+// alias node_reload='node /path/to/reload.js'
+
+
+var myrepl = require("repl").start({});
+
 /**
- * Removes a module from the cache
+ * Removes a module from the cache.
  */
 myrepl.context.require.uncache = function (moduleName) {
     // Run over the cache looking for the files
@@ -11,8 +28,7 @@ myrepl.context.require.uncache = function (moduleName) {
 };
 
 /**
- * Runs over the cache to search for all the cached
- * files
+ * Runs over the cache to search for all the cached files.
  */
 myrepl.context.require.searchCache = function (moduleName, callback) {
     // Resolve the module identified by the specified name
@@ -36,7 +52,10 @@ myrepl.context.require.searchCache = function (moduleName, callback) {
     }
 };
 
+/*
+ * Load a module, clearing it from the cache if necessary.
+ */
 myrepl.context.require.reload = function(moduleName) {
     myrepl.context.require.uncache(moduleName);
     return myrepl.context.require(moduleName);
-}
+};

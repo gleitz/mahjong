@@ -3,7 +3,7 @@
 // var util = require('util');
 var _ = require('underscore');
 
-var honors = [
+var HONORS = [
     'E',
     'S',
     'W',
@@ -13,7 +13,7 @@ var honors = [
     'R',
     '1',
     '9'
-],
+    ],
     colors = [
         'Pin',
         'Sou',
@@ -42,7 +42,7 @@ var honors = [
     },
     arrayOf = function(n, times) {
         return Array.apply(null, new Array(times)).map(Number.prototype.valueOf,n);
-    };
+    },
     getColor = function (tile) {
         if (tile < 0) {
             return null;
@@ -55,7 +55,7 @@ var honors = [
         return tile % 9;
     },
     getHonor =  function (tile) {
-        return honors[getValue(tile)];
+        return HONORS[getValue(tile)];
     },
     isHonor = function (tile) {
         return tile >= vals.honor_beg;
@@ -544,28 +544,32 @@ var honors = [
                 }
             }
         }
-        if (pins) {
+        if (pins.length) {
             handStr = handStr + pins.join('') + 'p ';
         }
-        if (sous) {
+        if (sous.length) {
             handStr = handStr + sous.join('') + 's ';
         }
-        if (honors) {
+        if (honors.length) {
             handStr = handStr + _.map(honors, function(h) { return getHonor(h) }).join('');
         }
         return handStr;
     },
     toTileString = function(hand) {
-        var matches = /(\d+p)?\s?(\d+s)?\s?([ESWNBGR19]+)?/g.exec(hand),
+        var matches = /(\d+[ps])?\s?(\d+[ps])?\s?([ESWNBGR19]+)?/g.exec(hand),
             tiles = arrayOf(0, 27);
         if (!matches || matches.length != 4) {
             return '';
         }
-        var pins = matches[1] || [],
-            sous = matches[2] || [],
-            honors = matches[3] || [],
+        var pins = matches[1] || '',
+            sous = matches[2] || '',
+            honors = matches[3] || '',
             i, tile;
-        console.log(pins, sous, honors);
+        if (pins.indexOf('s') != -1 || sous.indexOf('p') != -1) {
+            var tmp = pins;
+            pins = sous;
+            sous = tmp;
+        }
         for (i=0; i<pins.length-1; i++) {
             tile = parseInt(pins[i], 10);
             tiles[tile-1] += 1;
@@ -575,7 +579,7 @@ var honors = [
             tiles[tile+9-1] += 1;
         }
         for (i=0; i<honors.length; i++) {
-            tile = honors.indexOf(honors[i]);
+            tile = HONORS.indexOf(honors[i]);
             tiles[tile+18] += 1;
         }
         return tiles;
@@ -785,7 +789,7 @@ findBestDiscardWait = function (hist) {
 };
 
 module.exports = {
-    honors: honors,
+    honors: HONORS,
     colors: colors,
     vals: vals,
     getColor: getColor,
@@ -809,3 +813,28 @@ module.exports = {
     isHonor: isHonor,
     testing: {getColor: getColor}
 };
+
+// attach the .compare method to Array's prototype to call it on any array
+Array.prototype.equals = function (array) {
+    // if the other array is a falsy value, return
+    if (!array)
+        return false;
+
+    // compare lengths - can save a lot of time
+    if (this.length != array.length)
+        return false;
+
+    for (var i = 0; i < this.length; i++) {
+        // Check if we have nested arrays
+        if (this[i] instanceof Array && array[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!this[i].compare(array[i]))
+                return false;
+        }
+        else if (this[i] != array[i]) {
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;
+        }
+    }
+    return true;
+}
