@@ -289,9 +289,12 @@ var HONORS = [
         return [pairs, singles];
     },
     removeSingles = function (buffered, beg, end) {
-        var count = 0;
+        // check if there are any isolated
+        // single tiles from beg to end
+        var count = 0,
+            i;
 
-        for (var i = beg; i <= end; i++) {
+        for (i = beg; i <= end; i++) {
             if (buffered[i] !== 1) {
                 continue;
             }
@@ -319,31 +322,45 @@ var HONORS = [
         return count;
     },
     shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
-        var mjs = [],
-            queue = [],
-            valid = false,
+        var queue = [],
             seen = {};
+        console.log("DEPTH IS " + depth);
         var process = function(depth, buffered, singles, pairs) {
-            var key = buffered.slice(0);
-            key.push(singles);
-            key.push(pairs);
-            key.push(depth);
-            key = key.join('.');
-            if (seen[key]) {
-                return false;
-            }
-            seen[key] = 1;
             var copy,
                 csingles,
                 i,
                 discard;
+            console.log("starting process");
+            console.log(toHandString(translateFromBufferedNoHonors(buffered)));
+            console.log("singles are originally " + singles);
+            console.log("pairs are originally " + pairs);
+
+            // Check the cache to ensure that we haven't already
+            // calculated this branch
+            var key = buffered.slice(0);
+            key.push("singles" + singles);
+            key.push("pairs" + pairs);
+            key.push("depth" + depth);
+            key = key.join('.');
+            console.log(key);
+            if (seen[key]) {
+                console.log("already seen this");
+                return false;
+            }
+            seen[key] = 1;
+
+            // Ignore branches with greater shanten numbers
             if (depth >= shanten) {
                 return false;
             }
+
+            // 3-sets
             for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
                 if (buffered[i] >= 3) {
+                    // Remove 3-set
                     copy = buffered.slice(0);
                     copy[i] -= 3;
+                    // Remove any orphaned single tiles
                     csingles = removeSingles(copy, i - 2, i + 2);
                     queue.push([depth + 0, copy, singles + csingles, pairs]);
 
@@ -352,6 +369,8 @@ var HONORS = [
                         (copy[i + 0] === 0) &&
                         (copy[i + 1] === 0) &&
                         (copy[i + 2] === 0)) {
+                        // If there are no neighbor tiles after removing the
+                        // 3-set, stop analyzing this branch
                         return false;
                     }
                 }
@@ -374,6 +393,7 @@ var HONORS = [
                         (copy[i + 2] === 0) &&
                         (copy[i + 3] === 0) &&
                         (copy[i + 4] === 0)) {
+                        console.log("return 2");
                         return false;
                     }
                 }
@@ -385,27 +405,26 @@ var HONORS = [
              */
             for (i = vals.buf_beg; i <= vals.buf_end_no_honors; i++) {
                 if (buffered[i] >= 2) {
-                    if (singles > 0) {
-                        copy = buffered.slice(0);
-                        copy[i] -= 2;
-                        csingles = removeSingles(copy, i - 2, i + 2);
-                        queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
-                    } else {
-                        for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
-                            if (discard === i) {
-                                continue;
-                            }
+                    copy = buffered.slice(0);
+                    copy[i] -= 2;
+                    csingles = removeSingles(copy, i - 2, i + 2);
+                    queue.push([depth + 1, copy, singles + csingles - 1, pairs]);
+                    // } else {
+                    //     for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
+                    //         if (discard === i) {
+                    //             continue;
+                    //         }
 
-                            if (buffered[discard] >= 1) {
-                                copy = buffered.slice(0);
-                                copy[i] -= 2;
-                                copy[discard]--;
-                                csingles = removeSingles(copy, i - 2, i + 2);
-                                csingles += removeSingles (copy, discard - 2, discard + 2);
-                                queue.push([depth + 1, copy, singles + csingles, pairs]);
-                            }
-                        }
-                    }
+                    //         if (buffered[discard] >= 1) {
+                    //             copy = buffered.slice(0);
+                    //             copy[i] -= 2;
+                    //             copy[discard]--;
+                    //             csingles = removeSingles(copy, i - 2, i + 2);
+                    //             csingles += removeSingles (copy, discard - 2, discard + 2);
+                    //             queue.push([depth + 1, copy, singles + csingles, pairs]);
+                    //         }
+                    //     }
+                    // }
                 }
 
                 if ((buffered[i + 0] >= 1) && (buffered[i + 1] >= 1)) {
@@ -469,37 +488,64 @@ var HONORS = [
             /*
              * direct pairs
              */
-            if (pairs > 0) {
-                if (singles > 0) { // >1?
-                    queue.push([depth + 1, buffered, singles - 1, pairs - 1]);
-                    return false;
-                } else {
-                    var found = false;
-                    for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
-                        if (buffered[discard] >= 1) {
-                            copy = buffered.slice(0);
-                            copy[discard]--;
-                            csingles = removeSingles(copy, discard - 2, discard + 2);
-                            queue.push([depth + 1, copy, singles + csingles, pairs - 1]);
-                            found = true;
-                        }
-                    }
-                    if (found) {
-                        return false;
-                    }
-                }
-                if (pairs === 0) {
-                    singles += 2 * pairs;
-                } else {
-                    queue.push([depth, buffered, singles + 2, pairs - 1]);
-                    return false;
-                }
-                // return false;
-            }
+            // if (pairs > 0) {
+            //     if (singles > 0) { // >1?
+            //         queue.push([depth + 1, buffered, singles - 1, pairs - 1]);
+            //         console.log("pushed " + [depth + 1, buffered, singles - 1, pairs - 1]);
+            //         return false;
+            //     } else {
+            //         var found = false;
+            //         console.log("pairs, but no singles");
+            //         for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
+            //             if (buffered[discard] >= 1) {
+            //                 copy = buffered.slice(0);
+            //                 copy[discard]--;
+            //                 csingles = removeSingles(copy, discard - 2, discard + 2);
+            //                 queue.push([depth + 1, copy, singles + csingles, pairs - 1]);
+            //                 found = true;
+            //             }
+            //         }
+            //         if (found) {
+            //             console.log("FOUND!");
+            //             return false;
+            //         }
+            //     }
+            //     if (pairs === 0) {
+            //         singles += 2 * pairs;
+            //     } else {
+            //         queue.push([depth, buffered, singles + 2, pairs - 1]);
+            //         return false;
+            //     }
+            //     // return false;
+            // }
             var singles_left = sum(buffered) + singles;
+            console.log("singles left are " + singles_left);
+            console.log("pairs left are " + pairs);
+            while (pairs > 0 && singles_left > 0) {
+                pairs--;
+                singles_left--;
+                depth++;
+            }
+
+            while (pairs > 3) {
+                pairs -=3;
+                depth += 2;
+            }
+
+            if (pairs > 0) {
+                if (pairs != 2) {
+                    throw "Invalid number of pairs"
+                }
+                depth += 0;
+            }
+
             depth += parseInt((singles_left - 1) * 2 / 3, 10);
 
+            console.log("value is " + parseInt((singles_left - 1) * 2 / 3, 10));
+            console.log("depth is " + depth);
+
             if (depth < shanten) {
+                // Update the global shanten number
                 shanten = depth;
             }
         };
@@ -518,13 +564,25 @@ var HONORS = [
         hist.splice(vals.pin_beg, 0, 0, 0);
         return hist;
     },
+    translateFromBufferedNoHonors = function (buffered) {
+        var hist = buffered.slice(0);
+        hist.splice(0, 2);
+        hist.splice(9, 2);
+        hist.splice(18, 2);
+        return hist;
+    },
     shantenGeneralized = function (hist) {
         var shanten = sum(hist) * 2 / 3,
             buffered = translateToBufferedNoHonors(hist),
             honors_result = calcHonors(hist.slice(0)),
             pairs = honors_result[0],
             singles = honors_result[1];
+        console.log("buffered " + buffered);
+        console.log("honors_result " + honors_result);
+        console.log("pairs " + pairs);
+        console.log("singles " + singles);
         singles += removeSingles(buffered, vals.buf_beg, vals.buf_end_no_honors);
+        console.log("singled removed " + singles);
         return shantenSimulation(0, shanten, buffered, singles, pairs);
     },
     toHandString = function(hist) {

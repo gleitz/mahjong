@@ -2,7 +2,6 @@
 // Benjamin Gleitzman (gleitz@mit.edu)
 //
 // Inspired by Ben Barkay
-// http://stackoverflow.com/a/14801711/305414
 //
 // Usage: `node reload.js`
 // You can load the module as usual
