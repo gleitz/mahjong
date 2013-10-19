@@ -371,7 +371,6 @@ var HONORS = [
                         (copy[i + 2] === 0)) {
                         // If there are no neighbor tiles after removing the
                         // 3-set, stop analyzing this branch
-                        return false;
                     }
                 }
 
@@ -427,6 +426,13 @@ var HONORS = [
                     // }
                 }
 
+                if (buffered[i] >= 2) {
+                    copy = buffered.slice(0);
+                    copy[i] -= 2;
+                    csingles = removeSingles(copy, i - 2, i + 2);
+                    queue.push([depth, copy, singles + csingles, pairs + 1]);
+                }
+
                 if ((buffered[i + 0] >= 1) && (buffered[i + 1] >= 1)) {
                     if (singles > 0) {
                         copy = buffered.slice(0);
@@ -444,6 +450,16 @@ var HONORS = [
                             }
 
                             if (buffered[discard] >= 1) {
+                                // if (discard == (i - 1) || discard == (i + 2)) {
+                                //     console.log("SDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSD");
+                                //     copy = buffered.slice(0);
+                                //     copy[i + 0] -= 1;
+                                //     copy[i + 1] -= 1;
+                                //     copy[discard]--;
+                                //     csingles = removeSingles(copy, i - 2, i + 3);
+                                //     csingles += removeSingles(copy, discard - 2, discard + 2);
+                                //     queue.push([depth, copy, singles + csingles, pairs]);
+                                // }
                                 copy = buffered.slice(0);
                                 copy[i + 0] -= 1;
                                 copy[i + 1] -= 1;
@@ -521,6 +537,18 @@ var HONORS = [
             var singles_left = sum(buffered) + singles;
             console.log("singles left are " + singles_left);
             console.log("pairs left are " + pairs);
+            if (pairs == 1 && singles_left == 2) {
+                console.log("checking it");
+                var pos;
+                for (pos = vals.buf_beg; pos <= vals.buf_end_no_honors; pos++) {
+                    if ((buffered[pos] == 1 && buffered[pos+1] == 1) ||
+                        (buffered[pos] == 1 && buffered[pos+2] == 1)) {
+                        pairs--;
+                        singles = singles - 2;
+                        break;
+                    }
+                }
+            }
             while (pairs > 0 && singles_left > 0) {
                 pairs--;
                 singles_left--;

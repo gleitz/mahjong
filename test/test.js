@@ -73,15 +73,17 @@ describe('shanten functions', function(){
                 ['EEESSSWWWGGRR', 0],
                 ['1s EEESSSBBGGRR', 1],
                 ['1289s 111555999p', 1],
-                // ['12333s 89p EEESSS', 0],
+                ['12333s 89p EEESSS', 0],
                 ['67p 2334446s ESWN', 3],
-                // ['1124455567799s', 2],
+                ['1124455567799s', 2],
                 ['1122236677888s', 1],
-                // ['1133445667788s', 0]
+                ['1133445667788s', 0]
             ];
-            hands = [
-                ['12333s 89p EEESSS', 0]
-            ];
+            // hands = [
+                // ['12333s 89p EEESSS', 0],
+                // ['12333s 89p EEESSS', 0]
+                // ['11333s NNEEESSS', 0]
+            // ];
             _.each(hands, function(elem) {
                 console.log("NEXT!");
                 var hand_string = elem[0],
