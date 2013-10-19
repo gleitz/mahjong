@@ -1,4 +1,15 @@
+/*
+ * Utilities for managing a game of mahjong.
+ * Note that this specific variant, often played
+ * in Japan is called Three-Player mahjong or
+ * "Cock-Eyed" mahjong.
+ */
+
 var _ = require('underscore');
+
+function debug() {
+    false && console.log && console.log.apply(console, arguments);
+}
 
 var honors = [
     'E',
@@ -18,6 +29,8 @@ var honors = [
     ],
     vals = {
         // id = value + (9 * color);
+        // (buffered values have two extra spaces
+        // on either side of the pins and sous
         // name     id      buffered
         // pin      00-08   02-10
         // sou      09-17   13-21
@@ -38,9 +51,11 @@ var honors = [
         buf_end: 32
     },
     arrayOf = function(n, times) {
+        // return an array of the value of 'n' repeated 'times' number of time
         return Array.apply(null, new Array(times)).map(Number.prototype.valueOf,n);
     },
     getColor = function (tile) {
+        // return color at specific position
         if (tile < 0) {
             return null;
         }
@@ -49,9 +64,11 @@ var honors = [
         return colors[tile];
     },
     getValue =  function (tile) {
+        // return value at specific position
         return tile % 9;
     },
     getHonor =  function (tile) {
+        // return honor at specific position
         return honors[getValue(tile)];
     },
     isHonor = function (tile) {
@@ -71,6 +88,9 @@ var honors = [
         }
     },
     translateToBufferedNoHonors = function (hist) {
+        // Convert a histogram of tiles into the buffered
+        // representation which places extra space on the end
+        // of the pins and sous
         hist = hist.slice(0, vals.honor_beg);
         hist.splice(vals.honor_beg, 0, 0, 0);
         hist.splice(vals.sou_beg, 0, 0, 0);
@@ -85,6 +105,10 @@ var honors = [
         return hist;
     },
     toHandString = function(hist) {
+        // Convert from a histogram
+        // [3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,2,0]
+        // into a string representation of the hand
+        // '111222333p NNN11'
         var i,
             pins = [],
             sous = [],
@@ -113,6 +137,9 @@ var honors = [
         return handStr;
     },
     toTileString = function(hand) {
+        // Convert a hand string, '111222333p NNN11'
+        // into a histogram of the hand
+        // [3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,2,0]
         var matches = /(\d+[ps])?\s?(\d+[ps])?\s?([ESWNBGR19]+)?/g.exec(hand),
             tiles = arrayOf(0, 27);
         if (!matches || matches.length != 4) {
@@ -141,33 +168,8 @@ var honors = [
         }
         return tiles;
     },
-    toTileSetString = function (tiles) {
-        var conv = [],
-            buffer = '',
-            i;
-        for (i=0; i<tiles.length; i++) {
-            var tile = tiles[i],
-                data = {color: getColor(tile),
-                        honor: getHonor(tile),
-                        value: getValue(tile) + 1,
-                        number: i};
-            conv.push(data);
-        }
-        var first = conv[0];
-        if (first.color !== 'Honor') {
-            for (i=0; i<conv.length; i++) {
-                buffer += conv[i].value;
-            }
-            buffer += first.color.substring(0,1);
-            return buffer;
-        } else {
-            for (i=0; i<conv.length; i++) {
-                buffer += conv[i].honor.substring(0,1);
-            }
-            return buffer;
-        }
-    },
     sum = function (arr){
+        // Sum the number of tiles in a hand
         for(var s = 0, i = arr.length; i; s += arr[--i]);
         return s;
     };
@@ -186,10 +188,10 @@ module.exports = {
     arrayOf: arrayOf,
     translateFromBufferedNoHonors: translateFromBufferedNoHonors,
     translateToBufferedNoHonors: translateToBufferedNoHonors,
-    toTileSetString: toTileSetString,
     toTileString: toTileString,
     toHandString: toHandString,
-    sum: sum
+    sum: sum,
+    debug: debug
 };
 
 

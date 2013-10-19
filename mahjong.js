@@ -3,16 +3,10 @@
 var shanten = require('./shanten');
 var m_util = require('./mahjong_util');
 
-function debug() {
-    false && console.log && console.log.apply(console, arguments);
-}
-
 var vals = m_util.vals;
 
 var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
-    /*
-     * for honors, check triplets only
-     */
+    // for honors, check triplets only
     for (var i = beg; i <= end; i++) {
         if ((hist[i] % 3) !== 0) {
             return false;
@@ -144,7 +138,7 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
             queue.shift();
         }
         return [mjs, valid];
-    },  // WRITE TESTS
+    },
     findHonors = function (hist) {
         hist = hist.slice(0);
         var sets = [];
@@ -208,12 +202,6 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
         }
         if (checkRegularMahjong(hist)) {
             return_str += ("Tsumo! You've got a mahjong");
-            // var buffer = [],
-            // mj = findRegularMahjong(hist);
-            // for (i=0; i<mj.length; i++) {
-            // buffer.push(toTileSetString(mj[i]));
-            // }
-            // return_str += buffer.join(', ');
         } else {
             for (i=vals.id_min; i<= vals.id_max; i++) {
                 if (hist[i] > 0) {
@@ -233,145 +221,144 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
                 discard: discard,
                 shanten: best};
     },
-    addStreetScore = function (score, hist, beg, end)
-{
-    var i;
-    for (i = beg; i <= end - 1; i++) {
-        score[i] += hist[i + 1] * 100;
-    }
-
-    for (i = beg; i <= end - 2; i++) {
-        score[i] += hist[i + 2] * 10;
-    }
-
-    for (i = beg; i <= end - 3; i++) {
-        score[i] += hist[i + 3] * 5;
-    }
-
-    for (i = beg + 1; i <= end; i++) {
-        score[i] += hist[i - 1] * 100;
-    }
-
-    for (i = beg + 2; i <= end; i++) {
-        score[i] += hist[i - 2] * 10;
-    }
-
-    for (i = beg + 3; i <= end; i++) {
-        score[i] += hist[i - 3] * 5;
-    }
-
-    return score;
-},
-findBestDiscard = function (hist, worst_tiles) {
-    /*
-     * score by combination with other tiles
-     */
-    var score = [
-        0,1,2,3,4,3,2,1,0, // central tiles are more valuable
-        0,1,2,3,4,3,2,1,0,
-        5,-1,-1,5, // winds are more valuable
-        5,5,5, // honors
-            -1, -1],
-        i;
-    for (i = vals.id_min; i <= vals.id_max; i++) {
-        var add = 1000 * (hist[i] - 1);
-        score[i] += add;
-    }
-
-    score = addStreetScore (score, hist, vals.pin_beg, vals.pin_end);
-    score = addStreetScore (score, hist, vals.sou_beg, vals.sou_end);
-    if (worst_tiles) {
-        for (i=0; i<worst_tiles.length; i++) {
-            score[worst_tiles[i]] -= 1000;
+    addStreetScore = function (score, hist, beg, end) {
+        var i;
+        for (i = beg; i <= end - 1; i++) {
+            score[i] += hist[i + 1] * 100;
         }
-    }
 
-    /*
-     * select worst tile
-     */
-    var bestI = 0;
-    var bestV = 1000000;
-    for (i = vals.id_min; i <= vals.id_max; i++) {
-        if (hist[i] > 0) {
-            var v = score[i];
-            if (v < bestV) {
-                bestV = v;
-                bestI = i;
+        for (i = beg; i <= end - 2; i++) {
+            score[i] += hist[i + 2] * 10;
+        }
+
+        for (i = beg; i <= end - 3; i++) {
+            score[i] += hist[i + 3] * 5;
+        }
+
+        for (i = beg + 1; i <= end; i++) {
+            score[i] += hist[i - 1] * 100;
+        }
+
+        for (i = beg + 2; i <= end; i++) {
+            score[i] += hist[i - 2] * 10;
+        }
+
+        for (i = beg + 3; i <= end; i++) {
+            score[i] += hist[i - 3] * 5;
+        }
+
+        return score;
+    },
+    findBestDiscard = function (hist, worst_tiles) {
+        /*
+         * score by combination with other tiles
+         */
+        var score = [
+            0,1,2,3,4,3,2,1,0, // central tiles are more valuable
+            0,1,2,3,4,3,2,1,0,
+            5,-1,-1,5, // winds are more valuable
+            5,5,5, // honors
+                -1, -1],
+            i;
+        for (i = vals.id_min; i <= vals.id_max; i++) {
+            var add = 1000 * (hist[i] - 1);
+            score[i] += add;
+        }
+
+        score = addStreetScore (score, hist, vals.pin_beg, vals.pin_end);
+        score = addStreetScore (score, hist, vals.sou_beg, vals.sou_end);
+        if (worst_tiles) {
+            for (i=0; i<worst_tiles.length; i++) {
+                score[worst_tiles[i]] -= 1000;
             }
         }
-    }
-    return {discard: bestI,
-            score: score};
-},
-generateWall = function() {
-    var wall = [];
-    for (var plr = 0; plr < 4; plr++) {
-        for (var i = vals.id_min; i <= vals.id_max; i++) {
-            wall.push(i);
-        }
-    }
-    wall.sort(function() {return 0.5 - Math.random();});
-    return wall;
-}, generateHand = function() {
-    var hand = [];
-    for (var i = vals.id_min; i<=vals.id_max; i++) {
-        hand.push(0);
-    }
-    return hand.slice(0);
-},
-generateHands = function (num) {
-    var wall = generateWall();
-    var hands = [];
-    for (var plr = 0; plr < num; plr++) {
-        hands[plr] = generateHand();
-        for (var i = 0; i <= 13; i++) { //TODO: switch to < 13 when actually dealing
-            hands[plr][wall.pop()] += 1;
-        }
-    }
-    return {hands: hands,
-            wall: wall};
-},
-getWaits = function (hist) {
-    var count = m_util.sum(hist),
-        i,
-        waits = [];
-    if (count !== 13) {
-        throw new Error("invalid tile count (" + count + ")");
-    }
-    for (i=vals.id_min; i<=vals.id_max; i++) {
-        var hand = hist.slice(0);
-        hand[i] += 1;
-        if (checkRegularMahjong(hand)) {
-            for (var j=0; j<(4 - hist[i]); j++) {
-                waits.push(i);
+
+        /*
+         * select worst tile
+         */
+        var bestI = 0;
+        var bestV = 1000000;
+        for (i = vals.id_min; i <= vals.id_max; i++) {
+            if (hist[i] > 0) {
+                var v = score[i];
+                if (v < bestV) {
+                    bestV = v;
+                    bestI = i;
+                }
             }
         }
-    }
-    return waits;
-},
-findBestDiscardWait = function (hist) {
-    var waits = 0,
-        i,
-        discard = [];
-    for (i=vals.id_min; i<=vals.id_max; i++) {
-        if (hist[i] > 0) {
+        return {discard: bestI,
+                score: score};
+    },
+    generateWall = function() {
+        var wall = [];
+        for (var plr = 0; plr < 4; plr++) {
+            for (var i = vals.id_min; i <= vals.id_max; i++) {
+                wall.push(i);
+            }
+        }
+        wall.sort(function() {return 0.5 - Math.random();});
+        return wall;
+    }, generateHand = function() {
+        var hand = [];
+        for (var i = vals.id_min; i<=vals.id_max; i++) {
+            hand.push(0);
+        }
+        return hand.slice(0);
+    },
+    generateHands = function (num) {
+        var wall = generateWall();
+        var hands = [];
+        for (var plr = 0; plr < num; plr++) {
+            hands[plr] = generateHand();
+            for (var i = 0; i <= 13; i++) { //TODO: switch to < 13 when actually dealing
+                hands[plr][wall.pop()] += 1;
+            }
+        }
+        return {hands: hands,
+                wall: wall};
+    },
+    getWaits = function (hist) {
+        var count = m_util.sum(hist),
+            i,
+            waits = [];
+        if (count !== 13) {
+            throw new Error("invalid tile count (" + count + ")");
+        }
+        for (i=vals.id_min; i<=vals.id_max; i++) {
             var hand = hist.slice(0);
-            hand[i] -= 1;
-            var num_waits = getWaits(hand);
-            if (num_waits.length === 0) {
-                continue;
-            }
-            if (num_waits.length === waits) {
-                discard.push(i);
-            } else if (num_waits.length > waits) {
-                waits = num_waits.length;
-                discard = [];
-                discard.push(i);
+            hand[i] += 1;
+            if (checkRegularMahjong(hand)) {
+                for (var j=0; j<(4 - hist[i]); j++) {
+                    waits.push(i);
+                }
             }
         }
-    }
-    return discard;
-};
+        return waits;
+    },
+    findBestDiscardWait = function (hist) {
+        var waits = 0,
+            i,
+            discard = [];
+        for (i=vals.id_min; i<=vals.id_max; i++) {
+            if (hist[i] > 0) {
+                var hand = hist.slice(0);
+                hand[i] -= 1;
+                var num_waits = getWaits(hand);
+                if (num_waits.length === 0) {
+                    continue;
+                }
+                if (num_waits.length === waits) {
+                    discard.push(i);
+                } else if (num_waits.length > waits) {
+                    waits = num_waits.length;
+                    discard = [];
+                    discard.push(i);
+                }
+            }
+        }
+        return discard;
+    };
 
 module.exports = {
     checkRegularMahjong: checkRegularMahjong,
