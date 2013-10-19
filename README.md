@@ -1,6 +1,6 @@
-# mahjong
+# Cock-eyed Mahjong
 
-## Application for simulating, analyzing, and playing [Three-Player mahjong](http://www.japanese-mahjong.com/3pmjintro.html).
+### Application for simulating, analyzing, and playing [Three-Player mahjong](http://www.japanese-mahjong.com/3pmjintro.html).
 
 Usage
 -----
