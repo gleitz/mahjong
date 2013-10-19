@@ -3,7 +3,7 @@
 /*
  * Server-side application for simulating a mahjong game.
  * Usage: node app.js
- * Then visit http://localhost:3000
+ * Then visit http://localhost:3000/game
  */
 var mahjong = require('./mahjong'),
     shanten = require('./shanten'),
@@ -64,13 +64,16 @@ app.get('/', function(req, res){
 
 app.get('/analyze/:id?', function(req, res) {
     var hand = req.params.id,
-        result = 'use the form /analyze/111000000011101100002021100';
+        result = 'use the form /analyze/1p 123456789s BGR9';
     if (hand) {
-        hand = _(hand.split('')).map(function (n) {return parseInt(n, 10);});
+        hand = m_util.toTileString(hand)
+        // hand = _(hand.split('')).map(function (n) {return parseInt(n, 10);});
         var obj = mahjong.main(hand);
         result = 'current hand: ' + m_util.toHandString(hand);
         result += '<br/><br/>' + obj.msg;
-        result += '<br/><br/>probably best to throw the ' + m_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
+        if (obj.msg.indexOf('mahjong') == -1) {
+            result += '<br/><br/>probably best to throw the ' + m_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
+        }
     }
     res.send(result);
 });
