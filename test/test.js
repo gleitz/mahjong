@@ -74,23 +74,18 @@ describe('shanten functions', function(){
                 ['1s EEESSSBBGGRR', 1],
                 ['1289s 111555999p', 1],
                 ['12333s 89p EEESSS', 0],
+                ['12333s WWEEESSS', 0],
+                ['1122333s EEESSS', 0],
+                ['1233334s EEESSS', 0],
                 ['67p 2334446s ESWN', 3],
                 ['1124455567799s', 2],
                 ['1122236677888s', 1],
                 ['1133445667788s', 0]
             ];
-            // hands = [
-                // ['12333s 89p EEESSS', 0],
-                // ['12333s 89p EEESSS', 0]
-                // ['11333s NNEEESSS', 0]
-            // ];
             _.each(hands, function(elem) {
-                console.log("NEXT!");
                 var hand_string = elem[0],
                     shanten_num_oracle = elem[1],
                     shanten_num = mahjong.shantenGeneralized(mahjong.toTileString(hand_string));
-                console.log(hand_string);
-                console.log(mahjong.toTileString(hand_string));
                 assert(shanten_num_oracle == shanten_num,
                        util.format("Hand: %s, Expected: %s, Actual: %s", hand_string, shanten_num_oracle, shanten_num));
             });

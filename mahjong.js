@@ -3,6 +3,10 @@
 // var util = require('util');
 var _ = require('underscore');
 
+function debug() {
+    false && console.log && console.log.apply(console, arguments);
+}
+
 var HONORS = [
     'E',
     'S',
@@ -324,16 +328,16 @@ var HONORS = [
     shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
         var queue = [],
             seen = {};
-        console.log("DEPTH IS " + depth);
+        debug("DEPTH IS " + depth);
         var process = function(depth, buffered, singles, pairs) {
             var copy,
                 csingles,
                 i,
                 discard;
-            console.log("starting process");
-            console.log(toHandString(translateFromBufferedNoHonors(buffered)));
-            console.log("singles are originally " + singles);
-            console.log("pairs are originally " + pairs);
+            debug("starting process");
+            debug(toHandString(translateFromBufferedNoHonors(buffered)));
+            debug("singles are originally " + singles);
+            debug("pairs are originally " + pairs);
 
             // Check the cache to ensure that we haven't already
             // calculated this branch
@@ -342,9 +346,9 @@ var HONORS = [
             key.push("pairs" + pairs);
             key.push("depth" + depth);
             key = key.join('.');
-            console.log(key);
+            debug(key);
             if (seen[key]) {
-                console.log("already seen this");
+                debug("already seen this");
                 return false;
             }
             seen[key] = 1;
@@ -392,7 +396,7 @@ var HONORS = [
                         (copy[i + 2] === 0) &&
                         (copy[i + 3] === 0) &&
                         (copy[i + 4] === 0)) {
-                        console.log("return 2");
+                        debug("return 2");
                         return false;
                     }
                 }
@@ -451,7 +455,7 @@ var HONORS = [
 
                             if (buffered[discard] >= 1) {
                                 // if (discard == (i - 1) || discard == (i + 2)) {
-                                //     console.log("SDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSD");
+                                //     debug("SDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSDSDFJSDFKJSDFKJSD");
                                 //     copy = buffered.slice(0);
                                 //     copy[i + 0] -= 1;
                                 //     copy[i + 1] -= 1;
@@ -507,11 +511,11 @@ var HONORS = [
             // if (pairs > 0) {
             //     if (singles > 0) { // >1?
             //         queue.push([depth + 1, buffered, singles - 1, pairs - 1]);
-            //         console.log("pushed " + [depth + 1, buffered, singles - 1, pairs - 1]);
+            //         debug("pushed " + [depth + 1, buffered, singles - 1, pairs - 1]);
             //         return false;
             //     } else {
             //         var found = false;
-            //         console.log("pairs, but no singles");
+            //         debug("pairs, but no singles");
             //         for (discard = vals.buf_beg; discard <= vals.buf_end_no_honors; discard++) {
             //             if (buffered[discard] >= 1) {
             //                 copy = buffered.slice(0);
@@ -522,7 +526,7 @@ var HONORS = [
             //             }
             //         }
             //         if (found) {
-            //             console.log("FOUND!");
+            //             debug("FOUND!");
             //             return false;
             //         }
             //     }
@@ -535,10 +539,10 @@ var HONORS = [
             //     // return false;
             // }
             var singles_left = sum(buffered) + singles;
-            console.log("singles left are " + singles_left);
-            console.log("pairs left are " + pairs);
+            debug("singles left are " + singles_left);
+            debug("pairs left are " + pairs);
             if (pairs == 1 && singles_left == 2) {
-                console.log("checking it");
+                debug("checking it");
                 var pos;
                 for (pos = vals.buf_beg; pos <= vals.buf_end_no_honors; pos++) {
                     if ((buffered[pos] == 1 && buffered[pos+1] == 1) ||
@@ -569,8 +573,8 @@ var HONORS = [
 
             depth += parseInt((singles_left - 1) * 2 / 3, 10);
 
-            console.log("value is " + parseInt((singles_left - 1) * 2 / 3, 10));
-            console.log("depth is " + depth);
+            debug("value is " + parseInt((singles_left - 1) * 2 / 3, 10));
+            debug("depth is " + depth);
 
             if (depth < shanten) {
                 // Update the global shanten number
@@ -605,12 +609,12 @@ var HONORS = [
             honors_result = calcHonors(hist.slice(0)),
             pairs = honors_result[0],
             singles = honors_result[1];
-        console.log("buffered " + buffered);
-        console.log("honors_result " + honors_result);
-        console.log("pairs " + pairs);
-        console.log("singles " + singles);
+        debug("buffered " + buffered);
+        debug("honors_result " + honors_result);
+        debug("pairs " + pairs);
+        debug("singles " + singles);
         singles += removeSingles(buffered, vals.buf_beg, vals.buf_end_no_honors);
-        console.log("singled removed " + singles);
+        debug("singled removed " + singles);
         return shantenSimulation(0, shanten, buffered, singles, pairs);
     },
     toHandString = function(hist) {
