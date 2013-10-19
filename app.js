@@ -1,9 +1,6 @@
-/*global fs: false, __dirname: false, console: false, require: false, module: false */
-
-"use strict";
+/*global __dirname require */
 
 var mahjong = require('./mahjong'),
-    assert = require('assert'),
     express = require('express'),
     hbs = require('hbs'),
     fs = require('fs'),
@@ -16,15 +13,14 @@ var cfg = {
 var app = express();
 
 app.configure(function(){
-  // app.set('views', __dirname + '/views');
-  // app.set('view engine', 'hbs');
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
 });
 
-app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+app.use(express.errorHandler({dumpExceptions: true,
+                              showStack: true}));
 
 var templates = {tile: hbs.compile('<a alt="{{i}}" data-tile="{{i}}" class="left" onclick="return false;" href="#"><div class="tile tile-{{i}}"></div></a>')
                 };
@@ -195,34 +191,3 @@ app.get('/game', function(req, res) {
 });
 
 app.listen(3000);
-
-/*
-var hands = [
-    [0,0,0,1,2,3,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
-    [1,1,1,0,1,2,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
-    [0,0,0,3,3,1,1,1,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0],
-    [3,0,0,0,1,1,1,0,0,  0,0,2,0,0,0,0,0,0,  0,0,3,3,0,0,0,0,0],
-    [0,0,2,1,1,1,2,2,2,  0,0,0,0,0,0,0,0,0,  0,0,0,0,3,0,0,0,0]];
-for (var i=0; i<hands.length; i++) {
-    assert.ok(mahjong.checkRegularMahjong(hands[i]), hands[i]);
-}
-
-var hands = [
-    [1,1,1,0,1,2,2,1,0,  0,1,1,1,0,0,0,0,0,  0,0,1,1,0,0,0,0,0],
-    [1,1,1,1,1,0,0,0,0,  0,1,1,1,1,1,1,1,0,  0,0,2,0,0,0,0,0,0]
-];
-for (i=0; i<hands.length; i++) {
-    assert.ok(!mahjong.checkRegularMahjong(hands[i]));
-}
-*/
-//console.log(mahjong.checkRegularMahjong([1,1,1,1,1,0,0,0,0,  0,1,1,1,1,1,1,1,0,  0,0,2,0,0,0,0,0,0]));
-//console.log(mahjong.findRegularMahjong([1,1,1,0,3,3,3,3,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0]));
-//console.log(mahjong.findRegularMahjongAcc([1,1,4,0,0,0,0,0,0,  0,1,1,1,0,0,0,0,0,  0,0,2,0,0,0,0,0,0], 0, 9));
-// console.log(mahjong.main([1,1,4,0,0,0,0,0,0,  0,1,1,1,0,0,0,0,0,  1,1,1,1,1,0,0,0,0]));
-// console.log(mahjong.findBestDiscard([1,1,4,0,0,0,0,0,0,  0,1,1,1,0,0,0,0,0,  1,1,1,1,1,0,0,0,0]));
-//console.log(mahjong.shantenGeneralized([1,1,0,0,0,0,1,0,0,  1,0,0,1,0,0,1,0,0,  1,1,1,1,1,1,1,1,0]));
-// console.log(mahjong.shantenGeneralized([1,1,1,0,0,0,0,0,0,  0,1,1,1,0,1,1,0,0,  0,0,2,0,2,1,1,0,0]));
-
-// console.log(inRange(15, 14,
-
-// console.log(mahjong.translateToBufferedNoHonors([1,1,1,0,0,0,0,0,0,  0,1,1,1,0,1,1,0,0,  0,0,2,0,2,1,1,0,0]));

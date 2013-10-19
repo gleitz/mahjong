@@ -1,23 +1,22 @@
 /*global describe it */
 
 var mahjong = require('../mahjong');
+var m_util = require("../mahjong_util");
 var assert = require("assert");
 var util = require("util");
 var _ = require('underscore');
 
-_.extend(mahjong, mahjong.texting);
-
 describe('utility functions', function(){
     describe('getColor', function(){
         it('should return the correct color', function(){
-            assert.equal(mahjong.getColor(0), 'Pin');
-            assert.equal(mahjong.getColor(8), 'Pin');
-            assert.equal(mahjong.getColor(9), 'Sou');
-            assert.equal(mahjong.getColor(17), 'Sou');
-            assert.equal(mahjong.getColor(18), 'Honor');
-            assert.equal(mahjong.getColor(26), 'Honor');
-            assert.equal(mahjong.getColor(27), null);
-            assert.equal(mahjong.getColor(-1), null);
+            assert.equal(m_util.getColor(0), 'Pin');
+            assert.equal(m_util.getColor(8), 'Pin');
+            assert.equal(m_util.getColor(9), 'Sou');
+            assert.equal(m_util.getColor(17), 'Sou');
+            assert.equal(m_util.getColor(18), 'Honor');
+            assert.equal(m_util.getColor(26), 'Honor');
+            assert.equal(m_util.getColor(27), null);
+            assert.equal(m_util.getColor(-1), null);
         });
     });
     describe('toTileString', function(){
@@ -37,8 +36,10 @@ describe('utility functions', function(){
                         ];
             _.each(hands, function(elem) {
                 var hand_string = elem[0],
-                    hand_list = elem[1];
-                assert(mahjong.toTileString(hand_string).equals(hand_list));
+                    hand_list_oracle = elem[1],
+                    hand_list = m_util.toTileString(hand_string)
+                assert(hand_list_oracle.equals(hand_list),
+                       util.format("Hand: %s, Expected: %s, Actual: %s", hand_string, hand_list_oracle, hand_list));
             });
         });
         it('should return the correct hand string', function(){
@@ -54,7 +55,7 @@ describe('utility functions', function(){
             _.each(hands, function(elem) {
                 var hand_string_oracle = elem[0],
                     hand_list = elem[1],
-                    hand_string = mahjong.toHandString(hand_list);
+                    hand_string = m_util.toHandString(hand_list);
                 assert(hand_string_oracle == hand_string,
                        util.format("Expected: %s, Actual: %s", hand_string_oracle, hand_string));
             });
@@ -85,7 +86,7 @@ describe('shanten functions', function(){
             _.each(hands, function(elem) {
                 var hand_string = elem[0],
                     shanten_num_oracle = elem[1],
-                    shanten_num = mahjong.shantenGeneralized(mahjong.toTileString(hand_string));
+                    shanten_num = mahjong.shantenGeneralized(m_util.toTileString(hand_string));
                 assert(shanten_num_oracle == shanten_num,
                        util.format("Hand: %s, Expected: %s, Actual: %s", hand_string, shanten_num_oracle, shanten_num));
             });
