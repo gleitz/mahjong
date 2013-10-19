@@ -72,6 +72,7 @@ app.get('/analyze/:id?', function(req, res) {
         result = 'current hand: ' + m_util.toHandString(hand);
         result += '<br/><br/>' + obj.msg;
         if (obj.msg.indexOf('mahjong') == -1) {
+            result += '<br/><br/>shanten is ' + obj.shanten;
             result += '<br/><br/>probably best to throw the ' + m_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
         }
     }
