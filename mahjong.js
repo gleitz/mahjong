@@ -1,5 +1,10 @@
 /*global console, require, module */
 
+/*
+ * Functions for simulating a game of mahjong
+ * and checking if a mahjong has been achieved.
+ */
+
 var shanten = require('./shanten');
 var m_util = require('./mahjong_util');
 

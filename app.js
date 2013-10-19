@@ -1,5 +1,10 @@
 /*global __dirname require */
 
+/*
+ * Server-side application for simulating a mahjong game.
+ * Usage: node app.js
+ * Then visit http://localhost:3000
+ */
 var mahjong = require('./mahjong'),
     shanten = require('./shanten'),
     m_util = require('./mahjong_util'),
@@ -191,4 +196,6 @@ app.get('/game', function(req, res) {
     }
 });
 
-app.listen(3000);
+var port = 3000;
+app.listen(port);
+console.log("listening on " + port);

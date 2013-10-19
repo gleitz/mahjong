@@ -1,10 +1,8 @@
 {
   "name": "mahjong",
-  "subdomain": "ami",
-  "scripts": {
-    "start": "app.js"
-  },
-  "version": "0.0.0-1",
+  "version": "0.0.1",
+  "description": "Application for simulating, analyzing, and playing a game of three-player mahjong",
+  "main": "app.js",
   "dependencies": {
     "underscore": "*",
     "express": "*",
@@ -15,5 +13,23 @@
     "hbs": "*",
     "handlebars": "*",
     "mocha": "~1.13.0"
+  }
+  "devDependencies": {},
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gleitz/mahjong.git"
+  },
+  "keywords": [
+    "mahjong",
+    "tiles",
+    "mahjong ai",
+  ],
+  "author": "Benjamin Gleitzman",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gleitz/mahjong/issues"
   }
 }
