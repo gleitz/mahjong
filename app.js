@@ -1,6 +1,8 @@
 /*global __dirname require */
 
 var mahjong = require('./mahjong'),
+    shanten = require('./shanten'),
+    m_util = require('./mahjong_util'),
     express = require('express'),
     hbs = require('hbs'),
     fs = require('fs'),
@@ -61,9 +63,9 @@ app.get('/analyze/:id?', function(req, res) {
     if (hand) {
         hand = _(hand.split('')).map(function (n) {return parseInt(n, 10);});
         var obj = mahjong.main(hand);
-        result = 'current hand: ' + mahjong.toHandString(hand);
+        result = 'current hand: ' + m_util.toHandString(hand);
         result += '<br/><br/>' + obj.msg;
-        result += '<br/><br/>probably best to throw the ' + mahjong.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
+        result += '<br/><br/>probably best to throw the ' + m_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
     }
     res.send(result);
 });
@@ -77,7 +79,7 @@ app.get('/game', function(req, res) {
         inter,
         best_waits,
         test_hand,
-        shanten,
+        shanten_number,
         new_tile;
     if (tile && wall && hand) {
         tile = parseInt(tile, 10);
@@ -86,7 +88,7 @@ app.get('/game', function(req, res) {
         }
         wall = _(wall.split(',')).map(function (n) {return parseInt(n, 10);});
         hand = _(hand.split(',')).map(function (n) {return parseInt(n, 10);});
-        if (mahjong.isHonor(tile)) {
+        if (m_util.isHonor(tile)) {
             thrown.push(tile);
         }
         hand[tile] -= 1;
@@ -98,8 +100,7 @@ app.get('/game', function(req, res) {
         wall = hand_obj.wall;
     }
     var obj = mahjong.main(hand.slice(0));
-    var result,
-        recommended = mahjong.findBestDiscard(hand, _.union(thrown, obj.discard));
+    var recommended = mahjong.findBestDiscard(hand, _.union(thrown, obj.discard));
     if (obj.shanten === 0) {
         best_waits = mahjong.findBestDiscardWait(hand);
         if (best_waits.length > 0) {
@@ -107,8 +108,8 @@ app.get('/game', function(req, res) {
             if (inter.length === 0) {
                 test_hand = hand.slice(0);
                 test_hand[best_waits[0]] -= 1;
-                shanten = mahjong.shantenGeneralized(test_hand);
-                if (shanten > 0) {
+                shanten_number = shanten.shantenGeneralized(test_hand);
+                if (shanten_number > 0) {
                     best_waits = [recommended.discard];
                 }
             } else {
@@ -127,7 +128,7 @@ app.get('/game', function(req, res) {
             var new_hand = hand.slice(0);
             var total_waits = 0;
             new_hand[throw_tile] -= 1;
-            for (var j=mahjong.vals.id_min; j<=mahjong.vals.id_max; j++) {
+            for (var j=m_util.vals.id_min; j<=m_util.vals.id_max; j++) {
                 if (throw_tile === j) {
                     continue;
                 }
@@ -150,8 +151,8 @@ app.get('/game', function(req, res) {
             if (inter.length === 0) {
                 test_hand = hand.slice(0);
                 test_hand[best_discard[0]] -= 1;
-                shanten = mahjong.shantenGeneralized(test_hand);
-                if (shanten > 1) {
+                shanten_number = shanten.shantenGeneralized(test_hand);
+                if (shanten_number > 1) {
                     best_discard = [recommended.discard];
                 }
             }
@@ -172,7 +173,7 @@ app.get('/game', function(req, res) {
                     new_tile: new_tile,
                     tile_width: cfg.tile_width,
                     recommended: {discard_tile: [recommended.discard],
-                                  discard: mahjong.toString(recommended.discard),
+                                  discard: m_util.toString(recommended.discard),
                                   score: recommended.score}};
     if (req.param('ajax')) {
         res.json(response);

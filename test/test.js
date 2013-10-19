@@ -1,6 +1,6 @@
 /*global describe it */
 
-var mahjong = require('../mahjong');
+var shanten = require('../shanten');
 var m_util = require("../mahjong_util");
 var assert = require("assert");
 var util = require("util");
@@ -86,7 +86,7 @@ describe('shanten functions', function(){
             _.each(hands, function(elem) {
                 var hand_string = elem[0],
                     shanten_num_oracle = elem[1],
-                    shanten_num = mahjong.shantenGeneralized(m_util.toTileString(hand_string));
+                    shanten_num = shanten.shantenGeneralized(m_util.toTileString(hand_string));
                 assert(shanten_num_oracle == shanten_num,
                        util.format("Hand: %s, Expected: %s, Actual: %s", hand_string, shanten_num_oracle, shanten_num));
             });
