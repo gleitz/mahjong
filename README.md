@@ -2,6 +2,11 @@
 
 ### Application for simulating, analyzing, and playing [Three-Player mahjong](http://www.japanese-mahjong.com/3pmjintro.html).
 
+Example
+-------
+
+For an example of the mahjong AI visit [http://gleitzman.com/apps/mahjong/game](http://gleitzman.com/apps/mahjong/game).
+
 Usage
 -----
 
