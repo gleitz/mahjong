@@ -192,7 +192,7 @@ app.get('/game', function(req, res) {
                 var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
 
                 cfg = {
-                    base_path: req.headers['X-Script-Name'] || '',
+                    base_path: req.headers['x-script-name'] || '',
                     mobile: mobile,
                     tile_width: mobile ? 53 : 71 //width + 16
                 };
