@@ -60,7 +60,7 @@ var INIT = (function ($, undefined) {
 	    return tile >= vals.honor_beg;
     },
     toString = function (tile) {
-        
+
         if (isHonor(tile)) {
             return getHonor(tile);
 	    } else {
@@ -79,7 +79,7 @@ var INIT = (function ($, undefined) {
     function clearMoves() {
         cfg.previous_moves = [];
     }
-    
+
     function recentMove() {
         var current_time = new Date().getTime();
         for (var i in cfg.previous_moves) {
@@ -91,7 +91,7 @@ var INIT = (function ($, undefined) {
         clearMoves();
         return false;
     }
-    
+
     $.fn.fastClick = function(selector, callback) {
         this.delegate(selector, cfg.clickEvent, function (evt) {
             if (!recentMove()) {
@@ -100,7 +100,7 @@ var INIT = (function ($, undefined) {
         });
         return this;
     };
-    
+
     function ajax(params) {
         // a convenience wrapper around $.ajax that does some extra default stuff
         // for making valid signed requests
@@ -133,7 +133,7 @@ var INIT = (function ($, undefined) {
 
     function updateHand(data) {
         data = $.extend({}, data, {ajax: true});
-        var _cfg = {url: '/game',
+        var _cfg = {url: cfg.base_path + '/game',
                     data: (data),
                     success: function (data) {
                         if (data.new_tile) {
@@ -167,7 +167,7 @@ var INIT = (function ($, undefined) {
     function initialize(local_cfg) {
         $.extend(cfg, local_cfg);
     }
-    
+
     function checkHash() {
         var params = getHashParams();
         if (params.tile && params.wall && params.hand) {
@@ -182,7 +182,7 @@ var INIT = (function ($, undefined) {
         }
             var templates = {tile: Handlebars.compile('<a data-tile="{{i}}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{i}}"></div></a>')
                             };
-        
+
         Handlebars.registerHelper('render_tiles', function(hist) {
             var buffer = [],
             i;

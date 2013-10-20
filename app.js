@@ -171,7 +171,7 @@ app.get('/game', function(req, res) {
         //TODO: take the one with the lowest score
         recommended.discard = best_discard[0];
     }
-    var response = {layout : 'index',
+    var response = {layout: 'index',
                     hand: hand,
                     wall: wall,
                     thrown: thrown,
@@ -190,11 +190,13 @@ app.get('/game', function(req, res) {
         fs.readFile(__dirname + '/views/index_top.html', 'utf8', function(err, top){
             fs.readFile(__dirname + '/views/index_bottom.html', 'utf8', function(err, bottom){
                 var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
+
                 cfg = {
+                    base_path: req.headers['X-Script-Name'] || '',
                     mobile: mobile,
                     tile_width: mobile ? 53 : 71 //width + 16
                 };
-                res.send(top + JSON.stringify(cfg) + bottom);
+                res.send(top.replace(/{{base_path}}/g, cfg.base_path) + JSON.stringify(cfg) + bottom);
             });
         });
     }
