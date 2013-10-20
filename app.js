@@ -200,6 +200,6 @@ app.get('/game', function(req, res) {
     }
 });
 
-var port = 3000;
+var port = 9004;
 app.listen(port);
 console.log("listening on " + port);
