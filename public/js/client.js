@@ -1,44 +1,46 @@
-/*global Handlebars: false, $: false, console: false, require: false, module: false, window: false */
+/*global $ swig console require module window */
 
-"use strict";
 var INIT = (function ($, undefined) {
 
     var cfg = {
         previous_moves: [],
         clickEvent : /(iPad|iPhone)/i.test(navigator.userAgent) ? 'touchend' : 'click'
-    };
+    },
+        board_tpl;
     var honors = [
-        'East',
-	    'South',
-	    'West',
-	    'North',
-	    'White',
-	    'Green',
-	    'Red',
-	    '1Man',
-	    '9Man'
+        'E',
+        'S',
+        'W',
+        'N',
+        'B',
+        'G',
+        'R',
+        '1',
+        '9'
     ],
         colors = [
-	        'Pin',
-	        'Sou',
-	        'Honor'
+            'Pin',
+            'Sou',
+            'Honor'
         ],
         vals = {
-	        // id = value + (9 * color);
-	        // name	    id	    buffered
-	        // pin		00-08	02-10
-	        // sou		09-17	13-21
-	        // honors	18-26	24-32
+            // id = value + (9 * color);
+            // (buffered values have two extra spaces
+            // on either side of the pins and sous
+            // name     id      buffered
+            // pin      00-08   02-10
+            // sou      09-17   13-21
+            // honors   18-26   24-32
             id_min: 0,
-	        color_beg: 0,
+            color_beg: 0,
             pin_beg: 0,
             pin_end: 8,
             sou_beg: 9,
             sou_end: 17,
             color_end: 17,
             honor_beg: 18,
-	        honor_end: 26,
-	        id_max: 26,
+            honor_end: 26,
+            id_max: 26,
             count: 26 + 1,
             buf_beg: 2,
             buf_end_no_honors: 21,
@@ -46,26 +48,26 @@ var INIT = (function ($, undefined) {
         },
 
     getColor = function (tile) {
-	        tile = tile - (tile % 9);
-	    tile /= 9;
-	    return colors[tile];
+            tile = tile - (tile % 9);
+        tile /= 9;
+        return colors[tile];
     },
     getValue =  function (tile) {
-	    return tile % 9;
+        return tile % 9;
         },
     getHonor =  function (tile) {
-	    return honors[getValue(tile)];
+        return honors[getValue(tile)];
         },
     isHonor = function (tile) {
-	    return tile >= vals.honor_beg;
+        return tile >= vals.honor_beg;
     },
     toString = function (tile) {
 
         if (isHonor(tile)) {
             return getHonor(tile);
-	    } else {
-		    return (getValue(tile) + 1) + getColor(tile);
-	    }
+        } else {
+            return (getValue(tile) + 1) + getColor(tile);
+        }
     };
 
     // touch navigation
@@ -131,7 +133,31 @@ var INIT = (function ($, undefined) {
         return hashParams;
     }
 
+    function renderTiles(hist) {
+        var buffer = [],
+            i;
+        for (i=0; i<hist.length; i++) {
+            for (var j=0; j<hist[i]; j++) {
+                var pushed = false;
+                if (sum(hist) === 14) {
+                    var hand_tmp = hist.slice(0);
+                    hand_tmp[i] -= j;
+                    if (sum(hand_tmp.slice(i)) === 1) {
+                        console.log(i);
+                        buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
+                        pushed = true;
+                    }
+                }
+                if (!pushed) {
+                    buffer.push(swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a>') ({tile_num: i}));
+                }
+            }
+        }
+        return buffer.join(' ');
+    }
+
     function updateHand(data) {
+        console.log(data);
         data = $.extend({}, data, {ajax: true});
         var _cfg = {url: cfg.base_path + '/game',
                     data: (data),
@@ -143,9 +169,16 @@ var INIT = (function ($, undefined) {
                             data.partial_hand = data.hand;
                         }
                         data.discards.splice(data.discards.indexOf(data.recommended.discard_tile[0]), 1);
-                        $('body').html(Handlebars.compile($('#firstTemplate').html())(data));
+                        data.rendered_tiles = renderTiles(data.partial_hand);
+                        data.hand_data = data.hand;
+                        data.wall_data = data.wall;
+                        data.thrown_data = data.thrown;
+                        console.log("data is ");
+                        console.log(JSON.stringify(data));
+                        $('body').html(board_tpl(data));
+
                         if (data.new_tile) {
-                            $('#hand-tiles').append(Handlebars.compile('<span class="left" style="margin-left: {{tile_width}}px;">{{{render_tile i}}}</span>')({tile_width: cfg.tile_width, i: data.new_tile}));
+                            $('#hand-tiles').append(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: data.new_tile}));
                         }
                         for (var i=0; i<data.hand.length; i++) {
                             if (data.hand[i] > 0) {
@@ -177,53 +210,14 @@ var INIT = (function ($, undefined) {
         }
     }
     $(function () {
+        board_tpl = swig.compile($('#board_tpl').html());
         if (cfg.mobile) {
             $('body').addClass('mobile');
         }
-            var templates = {tile: Handlebars.compile('<a data-tile="{{i}}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{i}}"></div></a>')
-                            };
-
-        Handlebars.registerHelper('render_tiles', function(hist) {
-            var buffer = [],
-            i;
-            for (i=0; i<hist.length; i++) {
-                for (var j=0; j<hist[i]; j++) {
-                    var pushed = false;
-                    if (sum(hist) === 14) {
-                        var hand_tmp = hist.slice(0);
-                        hand_tmp[i] -= j;
-                        if (sum(hand_tmp.slice(i)) === 1) {
-                            buffer.push(Handlebars.compile('<span class="left" style="margin-left: {{tile_width}}px;">{{{render_tile i}}}</span>')({tile_width: cfg.tile_width, i: i}));
-                            pushed = true;
-                        }
-                    }
-                    if (!pushed) {
-                        buffer.push(templates.tile({i: i}));
-                    }
-                }
-            }
-            return buffer.join(' ');
-        });
-
-        Handlebars.registerHelper('render_score', function(hist, score) {
-            var buffer = [],
-            i;
-            for (i=0; i<hist.length; i++) {
-                for (var j=0; j<hist[i]; j++) {
-                    buffer.push('<div class="left tile-width center">' + score[i] + '</div>');
-                }
-            }
-            return buffer.join('');
-        });
-
-        Handlebars.registerHelper('render_tile', function(i) {
-            return templates.tile({i: i});
-        });
-
         $('body').fastClick('div.tile', function(evt) {
             evt.preventDefault();
             var $t = $(this),
-                $a = $(this).closest('a'),
+                $a = $t.closest('a'),
                 tile;
             if ($a.closest('#hand-tiles').length > 0) {
                 tile = $(this);

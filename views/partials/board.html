@@ -1,0 +1,22 @@
+<span class="small" style="position: absolute; right: 10px; top: 10px;"><a href="{{base_path}}/game">restart</a></span>
+<h1>Hand Contains</h1>
+<div id="hand-tiles" class="clr padded">{{ rendered_tiles|safe }}</div>
+{% if msg %}
+<h1>{{ msg }}</h1>
+<a href="/game">play again!</a>
+{% else %}
+<h3>AMI suggests <span class="small dim">{{ shanten }} shanten</span></h3>
+<div class="left">
+    <div class="clr padded">
+        <span class="left" style="margin-right: {{tile_width}}px;"><a alt="{{ recommended.discard_tile }}" data-tile="{{ recommended.discard_tile }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ recommended.discard_tile }}"></div></a></span>
+        <div style="clear: both;">
+            {% for tile_num in discards %}
+            <a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+<div id="hand" data-hand="{{ hand_data }}"></div>
+<div id="wall" data-wall="{{ wall_data }}"></div>
+<div id="thrown" data-thrown="{{ thrown_data }}"></div>

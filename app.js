@@ -10,7 +10,7 @@ var mahjong = require('./mahjong'),
     m_util = require('./mahjong_util'),
     express = require('express'),
     swig = require('swig'),
-    hbs = require('hbs'),
+    path = require('path'),
     fs = require('fs'),
     _ = require('underscore');
 
@@ -27,37 +27,29 @@ app.configure(function(){
   app.use(express.static(__dirname + '/public'));
 });
 
+// Swig templating
+app.engine('html', swig.renderFile);
+app.set('view engine', 'html');
+app.set('views', __dirname + '/views');
+
+//TODO: remove in production
+swig.setDefaults({ cache: false });
+app.set('view cache', false);
+
 app.use(express.errorHandler({dumpExceptions: true,
                               showStack: true}));
 
-var templates = {tile: hbs.compile('<a alt="{{i}}" data-tile="{{i}}" class="left" onclick="return false;" href="#"><div class="tile tile-{{i}}"></div></a>')
-                };
 
-hbs.registerHelper('render_tiles', function(hist) {
-    var buffer = [],
-        i;
-    for (i=0; i<hist.length; i++) {
-        for (var j=0; j<hist[i]; j++) {
-            buffer.push(templates.tile({i: i}));
-        }
-    }
-    return buffer.join(' ');
-});
-
-hbs.registerHelper('render_score', function(hist, score) {
-    var buffer = [],
-        i;
-    for (i=0; i<hist.length; i++) {
-        for (var j=0; j<hist[i]; j++) {
-            buffer.push('<div class="left tile-width center">' + score[i] + '</div>');
-        }
-    }
-    return buffer.join('');
-});
-
-hbs.registerHelper('render_tile', function(i) {
-    return templates.tile({i: i});
-});
+// hbs.registerHelper('render_score', function(hist, score) {
+//     var buffer = [],
+//         i;
+//     for (i=0; i<hist.length; i++) {
+//         for (var j=0; j<hist[i]; j++) {
+//             buffer.push('<div class="left tile-width center">' + score[i] + '</div>');
+//         }
+//     }
+//     return buffer.join('');
+// });
 
 app.get('/', function(req, res){
     res.send('konnichiwa');
@@ -188,19 +180,28 @@ app.get('/game', function(req, res) {
     if (req.param('ajax')) {
         res.json(response);
     } else {
-        fs.readFile(__dirname + '/views/index_top.html', 'utf8', function(err, top){
-            fs.readFile(__dirname + '/views/index_bottom.html', 'utf8', function(err, bottom){
-                var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
+        var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
 
-                cfg = {
-                    base_path: req.headers['x-script-name'] || '',
-                    mobile: mobile,
-                    tile_width: mobile ? 53 : 71 //width + 16
-                };
-                res.send(top.replace(/\{\{base_path\}\}/g, cfg.base_path) + JSON.stringify(cfg) + bottom);
-            });
+        cfg = {
+            base_path: req.headers['x-script-name'] || '',
+            mobile: mobile,
+            tile_width: mobile ? 53 : 71 //width + 16
+        };
+
+
+        fs.readFile(__dirname + '/views/partials/board.html', 'utf8', function(err, board){
+            cfg.board = board;
+            cfg.js_cfg = JSON.stringify(cfg);
+            console.log(cfg.js_cfg);
+            res.render('game', cfg);
         });
     }
+});
+
+app.get(/^\/templates\/[a-z\.A-Z0-9]+$/, function(req, res){
+    var filename = path.resolve('./views/partials/') + '/' +
+            req.path.split('/').pop();
+    res.sendfile(filename);
 });
 
 var port = 3000;
