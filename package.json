@@ -12,7 +12,8 @@
     "mime": "*",
     "hbs": "*",
     "handlebars": "*",
-    "mocha": "~1.13.0"
+    "mocha": "*",
+    "swig": "*"
   },
   "devDependencies": {},
   "scripts": {

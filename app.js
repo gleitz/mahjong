@@ -9,6 +9,7 @@ var mahjong = require('./mahjong'),
     shanten = require('./shanten'),
     m_util = require('./mahjong_util'),
     express = require('express'),
+    swig = require('swig'),
     hbs = require('hbs'),
     fs = require('fs'),
     _ = require('underscore');
@@ -196,7 +197,7 @@ app.get('/game', function(req, res) {
                     mobile: mobile,
                     tile_width: mobile ? 53 : 71 //width + 16
                 };
-                res.send(top.replace(/{{base_path}}/g, cfg.base_path) + JSON.stringify(cfg) + bottom);
+                res.send(top.replace(/\{\{base_path\}\}/g, cfg.base_path) + JSON.stringify(cfg) + bottom);
             });
         });
     }
