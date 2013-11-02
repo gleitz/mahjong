@@ -5,23 +5,47 @@
  * "Cock-Eyed" mahjong.
  */
 
-var _ = require('underscore');
-
-function debug() {
-    false && console.log && console.log.apply(console, arguments);
+// Establish the root object, `window` in the browser, or `exports` on the server.
+var root = this;
+// Create a safe reference to the mahjong_util object for use below.
+var mahjong_util = function(obj) {
+    if (obj instanceof mahjong_util) return obj;
+    if (!(this instanceof mahjong_util)) return new mahjong_util(obj);
+    this.mahjong_utilwrapped = obj;
+};
+// Export the mahjong_util object for **Node.js**, with
+// backwards-compatibility for the old `require()` API. If we're in
+// the browser, add `mahjong_util` as a global object via a string identifier,
+// for Closure Compiler "advanced" mode.
+if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+        exports = module.exports = mahjong_util;
+    }
+    exports.mahjong_util = mahjong_util;
+} else {
+    root.mahjong_util = mahjong_util;
 }
 
-var honors = [
-    'E',
-    'S',
-    'W',
-    'N',
-    'B',
-    'G',
-    'R',
-    '1',
-    '9'
-],
+// Import underscore if in **Node.js**
+// (import automatically available if in browser)
+if (typeof require !== 'undefined') {
+    var _ = require('underscore');
+}
+
+var debug = function() {
+    false && console.log && console.log.apply(console, arguments);
+},
+    honors = [
+        'E',
+        'S',
+        'W',
+        'N',
+        'B',
+        'G',
+        'R',
+        '1',
+        '9'
+    ],
     colors = [
         'Pin',
         'Sou',
@@ -174,7 +198,7 @@ var honors = [
         return s;
     };
 
-module.exports = {
+_.extend(mahjong_util, {
     isSou: isSou,
     isPin: isPin,
     honors: honors,
@@ -192,7 +216,7 @@ module.exports = {
     toHandString: toHandString,
     sum: sum,
     debug: debug
-};
+});
 
 
 // attach the .equals method to Array's prototype to call it on any array

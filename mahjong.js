@@ -6,9 +6,9 @@
  */
 
 var shanten = require('./shanten');
-var m_util = require('./mahjong_util');
+var mahjong_util = require('./mahjong_util');
 
-var vals = m_util.vals;
+var vals = mahjong_util.vals;
 
 var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
     // for honors, check triplets only
@@ -22,11 +22,11 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
     checkRegularMahjongNoPairColor = function (init_hist, init_beg, init_end) {
         var queue = [],
             process = function (hist, index, beg, end) {
-                if (m_util.sum(hist.slice(beg, end+1)) === 0) {
+                if (mahjong_util.sum(hist.slice(beg, end+1)) === 0) {
                     return true;
                 }
                 for (var i = beg; i <= end; i++) {
-                    if (m_util.sum(hist.slice(index, i)) > 0) {
+                    if (mahjong_util.sum(hist.slice(index, i)) > 0) {
                         return false;
                     }
                     var count = hist[i],
@@ -66,12 +66,12 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
         return false;
     },
     checkRegularMahjongNoPair = function (hist) {
-        return checkRegularMahjongNoPairHonor(hist, m_util.vals.honor_beg, m_util.vals.honor_end) &&
+        return checkRegularMahjongNoPairHonor(hist, mahjong_util.vals.honor_beg, mahjong_util.vals.honor_end) &&
             checkRegularMahjongNoPairColor(hist, vals.pin_beg, vals.pin_end) &&
             checkRegularMahjongNoPairColor(hist, vals.sou_beg, vals.sou_end);
     },
     checkRegularMahjong = function (hist) {
-        if (m_util.sum(hist) !== 14) {
+        if (mahjong_util.sum(hist) !== 14) {
             throw "not enough tiles in hand";
         }
         /*
@@ -97,12 +97,12 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
             valid = false;
         var process = function(hist, sets, index, beg, end) {
             var copy;
-            if (m_util.sum(hist.slice(beg, end+1)) === 0) {
+            if (mahjong_util.sum(hist.slice(beg, end+1)) === 0) {
                 mjs.push(sets);
                 return true;
             }
             for (var i = beg; i <= end; i++) {
-                if (m_util.sum(hist.slice(index, i)) > 0) {
+                if (mahjong_util.sum(hist.slice(index, i)) > 0) {
                     return false;
                 }
                 var count = hist[i];
@@ -153,7 +153,7 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
                 hist[i] -= 3;
             }
         }
-        if (m_util.sum(hist.slice(vals.honor_beg, vals.honor_end + 1)) === 0) {
+        if (mahjong_util.sum(hist.slice(vals.honor_beg, vals.honor_end + 1)) === 0) {
             return [[sets], true];
         }
         return [[sets], false];
@@ -200,8 +200,8 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
             i,
             discard = [],
             best = 10;
-        if (m_util.sum(hist) !== 14) {
-            return {msg: "must submit 14 tiles (there were " + m_util.sum(hist) + ")",
+        if (mahjong_util.sum(hist) !== 14) {
+            return {msg: "must submit 14 tiles (there were " + mahjong_util.sum(hist) + ")",
                     discard: []};
             // throw new Error("not enough tiles");
         }
@@ -324,7 +324,7 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
                 wall: wall};
     },
     getWaits = function (hist) {
-        var count = m_util.sum(hist),
+        var count = mahjong_util.sum(hist),
             i,
             waits = [];
         if (count !== 13) {

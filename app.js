@@ -7,8 +7,8 @@
  */
 var mahjong = require('./mahjong'),
     shanten = require('./shanten'),
-    m_util = require('./mahjong_util'),
-    shared = require('./public/js/shared'),
+    mahjong_util = require('./mahjong_util'),
+    shared = require('./public/js/src/shared'),
     express = require('express'),
     swig = require('swig'),
     path = require('path'),
@@ -50,14 +50,14 @@ app.get('/analyze/:id?', function(req, res) {
     var hand = req.params.id,
         result = 'use the form /analyze/1p 123456789s BGR9';
     if (hand) {
-        hand = m_util.toTileString(hand)
+        hand = mahjong_util.toTileString(hand)
         // hand = _(hand.split('')).map(function (n) {return parseInt(n, 10);});
         var obj = mahjong.main(hand);
-        result = 'current hand: ' + m_util.toHandString(hand);
+        result = 'current hand: ' + mahjong_util.toHandString(hand);
         result += '<br/><br/>' + obj.msg;
         if (obj.msg.indexOf('mahjong') == -1) {
             result += '<br/><br/>shanten is ' + obj.shanten;
-            result += '<br/><br/>probably best to throw the ' + m_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
+            result += '<br/><br/>probably best to throw the ' + mahjong_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
         }
     }
     res.send(result);
@@ -81,7 +81,7 @@ app.get('/game', function(req, res) {
         }
         wall = _(wall.split(',')).map(function (n) {return parseInt(n, 10);});
         hand = _(hand.split(',')).map(function (n) {return parseInt(n, 10);});
-        if (m_util.isHonor(tile)) {
+        if (mahjong_util.isHonor(tile)) {
             thrown.push(tile);
         }
         hand[tile] -= 1;
@@ -121,7 +121,7 @@ app.get('/game', function(req, res) {
             var new_hand = hand.slice(0);
             var total_waits = 0;
             new_hand[throw_tile] -= 1;
-            for (var j=m_util.vals.id_min; j<=m_util.vals.id_max; j++) {
+            for (var j=mahjong_util.vals.id_min; j<=mahjong_util.vals.id_max; j++) {
                 if (throw_tile === j) {
                     continue;
                 }
@@ -166,7 +166,7 @@ app.get('/game', function(req, res) {
                     new_tile: new_tile,
                     tile_width: cfg.tile_width,
                     recommended: {discard_tile: [recommended.discard],
-                                  discard: m_util.toString(recommended.discard),
+                                  discard: mahjong_util.toString(recommended.discard),
                                   score: recommended.score}};
     if (req.param('ajax')) {
         res.json(response);
