@@ -1,5 +1,3 @@
-- Use new version of Express
-- Switch to swig templates http://paularmstrong.github.io/swig/docs/#express
 - Create models for hand, game, player
 - Allow people to join a game
 - Allow people to throw tiles and see them on the screen

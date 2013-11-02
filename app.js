@@ -8,6 +8,7 @@
 var mahjong = require('./mahjong'),
     shanten = require('./shanten'),
     m_util = require('./mahjong_util'),
+    shared = require('./public/js/shared'),
     express = require('express'),
     swig = require('swig'),
     path = require('path'),
@@ -21,16 +22,18 @@ var cfg = {
 var app = express();
 
 app.configure(function(){
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
+    app.use(express.bodyParser());
+    app.use(express.methodOverride());
+    app.use(app.router);
+    app.use(express.static(__dirname + '/public'));
+    app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
 });
 
 // Swig templating
 app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
+shared.augmentSwig(swig);
 
 //TODO: remove in production
 swig.setDefaults({ cache: false });
@@ -38,18 +41,6 @@ app.set('view cache', false);
 
 app.use(express.errorHandler({dumpExceptions: true,
                               showStack: true}));
-
-
-// hbs.registerHelper('render_score', function(hist, score) {
-//     var buffer = [],
-//         i;
-//     for (i=0; i<hist.length; i++) {
-//         for (var j=0; j<hist[i]; j++) {
-//             buffer.push('<div class="left tile-width center">' + score[i] + '</div>');
-//         }
-//     }
-//     return buffer.join('');
-// });
 
 app.get('/', function(req, res){
     res.send('konnichiwa');
@@ -192,16 +183,9 @@ app.get('/game', function(req, res) {
         fs.readFile(__dirname + '/views/partials/board.html', 'utf8', function(err, board){
             cfg.board = board;
             cfg.js_cfg = JSON.stringify(cfg);
-            console.log(cfg.js_cfg);
             res.render('game', cfg);
         });
     }
-});
-
-app.get(/^\/templates\/[a-z\.A-Z0-9]+$/, function(req, res){
-    var filename = path.resolve('./views/partials/') + '/' +
-            req.path.split('/').pop();
-    res.sendfile(filename);
 });
 
 var port = 3000;

@@ -1,4 +1,4 @@
-/*global $ swig console require module window */
+/*global jQuery swig console window shared */
 
 var INIT = (function ($, undefined) {
 
@@ -143,13 +143,12 @@ var INIT = (function ($, undefined) {
                     var hand_tmp = hist.slice(0);
                     hand_tmp[i] -= j;
                     if (sum(hand_tmp.slice(i)) === 1) {
-                        console.log(i);
                         buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
                         pushed = true;
                     }
                 }
                 if (!pushed) {
-                    buffer.push(swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a>') ({tile_num: i}));
+                    buffer.push(shared.tile(i));
                 }
             }
         }
@@ -157,7 +156,6 @@ var INIT = (function ($, undefined) {
     }
 
     function updateHand(data) {
-        console.log(data);
         data = $.extend({}, data, {ajax: true});
         var _cfg = {url: cfg.base_path + '/game',
                     data: (data),
@@ -173,8 +171,6 @@ var INIT = (function ($, undefined) {
                         data.hand_data = data.hand;
                         data.wall_data = data.wall;
                         data.thrown_data = data.thrown;
-                        console.log("data is ");
-                        console.log(JSON.stringify(data));
                         $('body').html(board_tpl(data));
 
                         if (data.new_tile) {
@@ -210,6 +206,7 @@ var INIT = (function ($, undefined) {
         }
     }
     $(function () {
+        shared.augmentSwig(swig);
         board_tpl = swig.compile($('#board_tpl').html());
         if (cfg.mobile) {
             $('body').addClass('mobile');

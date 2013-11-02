@@ -8,10 +8,10 @@
 <h3>AMI suggests <span class="small dim">{{ shanten }} shanten</span></h3>
 <div class="left">
     <div class="clr padded">
-        <span class="left" style="margin-right: {{tile_width}}px;"><a alt="{{ recommended.discard_tile }}" data-tile="{{ recommended.discard_tile }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ recommended.discard_tile }}"></div></a></span>
+        <span class="left" style="margin-right: {{tile_width}}px;">{{ recommended.discard_tile|tile|safe }}</span>
         <div style="clear: both;">
             {% for tile_num in discards %}
-            <a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a>
+            {{ tile_num|tile|safe }}
             {% endfor %}
         </div>
     </div>
