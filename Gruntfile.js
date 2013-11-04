@@ -33,6 +33,15 @@ module.exports = function(grunt) {
             }
         },
 
+        mochaTest: {
+            test: {
+                options: {
+                    reporter: 'spec'
+                },
+                src: ['test/**/*.js']
+            }
+        },
+
         watch: {
             files: ['public/**/*.*'],
             tasks: ['cssmin', 'uglify', 'watch']
@@ -44,12 +53,13 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks( 'grunt-contrib-cssmin' );
     grunt.loadNpmTasks( 'grunt-contrib-uglify' );
     grunt.loadNpmTasks( 'grunt-contrib-watch' );
+    grunt.loadNpmTasks( 'grunt-mocha-test' );
 
     // Compression task
     grunt.registerTask( 'compress', [ 'cssmin', 'uglify', 'watch' ] ); // add mocha tests
 
     // Run tests
-    grunt.registerTask( 'test', [ 'jshint', 'qunit' ] );
+    grunt.registerTask( 'test', [ 'mochaTest' ] );
 
     // Start the app
     grunt.registerTask('default', function () {
