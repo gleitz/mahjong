@@ -23,7 +23,7 @@ To analyze a hand visit [http://localhost:3000/analyze/1p 123456789s BGR9](http:
 Development
 ------
 
-Install dev dependencies with `npm install` and start the application with `grunt watch`.
+Install dev dependencies with `npm install` and start the application with `grunt`.
 
 
 Author

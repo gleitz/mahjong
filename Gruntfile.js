@@ -20,7 +20,9 @@ module.exports = function(grunt) {
                 banner: '<%= meta.banner %>\n'
             },
             build: {
-                src: ['public/js/global/**/*.js', 'public/js/src/**/*.js'],
+                src: ['public/js/global/**/*.js',
+                      'shared/**/*.js',
+                      'public/js/src/**/*.js'],
                 dest: 'public/js/dist/all.min.js'
             }
         },

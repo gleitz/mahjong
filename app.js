@@ -5,9 +5,9 @@
  * Usage: node app.js
  * Then visit http://localhost:3000/game
  */
-var mahjong = require('./mahjong'),
-    shanten = require('./shanten'),
-    mahjong_util = require('./mahjong_util'),
+var mahjong = require('./server/mahjong'),
+    shanten = require('./server/shanten'),
+    mahjong_util = require('./shared/mahjong_util'),
     shared = require('./public/js/src/shared'),
     express = require('express'),
     swig = require('swig'),

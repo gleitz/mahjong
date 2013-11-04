@@ -1,6 +1,6 @@
 /*global console, require, module */
 
-var m_util = require('./mahjong_util');
+var m_util = require('../shared/mahjong_util');
 
 var vals = m_util.vals;
 

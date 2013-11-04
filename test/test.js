@@ -1,7 +1,7 @@
 /*global describe it */
 
-var shanten = require('../shanten');
-var m_util = require("../mahjong_util");
+var shanten = require('../server/shanten');
+var m_util = require("../shared/mahjong_util");
 var assert = require("assert");
 var util = require("util");
 var _ = require('underscore');

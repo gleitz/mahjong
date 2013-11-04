@@ -6,7 +6,7 @@
  */
 
 var shanten = require('./shanten');
-var mahjong_util = require('./mahjong_util');
+var mahjong_util = require('../shared/mahjong_util');
 
 var vals = mahjong_util.vals;
 
