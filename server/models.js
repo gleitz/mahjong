@@ -38,6 +38,9 @@ module.exports.findOneGame = function(game_id) {
 };
 
 module.exports.saveGame = function(game) {
-    var updateGame = Q.nbind(db.games.update, db.games);
-    return updateGame({_id: game._id}, game, {});
+    var findAndModifyGame = Q.nbind(db.games.findAndModify, db.games);
+    return findAndModifyGame({_id: game._id},
+                             null,
+                             game,
+                             {'new': true});
 };

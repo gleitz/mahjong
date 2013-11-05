@@ -14,6 +14,7 @@ var mahjong = require('./server/mahjong'),
     express = require('express'),
     swig = require('swig'),
     path = require('path'),
+    Q = require('q'),
     argv = require('optimist').argv,
     _ = require('underscore');
 
@@ -66,7 +67,6 @@ app.get('/analyze/:id?', function(req, res) {
 });
 
 var renderGame = function(game, req, res) {
-    console.log(game);
     var player = game.players[0];
     var result = ami.getDiscard(player.hand, player.discard),
         obj = result.obj,
@@ -97,35 +97,48 @@ var renderGame = function(game, req, res) {
     }
 };
 
-app.get('/game', function(req, res) {
-    var tile = req.param('tile', false),
-        game_id = req.param('game_id', false);
+var discardTile = function(game, tile) {
+    var player = game.players[0];
+    tile = parseInt(tile, 10);
+    player.discard.push(tile);
+    player.hand[tile] -= 1;
+    player.last_tile = game.wall.pop();
+    player.hand[player.last_tile] += 1;
+};
+
+var takeTurn = function(game_id, tile) {
+    var deferred = Q.defer();
     if (game_id) {
-        models.findOneGame(game_id).then(
-            function(game) {
-                if (tile) {
-                    var player = game.players[0];
-                    tile = parseInt(tile, 10);
-                    player.discard.push(tile);
-                    player.hand[tile] -= 1;
-                    player.last_tile = game.wall.pop();
-                    player.hand[player.last_tile] += 1;
-                }
-                models.saveGame(game).then(function() {
-                    renderGame(game, req, res);
-                }, function(error) {
-                }).done();
-            }, function(error) {
+        models.findOneGame(game_id).then(function(game) {
+            if (tile) {
+                discardTile(game, tile);
+                return models.saveGame(game).then(function(games) {
+                    return deferred.resolve(games[0]);
+                });
+            } else {
+                return deferred.resolve(game);
             }
-        ).done();
+        });
     } else {
         models.createGame([1]).then(function(games) {
             var game = games[0];
-            renderGame(game, req, res);
-        }, function(error) {
-            console.log(error);
-        }).done();
+            return deferred.resolve(game);
+        });
     }
+    return deferred.promise;
+};
+
+app.get('/game', function(req, res) {
+    var tile = req.param('tile', false),
+        game_id = req.param('game_id', false);
+    takeTurn(game_id, tile).then(function(game) {
+        console.log("game is ");
+        console.log(game);
+        return renderGame(game, req, res);
+    }).fail(function(error) {
+        console.log("there was an error");
+        console.log(error.stack);
+    });
 });
 
 // Connect to the DB and then start the application
