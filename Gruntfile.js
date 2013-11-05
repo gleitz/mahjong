@@ -55,7 +55,11 @@ module.exports = function(grunt) {
         },
 
         nodemon: {
-            dev: {}
+            dev: {
+                options: {
+                    nodeArgs: ['--port', port]
+                }
+            }
         },
 
         watch: {

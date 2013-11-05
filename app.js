@@ -6,13 +6,15 @@
  * Then visit http://localhost:3000/game
  */
 var mahjong = require('./server/mahjong'),
-    shanten = require('./server/shanten'),
+    ami = require('./server/ami'),
+    models = require('./server/models'),
     mahjong_util = require('./shared/mahjong_util'),
     shared = require('./shared/shared'),
     db = require('./server/db'),
     express = require('express'),
     swig = require('swig'),
     path = require('path'),
+    argv = require('optimist').argv,
     _ = require('underscore');
 
 
@@ -25,7 +27,7 @@ app.configure(function(){
     app.use(express.bodyParser());
     app.use(express.methodOverride());
     app.use(app.router);
-    app.use(express.static(__dirname + '/public'));
+    app.use(express['static'](__dirname + '/public'));
     app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
 });
 
@@ -50,7 +52,7 @@ app.get('/analyze/:id?', function(req, res) {
     var hand = req.params.id,
         result = 'use the form /analyze/1p 123456789s BGR9';
     if (hand) {
-        hand = mahjong_util.toTileString(hand)
+        hand = mahjong_util.toTileString(hand);
         // hand = _(hand.split('')).map(function (n) {return parseInt(n, 10);});
         var obj = mahjong.main(hand);
         result = 'current hand: ' + mahjong_util.toHandString(hand);
@@ -63,108 +65,19 @@ app.get('/analyze/:id?', function(req, res) {
     res.send(result);
 });
 
-app.get('/game', function(req, res) {
-    var tile = req.param('tile', false),
-        wall = req.param('wall'),
-        hand = req.param('hand'),
-        thrown = req.param('thrown', []),
-        i,
-        inter,
-        best_waits,
-        test_hand,
-        shanten_number,
-        new_tile;
-    if (tile && wall && hand) {
-        tile = parseInt(tile, 10);
-        if (thrown.length) {
-            thrown = _(thrown.split(',')).map(function (n) {return parseInt(n, 10);});
-        }
-        wall = _(wall.split(',')).map(function (n) {return parseInt(n, 10);});
-        hand = _(hand.split(',')).map(function (n) {return parseInt(n, 10);});
-        if (mahjong_util.isHonor(tile)) {
-            thrown.push(tile);
-        }
-        hand[tile] -= 1;
-        new_tile = wall.pop();
-        hand[new_tile] += 1;
-    } else {
-        var hand_obj = mahjong.generateHands(1);
-        hand = hand_obj.hands[0];
-        wall = hand_obj.wall;
-    }
-    var obj = mahjong.main(hand.slice(0));
-    var recommended = mahjong.findBestDiscard(hand, _.union(thrown, obj.discard));
-    if (obj.shanten === 0) {
-        best_waits = mahjong.findBestDiscardWait(hand);
-        if (best_waits.length > 0) {
-            inter = _.intersection(best_waits, [recommended.discard]);
-            if (inter.length === 0) {
-                test_hand = hand.slice(0);
-                test_hand[best_waits[0]] -= 1;
-                shanten_number = shanten.shantenGeneralized(test_hand);
-                if (shanten_number > 0) {
-                    best_waits = [recommended.discard];
-                }
-            } else {
-                best_waits = inter;
-            }
-        } else {
-            best_waits = [recommended.discard];
-        }
-        //TODO: take the one with the lowest score
-        recommended.discard = best_waits[0];
-    } else if (obj.shanten === 1) {
-        var best_discard = [],
-            num_waits = 0;
-        for (i=0; i<obj.discard.length; i++) {
-            var throw_tile = obj.discard[i];
-            var new_hand = hand.slice(0);
-            var total_waits = 0;
-            new_hand[throw_tile] -= 1;
-            for (var j=mahjong_util.vals.id_min; j<=mahjong_util.vals.id_max; j++) {
-                if (throw_tile === j) {
-                    continue;
-                }
-                var new_full_hand = new_hand.slice(0);
-                new_full_hand[j] += 1;
-                best_waits = mahjong.findBestDiscardWait(new_full_hand);
-                total_waits += best_waits;
-            }
-            if (total_waits.length === num_waits) {
-                if (_.indexOf(best_discard, throw_tile) === -1) {
-                    best_discard.push(throw_tile);
-                }
-            } else if (total_waits.length > num_waits) {
-                best_discard = [throw_tile];
-                num_waits = total_waits.length;
-            }
-        }
-        if (best_discard.length > 0) {
-            inter = _.intersection(best_discard, [recommended.discard]);
-            if (inter.length === 0) {
-                test_hand = hand.slice(0);
-                test_hand[best_discard[0]] -= 1;
-                shanten_number = shanten.shantenGeneralized(test_hand);
-                if (shanten_number > 1) {
-                    best_discard = [recommended.discard];
-                }
-            }
-        } else {
-            best_discard = [recommended.discard];
-        }
-        //TODO: take the one with the lowest score
-        recommended.discard = best_discard[0];
-    }
-    var response = {layout: 'index',
-                    hand: hand,
-                    wall: wall,
-                    thrown: thrown,
+var renderGame = function(game, req, res) {
+    console.log(game);
+    var player = game.players[0];
+    var result = ami.getDiscard(player.hand, player.discard),
+        obj = result.obj,
+        recommended = result.recommended;
+    var response = {hand: player.hand,
                     msg: obj.msg,
                     discards: obj.discard,
-                    best_waits: mahjong.findBestDiscardWait(hand),
                     shanten: obj.shanten,
-                    new_tile: new_tile,
+                    new_tile: game.last_tile,
                     tile_width: cfg.tile_width,
+                    game_id: game._id,
                     recommended: {discard_tile: [recommended.discard],
                                   discard: mahjong_util.toString(recommended.discard),
                                   score: recommended.score}};
@@ -182,15 +95,45 @@ app.get('/game', function(req, res) {
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
     }
-});
+};
 
-var port = 3000;
+app.get('/game', function(req, res) {
+    var tile = req.param('tile', false),
+        game_id = req.param('game_id', false);
+    if (game_id) {
+        models.findOneGame(game_id).then(
+            function(game) {
+                if (tile) {
+                    var player = game.players[0];
+                    tile = parseInt(tile, 10);
+                    player.discard.push(tile);
+                    player.hand[tile] -= 1;
+                    player.last_tile = game.wall.pop();
+                    player.hand[player.last_tile] += 1;
+                }
+                models.saveGame(game).then(function() {
+                    renderGame(game, req, res);
+                }, function(error) {
+                }).done();
+            }, function(error) {
+            }
+        ).done();
+    } else {
+        models.createGame([1]).then(function(games) {
+            var game = games[0];
+            renderGame(game, req, res);
+        }, function(error) {
+            console.log(error);
+        }).done();
+    }
+});
 
 // Connect to the DB and then start the application
 db.init(function(error) {
     if (error) {
         throw error;
     }
+    var port = argv.port || 3000;
     app.listen(port);
     console.log("listening on " + port);
 });

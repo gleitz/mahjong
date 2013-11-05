@@ -304,17 +304,18 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
         }
         wall.sort(function() {return 0.5 - Math.random();});
         return wall;
-    }, generateHand = function() {
+    },
+    generateHand = function() {
         var hand = [];
         for (var i = vals.id_min; i<=vals.id_max; i++) {
             hand.push(0);
         }
         return hand.slice(0);
     },
-    generateHands = function (num) {
+    deal = function (num_players) {
         var wall = generateWall();
         var hands = [];
-        for (var plr = 0; plr < num; plr++) {
+        for (var plr = 0; plr < num_players; plr++) {
             hands[plr] = generateHand();
             for (var i = 0; i <= 13; i++) { //TODO: switch to < 13 when actually dealing
                 hands[plr][wall.pop()] += 1;
@@ -371,7 +372,7 @@ module.exports = {
     findRegularMahjongAcc: findRegularMahjongAcc,
     main: main,
     findBestDiscard: findBestDiscard,
-    generateHands: generateHands,
+    deal: deal,
     generateHand: generateHand,
     getWaits: getWaits,
     findBestDiscardWait: findBestDiscardWait

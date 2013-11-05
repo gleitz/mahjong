@@ -1,11 +1,23 @@
+- Render the game on the server if you have a game_id
+- Don't save the game every time
+- Look into chaining calls - https://github.com/kriskowal/q and read q tutorial
+- Add additional players
 - Allow people to join a game
 - Allow people to throw tiles and see them on the screen
 
 
 player
 - name
-- hand
-- discard
 
 game
-- players
+- player
+  - hand
+  - discard
+- wall
+
+make sure the correct tile is thrown
+0,1,0,0,0,1,0,1,0,1,1,1,1,1,1,0,1,0,0,3,0,0,0,0,0,1,0
+
+
+Invalid number of pairs
+{ "wall" : [    10,     11,     7,  24,     4,  8,  16,     5,  21,     17,     16,     5,  22,     15,     18,     14,     11,     10,     3,  18,     13,     23,     14,     12,     19,     20,     25,     26,     17,     21,     6,  5,  17,     0,  1,  10,     1,  21,     20,     3,  7,  15,     6,  1,  12,     0,  9,  4,  17,     12,     4,  16,     14,     26,     23,     19,     8,  6,  18,     8,  13,     7,  15,     11,     25,     19,     21,     0,  8,  13,     11,     2,  9,  13,     16,     4,  2,  1,  7,  6,  5,  24,     25,     3,  26,     15,     20 ], "players" : [     {   "id" : 1,   "hand" : [  0,  0,  2,  1,  0,  0,  0,  0,  0,  2,  1,  0,  1,  0,  0,  0,  0,  0,  0,  0,  0,  0,  3,  2,  2,  0,  0 ],    "discard" : [   19,     20,     25,     26,     18,     14,     0 ],    "last_tile" : 2 } ], "_id" : ObjectId("5278afbe8170cd0000000003") }

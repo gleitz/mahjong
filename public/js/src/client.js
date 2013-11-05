@@ -156,10 +156,13 @@ var INIT = (function ($, undefined) {
     }
 
     function updateHand(data) {
+        console.log(data);
         data = $.extend({}, data, {ajax: true});
         var _cfg = {url: cfg.base_path + '/game',
                     data: (data),
                     success: function (data) {
+                        console.log(data);
+                        window.location.hash = "game_id=" + data.game_id;
                         if (data.new_tile) {
                             data.partial_hand = data.hand.slice(0);
                             data.partial_hand[data.new_tile] -= 1;
@@ -222,14 +225,18 @@ var INIT = (function ($, undefined) {
                 tile = $('#hand-tiles').find('div.tile-'+$a.data('tile')+':last');
             }
             tile.fadeOut('slow', function() {
-                window.location.hash = 'tile=' + $a.data('tile') + '&wall=' + $('#wall').data('wall') + '&hand=' + $('#hand').data('hand') + ($('#thrown').data('thrown') ? '&thrown=' + $('#thrown').data('thrown') : '');
+                var params = getHashParams();
+                params.tile = $a.data('tile');
+                updateHand(params);
+                // window.location.hash = 'tile=' + $a.data('tile') + '&wall=' + $('#wall').data('wall') + '&hand=' + $('#hand').data('hand') + ($('#thrown').data('thrown') ? '&thrown=' + $('#thrown').data('thrown') : '');
             });
         });
 
         $(window).hashchange( function(){
-            checkHash();
+            // checkHash();
         });
-        $(window).hashchange();
+        var params = getHashParams();
+        updateHand(params);
 
         $('body').bind('touchmove', pushMove);
         setTimeout(function() { window.scrollTo(0, 1); }, 0);
