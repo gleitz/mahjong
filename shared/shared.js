@@ -1,4 +1,6 @@
-/*global swig */
+/*
+ * Shared functions for use on both the client and the server
+ */
 
 // Establish the root object, `window` in the browser, or `exports` on the server.
 var root = this;
@@ -19,6 +21,12 @@ if (typeof exports !== 'undefined') {
     exports.shared = shared;
 } else {
     root.shared = shared;
+}
+
+// Import underscore if in **Node.js**
+// (import automatically available if in browser)
+if (typeof require !== 'undefined') {
+    var swig = require('swig');
 }
 
 shared.tile = function (input) {

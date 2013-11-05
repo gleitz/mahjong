@@ -8,11 +8,11 @@
 var mahjong = require('./server/mahjong'),
     shanten = require('./server/shanten'),
     mahjong_util = require('./shared/mahjong_util'),
-    shared = require('./public/js/src/shared'),
+    shared = require('./shared/shared'),
+    db = require('./server/db'),
     express = require('express'),
     swig = require('swig'),
     path = require('path'),
-    fs = require('fs'),
     _ = require('underscore');
 
 
@@ -179,15 +179,18 @@ app.get('/game', function(req, res) {
             tile_width: mobile ? 53 : 71 //width + 16
         };
 
-
-        fs.readFile(__dirname + '/views/partials/board.html', 'utf8', function(err, board){
-            cfg.board = board;
-            cfg.js_cfg = JSON.stringify(cfg);
-            res.render('game', cfg);
-        });
+        cfg.js_cfg = JSON.stringify(cfg);
+        res.render('game', cfg);
     }
 });
 
 var port = 3000;
-app.listen(port);
-console.log("listening on " + port);
+
+// Connect to the DB and then start the application
+db.init(function(error) {
+    if (error) {
+        throw error;
+    }
+    app.listen(port);
+    console.log("listening on " + port);
+});

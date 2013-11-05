@@ -44,32 +44,42 @@ module.exports = function(grunt) {
             }
         },
 
+        concurrent: {
+            compress: ['cssmin', 'uglify', 'mochaTest'],
+            start: {
+                tasks: ['nodemon', 'watch'],
+                options: {
+                    logConcurrentOutput: true
+                }
+            }
+        },
+
+        nodemon: {
+            dev: {}
+        },
+
         watch: {
-            files: ['public/**/*.*'],
-            tasks: ['cssmin', 'uglify', 'watch']
+            files: ['app.js',
+                    'public/**/*.*',
+                    'shared/**/*.*',
+                    'server/**/*.*',
+                    '!**/dist/**'], // ignore dist folder
+            tasks: ['concurrent:compress']
         }
 
     });
 
     // Dependencies
-    grunt.loadNpmTasks( 'grunt-contrib-cssmin' );
-    grunt.loadNpmTasks( 'grunt-contrib-uglify' );
-    grunt.loadNpmTasks( 'grunt-contrib-watch' );
-    grunt.loadNpmTasks( 'grunt-mocha-test' );
-
-    // Compression task
-    grunt.registerTask( 'compress', [ 'cssmin', 'uglify', 'watch' ] ); // add mocha tests
+    grunt.loadNpmTasks('grunt-contrib-cssmin');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-mocha-test');
+    grunt.loadNpmTasks('grunt-nodemon');
+    grunt.loadNpmTasks('grunt-concurrent');
 
     // Run tests
-    grunt.registerTask( 'test', [ 'mochaTest' ] );
+    grunt.registerTask('test', [ 'mochaTest' ] );
 
-    // Start the app
-    grunt.registerTask('default', function () {
-        grunt.util.spawn(
-            {cmd: 'node',
-             args: ['app.js']});
-
-        grunt.task.run('compress');
-    });
-
+    // Default tasks
+    grunt.registerTask('default', ['concurrent:start']);
 };

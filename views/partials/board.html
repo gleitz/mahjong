@@ -1,3 +1,4 @@
+{% raw %}
 <span class="small" style="position: absolute; right: 10px; top: 10px;"><a href="{{base_path}}/game">restart</a></span>
 <h1>Hand Contains</h1>
 <div id="hand-tiles" class="clr padded">{{ rendered_tiles|safe }}</div>
@@ -20,3 +21,4 @@
 <div id="hand" data-hand="{{ hand_data }}"></div>
 <div id="wall" data-wall="{{ wall_data }}"></div>
 <div id="thrown" data-thrown="{{ thrown_data }}"></div>
+{% endraw %}

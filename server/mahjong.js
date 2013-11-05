@@ -1,4 +1,4 @@
-/*global console, require, module */
+/*global console require module */
 
 /*
  * Functions for simulating a game of mahjong

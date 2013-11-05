@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="{{base_path}}/css/dist/all.min.css">
         <script src="{{base_path}}/js/dist/all.min.js"></script>
         <script id="board_tpl" type="text/x-tpl">
-            {{ board|safe }}
+            {% include "./partials/board.html" %}
         </script>
         <script>INIT.initialize({{ js_cfg|safe }});</script>
     </head>
