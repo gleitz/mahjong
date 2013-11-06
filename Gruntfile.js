@@ -63,10 +63,8 @@ module.exports = function(grunt) {
         },
 
         watch: {
-            files: ['app.js',
-                    'public/**/*.*',
+            files: ['public/**/*.*',
                     'shared/**/*.*',
-                    'server/**/*.*',
                     '!**/dist/**'], // ignore dist folder
             tasks: ['concurrent:compress']
         }

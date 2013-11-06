@@ -117,52 +117,12 @@ var INIT = (function ($, undefined) {
         return $.ajax(params);
     }
 
-    function getHashParams() {
-
-            var hashParams = {};
-        var e,
-        a = /\+/g,  // Regex for replacing addition symbol with a space
-        r = /([^&;=]+)=?([^&;]*)/g,
-        d = function (s) { return decodeURIComponent(s.replace(a, " ")); },
-        q = window.location.hash.substring(1);
-
-        while (e = r.exec(q)) {
-            hashParams[d(e[1])] = d(e[2]);
-        }
-
-        return hashParams;
-    }
-
-    function renderTiles(hist) {
-        var buffer = [],
-            i;
-        for (i=0; i<hist.length; i++) {
-            for (var j=0; j<hist[i]; j++) {
-                var pushed = false;
-                if (sum(hist) === 14) {
-                    var hand_tmp = hist.slice(0);
-                    hand_tmp[i] -= j;
-                    if (sum(hand_tmp.slice(i)) === 1) {
-                        buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
-                        pushed = true;
-                    }
-                }
-                if (!pushed) {
-                    buffer.push(shared.tile(i));
-                }
-            }
-        }
-        return buffer.join(' ');
-    }
-
     function updateHand(data) {
         console.log(data);
         data = $.extend({}, data, {ajax: true});
-        var _cfg = {url: cfg.base_path + '/game',
+        var _cfg = {url: cfg.base_path + '/game/' + cfg.game_id,
                     data: (data),
                     success: function (data) {
-                        console.log(data);
-                        window.location.hash = "game_id=" + data.game_id;
                         if (data.new_tile) {
                             data.partial_hand = data.hand.slice(0);
                             data.partial_hand[data.new_tile] -= 1;
@@ -170,12 +130,8 @@ var INIT = (function ($, undefined) {
                             data.partial_hand = data.hand;
                         }
                         data.discards.splice(data.discards.indexOf(data.recommended.discard_tile[0]), 1);
-                        data.rendered_tiles = renderTiles(data.partial_hand);
-                        data.hand_data = data.hand;
-                        data.wall_data = data.wall;
-                        data.thrown_data = data.thrown;
+                        data.rendered_tiles = shared.renderTiles(data.partial_hand, cfg);
                         $('body').html(board_tpl(data));
-
                         if (data.new_tile) {
                             $('#hand-tiles').append(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: data.new_tile}));
                         }
@@ -191,23 +147,10 @@ var INIT = (function ($, undefined) {
         ajax(_cfg);
     }
 
-    function sum (arr){
-        for(var s = 0, i = arr.length; i; s += arr[--i]);
-        return s;
-    }
-
     function initialize(local_cfg) {
         $.extend(cfg, local_cfg);
     }
 
-    function checkHash() {
-        var params = getHashParams();
-        if (params.tile && params.wall && params.hand) {
-            updateHand(params);
-        } else {
-            updateHand();
-        }
-    }
     $(function () {
         shared.augmentSwig(swig);
         board_tpl = swig.compile($('#board_tpl').html());
@@ -225,18 +168,9 @@ var INIT = (function ($, undefined) {
                 tile = $('#hand-tiles').find('div.tile-'+$a.data('tile')+':last');
             }
             tile.fadeOut('slow', function() {
-                var params = getHashParams();
-                params.tile = $a.data('tile');
-                updateHand(params);
-                // window.location.hash = 'tile=' + $a.data('tile') + '&wall=' + $('#wall').data('wall') + '&hand=' + $('#hand').data('hand') + ($('#thrown').data('thrown') ? '&thrown=' + $('#thrown').data('thrown') : '');
+                updateHand({tile: $a.data('tile')});
             });
         });
-
-        $(window).hashchange( function(){
-            // checkHash();
-        });
-        var params = getHashParams();
-        updateHand(params);
 
         $('body').bind('touchmove', pushMove);
         setTimeout(function() { window.scrollTo(0, 1); }, 0);

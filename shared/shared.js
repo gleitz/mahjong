@@ -29,10 +29,37 @@ if (typeof require !== 'undefined') {
     var swig = require('swig');
 }
 
+function sum (arr){
+    for(var s = 0, i = arr.length; i; s += arr[--i]);
+    return s;
+}
+
 shared.tile = function (input) {
     return swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" onclick="refute.threw(spy, exception);urn false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a>')({tile_num: input});
 };
 
-shared.augmentSwig = function(swig){
+shared.augmentSwig = function(swig) {
     swig.setFilter('tile', shared.tile);
+};
+
+shared.renderTiles = function(hist, cfg) {
+    var buffer = [],
+        i;
+    for (i=0; i<hist.length; i++) {
+        for (var j=0; j<hist[i]; j++) {
+            var pushed = false;
+            if (sum(hist) === 14) {
+                var hand_tmp = hist.slice(0);
+                hand_tmp[i] -= j;
+                if (sum(hand_tmp.slice(i)) === 1) {
+                    buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
+                    pushed = true;
+                }
+            }
+            if (!pushed) {
+                buffer.push(shared.tile(i));
+            }
+        }
+    }
+    return buffer.join(' ');
 };

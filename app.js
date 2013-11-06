@@ -14,6 +14,7 @@ var mahjong = require('./server/mahjong'),
     express = require('express'),
     swig = require('swig'),
     path = require('path'),
+    fs = require('fs'),
     Q = require('q'),
     argv = require('optimist').argv,
     _ = require('underscore');
@@ -37,6 +38,9 @@ app.engine('html', swig.renderFile);
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
 shared.augmentSwig(swig);
+
+// Get the template for the client side
+var board_tpl = fs.readFileSync('./views/partials/board.html','utf8');
 
 //TODO: remove in production
 swig.setDefaults({ cache: false });
@@ -85,12 +89,24 @@ var renderGame = function(game, req, res) {
         res.json(response);
     } else {
         var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
-
         cfg = {
             base_path: req.headers['x-script-name'] || '',
             mobile: mobile,
-            tile_width: mobile ? 53 : 71 //width + 16
+            tile_width: mobile ? 53 : 71, //width + 16
+            board_tpl: board_tpl
         };
+        if (response.game_id) {
+            _.extend(cfg, response);
+            if (cfg.new_tile) {
+                cfg.partial_hand = cfg.hand.slice(0);
+                cfg.partial_hand[cfg.new_tile] -= 1;
+            } else {
+                cfg.partial_hand = cfg.hand;
+            }
+            cfg.discards.splice(cfg.discards.indexOf(cfg.recommended.discard_tile[0]), 1);
+            cfg.rendered_tiles = shared.renderTiles(cfg.partial_hand, cfg);
+            cfg.rendered_tiles = shared.renderTiles(cfg.partial_hand, cfg);
+        }
 
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
@@ -109,34 +125,37 @@ var discardTile = function(game, tile) {
 var takeTurn = function(game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
+        console.log("found game!");
         models.findOneGame(game_id).then(function(game) {
             if (tile) {
                 discardTile(game, tile);
-                return models.saveGame(game).then(function(games) {
-                    return deferred.resolve(games[0]);
+                return models.saveGame(game).then(function() {
+                    return deferred.resolve(game);
                 });
             } else {
                 return deferred.resolve(game);
             }
         });
-    } else {
-        models.createGame([1]).then(function(games) {
-            var game = games[0];
-            return deferred.resolve(game);
-        });
     }
     return deferred.promise;
 };
 
-app.get('/game', function(req, res) {
-    var tile = req.param('tile', false),
-        game_id = req.param('game_id', false);
+app.get('/game/:id?', function(req, res) {
+    var game_id = req.params.id,
+        tile = req.param('tile', false);
+    if (!game_id) {
+        return models.createGame([1]).then(function(games) {
+            var game = games[0];
+            res.redirect((req.headers['x-script-name'] || '') + 'game/' + game._id);
+            return renderGame(game, req, res);
+        });
+    }
+    console.log("foobar");
     takeTurn(game_id, tile).then(function(game) {
-        console.log("game is ");
-        console.log(game);
         return renderGame(game, req, res);
     }).fail(function(error) {
         console.log("there was an error");
+        console.log(error);
         console.log(error.stack);
     });
 });
