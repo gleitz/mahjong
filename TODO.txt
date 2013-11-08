@@ -1,8 +1,9 @@
-- Don't save the game every time
-- Look into chaining calls - https://github.com/bellbind/using-promise-q and https://github.com/kriskowal/q
-- Add additional players
-- Allow people to join a game
+- When creating a game, put the user's name in the session/game object
+- When entering a game, establish a socketio connection to receive updates
+- Game needs a turn object
 - Allow people to throw tiles and see them on the screen
+- Look into chaining calls - https://github.com/bellbind/using-promise-q and https://github.com/kriskowal/q
+
 
 
 player

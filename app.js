@@ -12,13 +12,18 @@ var mahjong = require('./server/mahjong'),
     shared = require('./shared/shared'),
     db = require('./server/db'),
     express = require('express'),
+    MongoStore = require('connect-mongo')(express),
     swig = require('swig'),
     path = require('path'),
     fs = require('fs'),
     Q = require('q'),
+    AES = require("crypto-js/aes"),
     argv = require('optimist').argv,
     _ = require('underscore');
 
+var SOCKET_IO_NAMESPACE = 'game',
+    SOCKET_IO_SECRET = 'fhqwhgads',
+    EXPRESS_SESSION_SECRET = 'fhqwhgads';
 
 var cfg = {
 };
@@ -26,10 +31,20 @@ var cfg = {
 var app = express();
 
 app.configure(function(){
+    app.use(express['static'](__dirname + '/public'));
     app.use(express.bodyParser());
     app.use(express.methodOverride());
+    app.use(express.cookieParser());
+    app.use(express.session({
+        store: new MongoStore({db: 'session'}),
+        secret: EXPRESS_SESSION_SECRET
+    }));
+    app.use(function(req, res, next) {
+        res.locals.socketIoNamespace = "game";
+        res.locals.socketIoToken = AES.encrypt(req.session.id, SOCKET_IO_SECRET);
+        next();
+    });
     app.use(app.router);
-    app.use(express['static'](__dirname + '/public'));
     app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
 });
 
@@ -75,7 +90,9 @@ var renderGame = function(game, req, res) {
     var result = ami.getDiscard(player.hand, player.discard),
         obj = result.obj,
         recommended = result.recommended;
-    var response = {hand: player.hand,
+    var response = {socketIo: {namespace: SOCKET_IO_NAMESPACE,
+                               token: AES.encrypt(req.session.id, SOCKET_IO_SECRET)},
+                    hand: player.hand,
                     msg: obj.msg,
                     discards: obj.discard,
                     shanten: obj.shanten,
@@ -125,7 +142,6 @@ var discardTile = function(game, tile) {
 var takeTurn = function(game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
-        console.log("found game!");
         models.findOneGame(game_id).then(function(game) {
             if (tile) {
                 discardTile(game, tile);
@@ -141,6 +157,9 @@ var takeTurn = function(game_id, tile) {
 };
 
 app.get('/game/:id?', function(req, res) {
+    var previous      = req.session.value || 0;
+    req.session.value = previous + 1;
+    console.log(req.session.value);
     var game_id = req.params.id,
         tile = req.param('tile', false);
     if (!game_id) {
@@ -150,7 +169,6 @@ app.get('/game/:id?', function(req, res) {
             return renderGame(game, req, res);
         });
     }
-    console.log("foobar");
     takeTurn(game_id, tile).then(function(game) {
         return renderGame(game, req, res);
     }).fail(function(error) {

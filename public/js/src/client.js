@@ -7,68 +7,6 @@ var INIT = (function ($, undefined) {
         clickEvent : /(iPad|iPhone)/i.test(navigator.userAgent) ? 'touchend' : 'click'
     },
         board_tpl;
-    var honors = [
-        'E',
-        'S',
-        'W',
-        'N',
-        'B',
-        'G',
-        'R',
-        '1',
-        '9'
-    ],
-        colors = [
-            'Pin',
-            'Sou',
-            'Honor'
-        ],
-        vals = {
-            // id = value + (9 * color);
-            // (buffered values have two extra spaces
-            // on either side of the pins and sous
-            // name     id      buffered
-            // pin      00-08   02-10
-            // sou      09-17   13-21
-            // honors   18-26   24-32
-            id_min: 0,
-            color_beg: 0,
-            pin_beg: 0,
-            pin_end: 8,
-            sou_beg: 9,
-            sou_end: 17,
-            color_end: 17,
-            honor_beg: 18,
-            honor_end: 26,
-            id_max: 26,
-            count: 26 + 1,
-            buf_beg: 2,
-            buf_end_no_honors: 21,
-            buf_end: 32
-        },
-
-    getColor = function (tile) {
-            tile = tile - (tile % 9);
-        tile /= 9;
-        return colors[tile];
-    },
-    getValue =  function (tile) {
-        return tile % 9;
-        },
-    getHonor =  function (tile) {
-        return honors[getValue(tile)];
-        },
-    isHonor = function (tile) {
-        return tile >= vals.honor_beg;
-    },
-    toString = function (tile) {
-
-        if (isHonor(tile)) {
-            return getHonor(tile);
-        } else {
-            return (getValue(tile) + 1) + getColor(tile);
-        }
-    };
 
     // touch navigation
     function pushMove() {
