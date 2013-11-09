@@ -1,3 +1,4 @@
+- Socket.io query string authentication https://www.exratione.com/2013/05/the-use-of-cookies-versus-query-string-tokens-to-identify-sessions-in-socketio/
 - When creating a game, put the user's name in the session/game object
 - When entering a game, establish a socketio connection to receive updates
 - Game needs a turn object

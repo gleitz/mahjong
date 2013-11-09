@@ -35,7 +35,7 @@ function sum (arr){
 }
 
 shared.tile = function (input) {
-    return swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" onclick="refute.threw(spy, exception);urn false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a>')({tile_num: input});
+    return swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>')({tile_num: input});
 };
 
 shared.augmentSwig = function(swig) {
@@ -52,7 +52,7 @@ shared.renderTiles = function(hist, cfg) {
                 var hand_tmp = hist.slice(0);
                 hand_tmp[i] -= j;
                 if (sum(hand_tmp.slice(i)) === 1) {
-                    buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
+                    buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
                     pushed = true;
                 }
             }
