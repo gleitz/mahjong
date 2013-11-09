@@ -1,5 +1,9 @@
 /*global exports */
 
+/*
+ * Routes for handling state in the mahjong game
+ */
+
 var _ = require('underscore'),
     AES = require("crypto-js/aes"),
     ami = require('./ami'),
@@ -38,9 +42,6 @@ exports.addRoutes = function(app) {
     });
 
     app.get('/game/:id?', function(req, res) {
-        var previous      = req.session.value || 0;
-        req.session.value = previous + 1;
-        console.log(req.session.value);
         var game_id = req.params.id,
             tile = req.param('tile', false);
         if (!game_id) {
@@ -65,10 +66,9 @@ var renderGame = function(game, req, res) {
     var result = ami.getDiscard(player.hand, player.discard),
         obj = result.obj,
         recommended = result.recommended;
-    console.log(game);
     var response = {socketIo: {namespace: config.SOCKET_IO_NAMESPACE,
                                token: AES.encrypt(req.session.id,
-                                                  config.SOCKET_IO_SECRET)}.toString(),
+                                                  config.SOCKET_IO_SECRET).toString()},
                     hand: player.hand,
                     msg: obj.msg,
                     discards: obj.discard,
@@ -89,7 +89,6 @@ var renderGame = function(game, req, res) {
             board_tpl: board_tpl
         };
         if (response.game_id) {
-            console.log(response);
             _.extend(cfg, response);
             if (cfg.new_tile) {
                 cfg.partial_hand = cfg.hand.slice(0);
