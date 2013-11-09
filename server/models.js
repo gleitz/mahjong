@@ -7,11 +7,9 @@
 var db = require('./db'),
     ObjectID = require('mongodb').ObjectID,
     mahjong = require('./mahjong'),
-    mahjong_util = require('../shared/mahjong_util'),
-    shanten = require('./shanten'),
-    Q = require('q'),
-    _ = require('underscore');
+    Q = require('q');
 
+// TODO: disable in production
 Q.longStackSupport = true;
 
 module.exports.createGame = function(player_ids) {
@@ -20,7 +18,8 @@ module.exports.createGame = function(player_ids) {
         hands = deal.hands,
         i;
     var game = {wall: deal.wall,
-                players: []
+                players: [],
+                current_player: player_ids[0]
                };
     for (i=0; i<hands.length; i++) {
         var player = {id: player_ids[i],

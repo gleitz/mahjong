@@ -1,7 +1,6 @@
-- Socket.io query string authentication https://www.exratione.com/2013/05/the-use-of-cookies-versus-query-string-tokens-to-identify-sessions-in-socketio/
-- When creating a game, put the user's name in the session/game object
+- Create a user object in the mongodb
+- When creating a game, put the user_id in the session/game object
 - When entering a game, establish a socketio connection to receive updates
-- Game needs a turn object
 - Allow people to throw tiles and see them on the screen
 - Look into chaining calls - https://github.com/bellbind/using-promise-q and https://github.com/kriskowal/q
 

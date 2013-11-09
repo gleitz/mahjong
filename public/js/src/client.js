@@ -1,4 +1,4 @@
-/*global jQuery swig console window shared */
+/*global jQuery swig console window shared io */
 
 var INIT = (function ($, undefined) {
 
@@ -56,7 +56,6 @@ var INIT = (function ($, undefined) {
     }
 
     function updateHand(data) {
-        console.log(data);
         data = $.extend({}, data, {ajax: true});
         var _cfg = {url: cfg.base_path + '/game/' + cfg.game_id,
                     data: (data),
@@ -90,8 +89,10 @@ var INIT = (function ($, undefined) {
     }
 
     $(function () {
+        // swig initialization
         shared.augmentSwig(swig);
         board_tpl = swig.compile($('#board_tpl').html());
+
         if (cfg.mobile) {
             $('body').addClass('mobile');
         }
@@ -110,13 +111,22 @@ var INIT = (function ($, undefined) {
             });
         });
 
+        // initialize socket.io
+        var socket = io.connect(cfg.base_path + '/' +
+                                cfg.socketIo.namespace + '?token=' +
+                                cfg.socketIo.token);
+        socket.on('news', function (data) {
+            console.log(data);
+            socket.emit('my other event', { my: 'data' });
+        });
+
         $('body').bind('touchmove', pushMove);
         setTimeout(function() { window.scrollTo(0, 1); }, 0);
     });
 
 
     return {
-        cfg        : cfg,
-        initialize : initialize
+        cfg: cfg,
+        initialize: initialize
     };
 })(jQuery);

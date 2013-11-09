@@ -5,9 +5,9 @@
  */
 
 var _ = require('underscore'),
-    AES = require("crypto-js/aes"),
     ami = require('./ami'),
     config = require('./config'),
+    crypto = require('./crypto'),
     fs = require('fs'),
     mahjong = require('./mahjong'),
     mahjong_util = require('../shared/mahjong_util'),
@@ -45,7 +45,7 @@ exports.addRoutes = function(app) {
         var game_id = req.params.id,
             tile = req.param('tile', false);
         if (!game_id) {
-            return models.createGame([1]).then(function(games) {
+            return models.createGame([req.session.user_id]).then(function(games) {
                 var game = games[0];
                 res.redirect((req.headers['x-script-name'] || '') + 'game/' + game._id);
                 return renderGame(game, req, res);
@@ -62,13 +62,15 @@ exports.addRoutes = function(app) {
 };
 
 var renderGame = function(game, req, res) {
+    res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+    console.log("session id is " + req.session.id);
     var player = game.players[0];
     var result = ami.getDiscard(player.hand, player.discard),
         obj = result.obj,
         recommended = result.recommended;
     var response = {socketIo: {namespace: config.SOCKET_IO_NAMESPACE,
-                               token: AES.encrypt(req.session.id,
-                                                  config.SOCKET_IO_SECRET).toString()},
+                               token: crypto.encrypt(req.session.id)},
+                    moniker: req.session.moniker,
                     hand: player.hand,
                     msg: obj.msg,
                     discards: obj.discard,
