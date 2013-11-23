@@ -10,11 +10,9 @@ var argv = require('optimist').argv,
     crypto = require('./server/crypto'),
     db = require('./server/db'),
     express = require('express'),
-    moniker = require('moniker'),
     path = require('path'),
     shared = require('./shared/shared'),
-    swig = require('swig'),
-    uuid = require('node-uuid');
+    swig = require('swig');
 
 var MongoStore = require('connect-mongo')(express),
     sessionStore = new MongoStore({db: 'session'});
@@ -33,16 +31,6 @@ app.configure(function(){
         store: sessionStore,
         secret: config.EXPRESS_SESSION_SECRET
     }));
-    // add a moniker if not present
-    app.use(function(req, res, next) {
-        if (!req.session.user_id) {
-            req.session.user_id = uuid.v4();
-        }
-        if (!req.session.moniker) {
-            req.session.moniker = moniker.choose();
-        }
-        next();
-    });
     app.use(app.router);
     app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
     app.use(express.errorHandler({dumpExceptions: true,
