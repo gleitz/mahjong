@@ -95,32 +95,32 @@ a.selected {border: 4px solid #FF0000;
 
 .center { text-align: center; }
 
-.tile-0{ background-image: url(/img/tiles/bamboo_1.png); }
-.tile-1{ background-image: url(/img/tiles/bamboo_2.png); }
-.tile-2{ background-image: url(/img/tiles/bamboo_3.png); }
-.tile-3{ background-image: url(/img/tiles/bamboo_4.png); }
-.tile-4{ background-image: url(/img/tiles/bamboo_5.png); }
-.tile-5{ background-image: url(/img/tiles/bamboo_6.png); }
-.tile-6{ background-image: url(/img/tiles/bamboo_7.png); }
-.tile-7{ background-image: url(/img/tiles/bamboo_8.png); }
-.tile-8{ background-image: url(/img/tiles/bamboo_9.png); }
+.tile-0{ background-image: url(../../img/tiles/bamboo_1.png); }
+.tile-1{ background-image: url(../../img/tiles/bamboo_2.png); }
+.tile-2{ background-image: url(../../img/tiles/bamboo_3.png); }
+.tile-3{ background-image: url(../../img/tiles/bamboo_4.png); }
+.tile-4{ background-image: url(../../img/tiles/bamboo_5.png); }
+.tile-5{ background-image: url(../../img/tiles/bamboo_6.png); }
+.tile-6{ background-image: url(../../img/tiles/bamboo_7.png); }
+.tile-7{ background-image: url(../../img/tiles/bamboo_8.png); }
+.tile-8{ background-image: url(../../img/tiles/bamboo_9.png); }
 
-.tile-9{ background-image: url(/img/tiles/ball_1.png); }
-.tile-10{ background-image: url(/img/tiles/ball_2.png); }
-.tile-11{ background-image: url(/img/tiles/ball_3.png); }
-.tile-12{ background-image: url(/img/tiles/ball_4.png); }
-.tile-13{ background-image: url(/img/tiles/ball_5.png); }
-.tile-14{ background-image: url(/img/tiles/ball_6.png); }
-.tile-15{ background-image: url(/img/tiles/ball_7.png); }
-.tile-16{ background-image: url(/img/tiles/ball_8.png); }
-.tile-17{ background-image: url(/img/tiles/ball_9.png); }
+.tile-9{ background-image: url(../../img/tiles/ball_1.png); }
+.tile-10{ background-image: url(../../img/tiles/ball_2.png); }
+.tile-11{ background-image: url(../../img/tiles/ball_3.png); }
+.tile-12{ background-image: url(../../img/tiles/ball_4.png); }
+.tile-13{ background-image: url(../../img/tiles/ball_5.png); }
+.tile-14{ background-image: url(../../img/tiles/ball_6.png); }
+.tile-15{ background-image: url(../../img/tiles/ball_7.png); }
+.tile-16{ background-image: url(../../img/tiles/ball_8.png); }
+.tile-17{ background-image: url(../../img/tiles/ball_9.png); }
 
-.tile-18{ background-image: url(/img/tiles/wind_east.png); }
-.tile-19{ background-image: url(/img/tiles/wind_south.png); }
-.tile-20{ background-image: url(/img/tiles/wind_west.png); }
-.tile-21{ background-image: url(/img/tiles/wind_north.png); }
-.tile-22{ background-image: url(/img/tiles/dragon_white.png); }
-.tile-23{ background-image: url(/img/tiles/dragon_green.png); }
-.tile-24{ background-image: url(/img/tiles/dragon_red.png); }
-.tile-25{ background-image: url(/img/tiles/character_1.png); }
-.tile-26{ background-image: url(/img/tiles/character_9.png); }
+.tile-18{ background-image: url(../../img/tiles/wind_east.png); }
+.tile-19{ background-image: url(../../img/tiles/wind_south.png); }
+.tile-20{ background-image: url(../../img/tiles/wind_west.png); }
+.tile-21{ background-image: url(../../img/tiles/wind_north.png); }
+.tile-22{ background-image: url(../../img/tiles/dragon_white.png); }
+.tile-23{ background-image: url(../../img/tiles/dragon_green.png); }
+.tile-24{ background-image: url(../../img/tiles/dragon_red.png); }
+.tile-25{ background-image: url(../../img/tiles/character_1.png); }
+.tile-26{ background-image: url(../../img/tiles/character_9.png); }

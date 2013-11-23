@@ -47,7 +47,7 @@ exports.addRoutes = function(app) {
         if (!game_id) {
             return models.createGame([req.session.user_id]).then(function(games) {
                 var game = games[0];
-                res.redirect((req.headers['x-script-name'] || '') + 'game/' + game._id);
+                res.redirect((req.headers['x-script-name'] || '') + '/game/' + game._id);
                 return renderGame(game, req, res);
             });
         }
