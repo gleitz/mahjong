@@ -1,3 +1,4 @@
+- Use LESS
 - Create a user object in the mongodb
 - Add getOrCreateUser (and then getOrCreateGame)
 - When creating a game, put the user_id in the session/game object

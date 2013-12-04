@@ -25,7 +25,8 @@
     "grunt-contrib-watch": "~0.5.3",
     "grunt-mocha-test": "~0.7.0",
     "grunt-nodemon": "~0.1.1",
-    "grunt-concurrent": "~0.4.1"
+    "grunt-concurrent": "~0.4.1",
+    "grunt-contrib-less": "~0.8.2"
   },
   "scripts": {
     "test": "mocha"

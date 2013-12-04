@@ -27,10 +27,18 @@ module.exports = function(grunt) {
             }
         },
 
-        cssmin: {
-            compress: {
+        less: {
+            development: {
                 files: {
-                    'public/css/dist/all.min.css': [ 'public/css/src/**/*.css' ]
+                    'public/css/dist/all.css': [ 'public/css/src/**/*.less' ]
+                }
+            },
+            production: {
+                options: {
+                    cleancss: true
+                },
+                files: {
+                    'public/css/dist/all.min.css': [ 'public/css/src/**/*.less' ]
                 }
             }
         },
@@ -45,7 +53,7 @@ module.exports = function(grunt) {
         },
 
         concurrent: {
-            compress: ['cssmin', 'uglify', 'mochaTest'],
+            compress: ['less', 'uglify', 'mochaTest'],
             start: {
                 tasks: ['nodemon', 'watch'],
                 options: {
@@ -72,6 +80,7 @@ module.exports = function(grunt) {
     });
 
     // Dependencies
+    grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
