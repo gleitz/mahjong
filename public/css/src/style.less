@@ -73,22 +73,17 @@ a.selected {border: 4px solid #FF0000;
 @num-tiles-in-suit: 9;
 @bamboo: bamboo;
 @ball: ball;
-.makeTiles(bamboo; @i) when (@i > 0) {
-    @tile-value: @i - 1;
+.makeTile(@tile-name; @tile-value; @i) {
     .tile-@{tile-value} {
-        background-image: url('../../img/tiles/bamboo_@{i}.png');
+        background-image: url('../../img/tiles/@{tile-name}_@{i}.png');
     }
-    .makeTiles(@bamboo; (@i - 1));
 }
-.makeTiles(ball; @i) when (@i > 0) {
-    @tile-value: @i - 1 + 9;
-    .tile-@{tile-value} {
-        background-image: url('../../img/tiles/ball_@{i}.png');
-    }
-    .makeTiles(@ball; (@i - 1));
+.makeTiles(@type; @tile-value; @i) when (@i > 0) {
+    .makeTile(@type; @tile-value; @i);
+    .makeTiles(@type; (@tile-value - 1); (@i - 1));
 }
-.makeTiles(@bamboo; @num-tiles-in-suit);
-.makeTiles(@ball; @num-tiles-in-suit);
+.makeTiles(@bamboo; (@num-tiles-in-suit - 1); @num-tiles-in-suit);
+.makeTiles(@ball; (@num-tiles-in-suit - 1 + 9); @num-tiles-in-suit);
 
 .tile-18{ background-image: url(../../img/tiles/wind_east.png); }
 .tile-19{ background-image: url(../../img/tiles/wind_south.png); }
