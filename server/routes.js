@@ -19,17 +19,26 @@ var _ = require('underscore'),
 // Fetch board template for rendering on the client side
 var board_tpl = fs.readFileSync('./views/partials/board.html', 'utf8');
 
+var formatUrl = function(req, path) {
+    return (req.headers['x-script-name'] || '') + path
+}
+
 exports.addRoutes = function(app) {
-    app.get('/', function(req, res){
-        res.send('konnichiwa');
+    app.get('/', function(req, res) {
+        var cfg = {path: formatUrl(req, '/game')};
+        res.render('home', cfg);
     });
 
-    app.get('/analyze/:id?', function(req, res) {
-        var hand = req.params.id,
+    app.get('/analyze/:hand?', function(req, res) {
+        var hand = req.params.hand,
+            raw_hand = req.query.raw_hand,
             result = 'use the form /analyze/1p 123456789s BGR9';
-        if (hand) {
+        if (raw_hand) {
+            hand = JSON.parse(raw_hand);
+        } else if (hand) {
             hand = mahjong_util.toTileString(hand);
-            // hand = _(hand.split('')).map(function (n) {return parseInt(n, 10);});
+        }
+        if (hand) {
             var obj = mahjong.main(hand);
             result = 'current hand: ' + mahjong_util.toHandString(hand);
             result += '<br/><br/>' + obj.msg;
@@ -47,7 +56,7 @@ exports.addRoutes = function(app) {
         if (!game_id) {
             return models.createGame([req.session.user_id]).then(function(games) {
                 var game = games[0];
-                res.redirect((req.headers['x-script-name'] || '') + '/game/' + game._id);
+                res.redirect(formatUrl(req, '/game/' + game._id));
                 return renderGame(game, req, res);
             });
         }

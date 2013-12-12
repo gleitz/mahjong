@@ -191,7 +191,7 @@ var shantenSimulation = function (depth, shanten, buffered, singles, pairs) {
 
         if (pairs > 0) {
             if (pairs != 2) {
-                throw "Invalid number of pairs";
+                return false;
             }
             depth += 0;
         }

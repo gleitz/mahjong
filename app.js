@@ -22,6 +22,9 @@ var app = express(),
     io = require('socket.io').listen(server),
     cookieParser = express.cookieParser(config.EXPRESS_COOKIE_SECRET);
 
+// TODO(gleitz): disable in production
+io.set('log level', 1); // reduce logging
+
 app.configure(function(){
     app.use(express['static'](__dirname + '/public'));
     app.use(express.bodyParser());
