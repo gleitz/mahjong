@@ -1,6 +1,5 @@
-- When discarding, make sure it is the correct player
-- When entering a game, establish a socketio connection to receive updates
 - Allow people to throw tiles and see them on the screen
+- When entering a game, establish a socketio connection with that game name
 - switch to rendered templates
 - Look into chaining calls - http://stackoverflow.com/questions/19506163/how-to-correctly-chain-conditional-promises-with-q-js https://github.com/bellbind/using-promise-q and https://github.com/kriskowal/q
 

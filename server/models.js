@@ -33,7 +33,9 @@ module.exports.createGame = function(player_ids) {
                       last_tile: null};
         game.players.push(player);
     }
-    return insertGame(game);
+    return insertGame(game).then(function(games) {
+        return games[0];
+    });
 };
 
 module.exports.findOneGame = function(game_id) {
@@ -50,7 +52,17 @@ module.exports.createPlayer = function() {
     var insertPlayer = Q.nbind(db.players.insert, db.players);
     var player = {name: moniker.choose()
                  };
-    return insertPlayer(player);
+    return insertPlayer(player).then(function(players) {
+        return players[0];
+    });
+};
+
+module.exports.getOrCreatePlayer = function(player_id) {
+    if (player_id) {
+        return module.exports.findOnePlayer(player_id);
+    } else {
+        return module.exports.createPlayer();
+    }
 };
 
 module.exports.findOnePlayer = function(player_id) {
@@ -62,14 +74,3 @@ module.exports.savePlayer = function(player) {
     var updatePlayer = Q.nbind(db.players.update, db.players);
     return updatePlayer({_id: player._id}, player);
 };
-
-/*
- // check if the user exists
-
- if (!req.session.user_id) {
- }
- if (!req.session.moniker) {
- req.session.moniker = ;
- }
- next();
-*/

@@ -121,7 +121,7 @@ var INIT = (function ($, undefined) {
         });
 
         // highlight the current tile to throw
-        if (cfg.isSimulation) {
+        if (cfg.isSimulation && !cfg.msg) {
             $('#hand-tiles').find('div.tile-' + cfg.recommended.discard_tile + ':last').closest('a').addClass('selected');
         }
 

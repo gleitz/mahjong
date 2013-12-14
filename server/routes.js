@@ -37,7 +37,7 @@ var renderGame = function(game, req, res) {
         recommended = result.recommended;
     var response = {socketIo: {namespace: config.SOCKET_IO_NAMESPACE,
                                token: crypto.encrypt(req.session.id)},
-                    moniker: req.session.moniker,
+                    player_name: req.session.player_name,
                     hand: player.hand,
                     msg: obj.msg,
                     discards: obj.discard,
@@ -76,22 +76,33 @@ var renderGame = function(game, req, res) {
 };
 
 
-var discardTile = function(game, tile) {
-    var player = game.players[0];
-    tile = parseInt(tile, 10);
+var discardTile = function(player_id, game, tile) {
+    console.log(player_id);
+    var player = _.find(game.players, function(p) {
+        console.log(p);
+        return p.id === player_id;
+    });
+    if (!player) {
+        return false;
+    }
+    tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
     player.discard.push(tile);
     player.hand[tile] -= 1;
     player.last_tile = game.wall.pop();
     player.hand[player.last_tile] += 1;
+    return true;
 };
 
 
-var takeTurn = function(user_id, game_id, tile) {
+var takeTurn = function(player_id, game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
         models.findOneGame(game_id).then(function(game) {
             if (tile) {
-                discardTile(game, tile);
+                var success = discardTile(player_id, game, tile);
+                if (!success) {
+                    return deferred.reject(new Error('User or game not found'));
+                }
                 return models.saveGame(game).then(function() {
                     return deferred.resolve(game);
                 });
@@ -102,6 +113,15 @@ var takeTurn = function(user_id, game_id, tile) {
     }
     return deferred.promise;
 };
+
+var addPlayerToSession = function(req, player) {
+    if (!req.session.player_id) {
+        req.session.player_id = player._id
+    }
+    if (!req.session.player_name) {
+        req.session.player_name = player.name;
+    }
+}
 
 
 /* Exported Functions */
@@ -138,47 +158,28 @@ exports.addRoutes = function(app) {
         res.send(result);
     });
 
-    // Simulate a mahjong game with AMI playing a single hand
-    app.get('/simulate/:id?', function(req, res) {
-        var game_id = req.params.id,
-            tile = req.param('tile', false),
-            user_id = req.session.user_id;
-        if (!game_id) {
-            return models.createGame([user_id]).then(function(games) {
-                var game = games[0];
-                res.redirect(formatUrl(req, '/game/' + game._id));
-                return renderGame(game, req, res);
-            });
-        } else {
-            takeTurn(user_id, game_id, tile).then(function(game) {
-                return renderGame(game, req, res);
-            }).fail(function(error) {
-                console.log("there was an error");
-                console.log(error);
-                console.log(error.stack);
-            });
-        }
-    });
-
-    // Create a game for multiple players
+    // Load a game or play a tile. Can also be used to simulate a
+    // mahjong game with AMI playing a single hand
     app.get('/game/:id?', function(req, res) {
-        var game_id = req.params.id,
-            tile = req.param('tile', false),
-            user_id = req.session.user_id;
-        if (game_id) {
-            return takeTurn(user_id, game_id, tile).then(function(game) {
-                return renderGame(game, req, res);
-            }).fail(function(error) {
-                console.log("there was an error");
-                console.log(error);
-                console.log(error.stack);
-            });
-        } else {
-            return models.createGame([user_id]).then(function(games) {
-                var game = games[0];
-                res.redirect(formatUrl(req, '/game/' + game._id));
-                return renderGame(game, req, res);
-            });
-        }
+        return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
+            addPlayerToSession(req, player);
+            var game_id = req.params.id,
+                tile = req.param('tile', false),
+                player_id = req.session.player_id;
+            if (!game_id) {
+                return models.createGame([player_id]).then(function(game) {
+                    res.redirect(formatUrl(req, '/game/' + game._id));
+                    return renderGame(game, req, res);
+                });
+            } else {
+                takeTurn(player_id, game_id, tile).then(function(game) {
+                    return renderGame(game, req, res);
+                }).fail(function(error) {
+                    console.log("there was an error");
+                    console.log(error);
+                    console.log(error.stack);
+                });
+            }
+        });
     });
 };
