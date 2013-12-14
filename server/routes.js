@@ -1,8 +1,11 @@
 /*global exports */
 
 /*
- * Routes for handling state in the mahjong game
+ * Routes for URL endpoints in the mahjong game.
  */
+
+
+/* Imports */
 
 var _ = require('underscore'),
     ami = require('./ami'),
@@ -15,60 +18,15 @@ var _ = require('underscore'),
     Q = require('q'),
     shared = require('../shared/shared');
 
-
 // Fetch board template for rendering on the client side
 var board_tpl = fs.readFileSync('./views/partials/board.html', 'utf8');
+
+
+/* Helper Functions */
 
 var formatUrl = function(req, path) {
     return (req.headers['x-script-name'] || '') + path
 }
-
-exports.addRoutes = function(app) {
-    app.get('/', function(req, res) {
-        var cfg = {path: formatUrl(req, '/game')};
-        res.render('home', cfg);
-    });
-
-    app.get('/analyze/:hand?', function(req, res) {
-        var hand = req.params.hand,
-            raw_hand = req.query.raw_hand,
-            result = 'use the form /analyze/1p 123456789s BGR9';
-        if (raw_hand) {
-            hand = JSON.parse(raw_hand);
-        } else if (hand) {
-            hand = mahjong_util.toTileString(hand);
-        }
-        if (hand) {
-            var obj = mahjong.main(hand);
-            result = 'current hand: ' + mahjong_util.toHandString(hand);
-            result += '<br/><br/>' + obj.msg;
-            if (obj.msg.indexOf('mahjong') == -1) {
-                result += '<br/><br/>shanten is ' + obj.shanten;
-                result += '<br/><br/>probably best to throw the ' + mahjong_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
-            }
-        }
-        res.send(result);
-    });
-
-    app.get('/game/:id?', function(req, res) {
-        var game_id = req.params.id,
-            tile = req.param('tile', false);
-        if (!game_id) {
-            return models.createGame([req.session.user_id]).then(function(games) {
-                var game = games[0];
-                res.redirect(formatUrl(req, '/game/' + game._id));
-                return renderGame(game, req, res);
-            });
-        }
-        takeTurn(game_id, tile).then(function(game) {
-            return renderGame(game, req, res);
-        }).fail(function(error) {
-            console.log("there was an error");
-            console.log(error);
-            console.log(error.stack);
-        });
-    });
-};
 
 var renderGame = function(game, req, res) {
     res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
@@ -97,7 +55,8 @@ var renderGame = function(game, req, res) {
             base_path: req.headers['x-script-name'] || '',
             mobile: mobile,
             tile_width: mobile ? 53 : 71, //width + 16
-            board_tpl: board_tpl
+            board_tpl: board_tpl,
+            isSimulation: true
         };
         if (response.game_id) {
             _.extend(cfg, response);
@@ -111,11 +70,11 @@ var renderGame = function(game, req, res) {
             cfg.rendered_tiles = shared.renderTiles(cfg.partial_hand, cfg);
             cfg.rendered_tiles = shared.renderTiles(cfg.partial_hand, cfg);
         }
-
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
     }
 };
+
 
 var discardTile = function(game, tile) {
     var player = game.players[0];
@@ -126,7 +85,8 @@ var discardTile = function(game, tile) {
     player.hand[player.last_tile] += 1;
 };
 
-var takeTurn = function(game_id, tile) {
+
+var takeTurn = function(user_id, game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
         models.findOneGame(game_id).then(function(game) {
@@ -141,4 +101,84 @@ var takeTurn = function(game_id, tile) {
         });
     }
     return deferred.promise;
+};
+
+
+/* Exported Functions */
+
+exports.addRoutes = function(app) {
+
+    // Homepage
+    app.get('/', function(req, res) {
+        var cfg = {path: formatUrl(req, '/game')};
+        res.render('home', cfg);
+    });
+
+    // Analyze a hand in either form:
+    // analyze/111222333p NNN11
+    // analyze/?raw_hand=[0,0,2,1,0,0,0,0,0,2,1,0,1,0,0,0,0,0,0,0,0,0,3,2,2,0,0]
+    app.get('/analyze/:hand?', function(req, res) {
+        var hand = req.params.hand,
+            raw_hand = req.query.raw_hand,
+            result = 'use the form /analyze/1p 123456789s BGR9';
+        if (raw_hand) {
+            hand = JSON.parse(raw_hand);
+        } else if (hand) {
+            hand = mahjong_util.toTileString(hand);
+        }
+        if (hand) {
+            var obj = mahjong.main(hand);
+            result = 'current hand: ' + mahjong_util.toHandString(hand);
+            result += '<br/><br/>' + obj.msg;
+            if (obj.msg.indexOf('mahjong') == -1) {
+                result += '<br/><br/>shanten is ' + obj.shanten;
+                result += '<br/><br/>probably best to throw the ' + mahjong_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
+            }
+        }
+        res.send(result);
+    });
+
+    // Simulate a mahjong game with AMI playing a single hand
+    app.get('/simulate/:id?', function(req, res) {
+        var game_id = req.params.id,
+            tile = req.param('tile', false),
+            user_id = req.session.user_id;
+        if (!game_id) {
+            return models.createGame([user_id]).then(function(games) {
+                var game = games[0];
+                res.redirect(formatUrl(req, '/game/' + game._id));
+                return renderGame(game, req, res);
+            });
+        } else {
+            takeTurn(user_id, game_id, tile).then(function(game) {
+                return renderGame(game, req, res);
+            }).fail(function(error) {
+                console.log("there was an error");
+                console.log(error);
+                console.log(error.stack);
+            });
+        }
+    });
+
+    // Create a game for multiple players
+    app.get('/game/:id?', function(req, res) {
+        var game_id = req.params.id,
+            tile = req.param('tile', false),
+            user_id = req.session.user_id;
+        if (game_id) {
+            return takeTurn(user_id, game_id, tile).then(function(game) {
+                return renderGame(game, req, res);
+            }).fail(function(error) {
+                console.log("there was an error");
+                console.log(error);
+                console.log(error.stack);
+            });
+        } else {
+            return models.createGame([user_id]).then(function(games) {
+                var game = games[0];
+                res.redirect(formatUrl(req, '/game/' + game._id));
+                return renderGame(game, req, res);
+            });
+        }
+    });
 };

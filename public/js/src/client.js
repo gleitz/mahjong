@@ -78,7 +78,7 @@ var INIT = (function ($, undefined) {
                             }
                         }
                         if (!data.msg) {
-                            var tile = $('#hand-tiles').find('div.tile-'+data.recommended.discard_tile+':last').closest('a').addClass('selected');
+                            $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
                         }
                     }};
         ajax(_cfg);
@@ -120,6 +120,11 @@ var INIT = (function ($, undefined) {
             socket.emit('my other event', { my: 'data' });
         });
 
+        // highlight the current tile to throw
+        if (cfg.isSimulation) {
+            $('#hand-tiles').find('div.tile-' + cfg.recommended.discard_tile + ':last').closest('a').addClass('selected');
+        }
+
         $('body').bind('touchmove', pushMove);
         setTimeout(function() { window.scrollTo(0, 1); }, 0);
     });
@@ -129,4 +134,5 @@ var INIT = (function ($, undefined) {
         cfg: cfg,
         initialize: initialize
     };
+
 })(jQuery);

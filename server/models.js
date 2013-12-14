@@ -4,6 +4,8 @@
  * Models for mahjong players, hands, and game
  */
 
+
+/* Imports */
 var db = require('./db'),
     ObjectID = require('mongodb').ObjectID,
     mahjong = require('./mahjong'),
@@ -13,6 +15,8 @@ var db = require('./db'),
 // TODO: disable in production
 Q.longStackSupport = true;
 
+
+/* Exported Modules */
 module.exports.createGame = function(player_ids) {
     var insertGame = Q.nbind(db.games.insert, db.games);
     var deal = mahjong.deal(player_ids.length),
@@ -58,8 +62,6 @@ module.exports.savePlayer = function(player) {
     var updatePlayer = Q.nbind(db.players.update, db.players);
     return updatePlayer({_id: player._id}, player);
 };
-
-
 
 /*
  // check if the user exists
