@@ -1,4 +1,4 @@
-/*global jQuery swig console window shared io */
+/*global jQuery swig console window shared io _ */
 
 var INIT = (function ($, undefined) {
 
@@ -60,23 +60,8 @@ var INIT = (function ($, undefined) {
         var _cfg = {url: cfg.base_path + '/game/' + cfg.game_id,
                     data: (data),
                     success: function (data) {
-                        if (data.new_tile) {
-                            data.partial_hand = data.hand.slice(0);
-                            data.partial_hand[data.new_tile] -= 1;
-                        } else {
-                            data.partial_hand = data.hand;
-                        }
-                        data.discards.splice(data.discards.indexOf(data.recommended.discard_tile[0]), 1);
-                        data.rendered_tiles = shared.renderTiles(data.partial_hand, cfg);
+                        shared.renderPlayerTiles(data, data.last_tile, cfg);
                         $('body').html(board_tpl(data));
-                        if (data.new_tile) {
-                            $('#hand-tiles').append(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" onclick="return false;" href="#"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: data.new_tile}));
-                        }
-                        for (var i=0; i<data.hand.length; i++) {
-                            if (data.hand[i] > 0) {
-                                $('#hand-tiles').find('div.tile-'+i).attr('title', data.recommended.score[i]);
-                            }
-                        }
                         if (!data.msg) {
                             $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
                         }

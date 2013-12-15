@@ -53,9 +53,9 @@ module.exports = function(grunt) {
         },
 
         concurrent: {
-            compress: ['less', 'uglify', 'mochaTest'],
+            compress: ['less', 'uglify'],
             start: {
-                tasks: ['nodemon', 'watch'],
+                tasks: ['mochaTest', 'nodemon', 'watch'],
                 options: {
                     logConcurrentOutput: true
                 }
@@ -73,6 +73,7 @@ module.exports = function(grunt) {
         watch: {
             files: ['public/**/*.*',
                     'shared/**/*.*',
+                    'views/partials/**/*.*',
                     '!**/dist/**'], // ignore dist folder
             tasks: ['concurrent:compress']
         }

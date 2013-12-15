@@ -30,23 +30,26 @@ var formatUrl = function(req, path) {
 
 var renderGame = function(game, req, res) {
     res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
-    console.log("session id is " + req.session.id);
-    var player = game.players[0];
+    var player_id = req.session.player_id,
+        player_name = req.session.player_name;
+    var player = findPlayer(game.players, player_id);
     var result = ami.getDiscard(player.hand, player.discard),
         obj = result.obj,
         recommended = result.recommended;
     var response = {socketIo: {namespace: config.SOCKET_IO_NAMESPACE,
                                token: crypto.encrypt(req.session.id)},
-                    player_name: req.session.player_name,
+                    player_name: player_name,
+                    discard: player.discard,
+                    last_tile: player.last_tile,
                     hand: player.hand,
                     msg: obj.msg,
                     discards: obj.discard,
                     shanten: obj.shanten,
-                    new_tile: game.last_tile,
                     game_id: game._id,
                     recommended: {discard_tile: [recommended.discard],
                                   discard: mahjong_util.toString(recommended.discard),
-                                  score: recommended.score}};
+                                  score: recommended.score},
+                    game: game};
     if (req.param('ajax')) {
         res.json(response);
     } else {
@@ -60,15 +63,7 @@ var renderGame = function(game, req, res) {
         };
         if (response.game_id) {
             _.extend(cfg, response);
-            if (cfg.new_tile) {
-                cfg.partial_hand = cfg.hand.slice(0);
-                cfg.partial_hand[cfg.new_tile] -= 1;
-            } else {
-                cfg.partial_hand = cfg.hand;
-            }
-            cfg.discards.splice(cfg.discards.indexOf(cfg.recommended.discard_tile[0]), 1);
-            cfg.rendered_tiles = shared.renderTiles(cfg.partial_hand, cfg);
-            cfg.rendered_tiles = shared.renderTiles(cfg.partial_hand, cfg);
+            shared.renderPlayerTiles(cfg, cfg.last_tile, cfg);
         }
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
@@ -76,12 +71,14 @@ var renderGame = function(game, req, res) {
 };
 
 
-var discardTile = function(player_id, game, tile) {
-    console.log(player_id);
-    var player = _.find(game.players, function(p) {
-        console.log(p);
+var findPlayer = function(players, player_id) {
+    return _.find(players, function(p) {
         return p.id === player_id;
     });
+}
+
+var discardTile = function(player_id, game, tile) {
+    var player = findPlayer(game.players, player_id);
     if (!player) {
         return false;
     }

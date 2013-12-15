@@ -26,7 +26,9 @@ if (typeof exports !== 'undefined') {
 // Import underscore if in **Node.js**
 // (import automatically available if in browser)
 if (typeof require !== 'undefined') {
-    var swig = require('swig');
+    var _ = require('underscore'),
+        swig = require('swig');
+
 }
 
 function sum (arr){
@@ -42,24 +44,31 @@ shared.augmentSwig = function(swig) {
     swig.setFilter('tile', shared.tile);
 };
 
-shared.renderTiles = function(hist, cfg) {
+shared.renderTiles = function(hist, last_tile, cfg) {
     var buffer = [],
+        last_tile_str,
         i;
     for (i=0; i<hist.length; i++) {
         for (var j=0; j<hist[i]; j++) {
-            var pushed = false;
-            if (sum(hist) === 14) {
-                var hand_tmp = hist.slice(0);
-                hand_tmp[i] -= j;
-                if (sum(hand_tmp.slice(i)) === 1) {
-                    buffer.push(swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i}));
-                    pushed = true;
-                }
-            }
-            if (!pushed) {
+            var hand_tmp = hist.slice(0);
+            hand_tmp[i] -= j;
+            if (!last_tile_str &&
+                 (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
+                // Separate the last discarded tile. If the game has just started
+                // then separate the last tile in the hand
+                last_tile_str = swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i});
+            } else {
                 buffer.push(shared.tile(i));
             }
         }
     }
+    buffer.push(last_tile_str);
     return buffer.join(' ');
+};
+
+shared.renderPlayerTiles = function(data, last_tile, cfg) {
+    data.rendered_tiles = shared.renderTiles(data.hand, last_tile, cfg);
+    data.discarded_tiles = _.reduce(data.discard, function(memo, tile) {
+        return memo + shared.tile(tile);
+    }, '');
 };
