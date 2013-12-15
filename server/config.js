@@ -1,3 +1,5 @@
+/*global module */
+
 module.exports = {
     SOCKET_IO_NAMESPACE: 'game',
     CRYPTO_AES_SECRET: 'fhqwhgads',

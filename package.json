@@ -26,7 +26,8 @@
     "grunt-mocha-test": "~0.7.0",
     "grunt-nodemon": "~0.1.1",
     "grunt-concurrent": "~0.4.1",
-    "grunt-contrib-less": "~0.8.2"
+    "grunt-contrib-less": "~0.8.2",
+    "grunt-contrib-concat": "~0.3.0"
   },
   "scripts": {
     "test": "mocha"

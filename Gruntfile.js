@@ -15,6 +15,18 @@ module.exports = function(grunt) {
                 ' */'
         },
 
+        concat: {
+            options: {
+                separator: ';\n'
+            },
+            dist: {
+                src: ['public/js/global/**/*.js',
+                      'shared/**/*.js',
+                      'public/js/src/**/*.js'],
+                dest: 'public/js/dist/all.js'
+            }
+        },
+
         uglify: {
             options: {
                 banner: '<%= meta.banner %>\n'
@@ -53,7 +65,7 @@ module.exports = function(grunt) {
         },
 
         concurrent: {
-            compress: ['less', 'uglify'],
+            compress: ['less', 'concat', 'uglify'],
             start: {
                 tasks: ['mochaTest', 'nodemon', 'watch'],
                 options: {
@@ -83,6 +95,7 @@ module.exports = function(grunt) {
     // Dependencies
     grunt.loadNpmTasks('grunt-contrib-less');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-mocha-test');

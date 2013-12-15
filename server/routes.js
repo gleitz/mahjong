@@ -28,8 +28,17 @@ var formatUrl = function(req, path) {
     return (req.headers['x-script-name'] || '') + path
 }
 
-var renderGame = function(game, req, res) {
+var preventCache = function(res) {
     res.header('Cache-Control', 'no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0');
+}
+
+var mobileRegex = /(iPhone|iPod|Android|webOS)/i;
+var isMobile = function(req) {
+    return mobileRegex.test(req.header('User-Agent', ''))
+}
+
+var renderGame = function(game, req, res) {
+    preventCache(res);
     var player_id = req.session.player_id,
         player_name = req.session.player_name;
     var player = findPlayer(game.players, player_id);
@@ -53,7 +62,7 @@ var renderGame = function(game, req, res) {
     if (req.param('ajax')) {
         res.json(response);
     } else {
-        var mobile = /(iPhone|iPod|Android|webOS)/i.test(req.header('User-Agent', ''));
+        var mobile = isMobile(req);
         var cfg = {
             base_path: req.headers['x-script-name'] || '',
             mobile: mobile,
@@ -120,6 +129,29 @@ var addPlayerToSession = function(req, player) {
     }
 }
 
+var loadOrPlayGame = function(req, res) {
+    return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
+        addPlayerToSession(req, player);
+        var game_id = req.params.id,
+            tile = req.param('tile', false),
+            player_id = req.session.player_id;
+        if (!game_id) {
+            return models.createGame([player_id]).then(function(game) {
+                res.redirect(formatUrl(req, '/game/' + game._id));
+                return renderGame(game, req, res);
+            });
+        } else {
+            takeTurn(player_id, game_id, tile).then(function(game) {
+                return renderGame(game, req, res);
+            }).fail(function(error) {
+                console.log("there was an error");
+                console.log(error);
+                console.log(error.stack);
+            });
+        }
+    });
+}
+
 
 /* Exported Functions */
 
@@ -158,25 +190,23 @@ exports.addRoutes = function(app) {
     // Load a game or play a tile. Can also be used to simulate a
     // mahjong game with AMI playing a single hand
     app.get('/game/:id?', function(req, res) {
-        return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
-            addPlayerToSession(req, player);
-            var game_id = req.params.id,
-                tile = req.param('tile', false),
-                player_id = req.session.player_id;
-            if (!game_id) {
-                return models.createGame([player_id]).then(function(game) {
-                    res.redirect(formatUrl(req, '/game/' + game._id));
-                    return renderGame(game, req, res);
-                });
-            } else {
-                takeTurn(player_id, game_id, tile).then(function(game) {
-                    return renderGame(game, req, res);
-                }).fail(function(error) {
-                    console.log("there was an error");
-                    console.log(error);
-                    console.log(error.stack);
-                });
-            }
+        return loadOrPlayGame(req, res);
+    });
+};
+
+
+exports.addSockets = function(io) {
+
+    // Socket triggers
+    io.sockets.on('connection', function (socket) {
+        console.log('Socket connection for session ID: ' + socket.handshake.sessionId);
+        socket.on('discard', function(data) {
+            console.log(socket);
+            console.log(data);
+        });
+        socket.on('disconnect', function () {
+            io.sockets.emit('user disconnected');
         });
     });
+
 };

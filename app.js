@@ -53,9 +53,11 @@ app.set('view cache', false);
 
 // Add the application routes
 require('./server/routes').addRoutes(app);
+// Add socket.io triggers
+require('./server/routes').addSockets(io, sessionStore);
 
 // Socket.io session configuration
-io.set("authorization", function (data, callback) {
+io.set('authorization', function (data, callback) {
     if (data && data.query && data.query.token) {
         var sessionId = crypto.decrypt(data.query.token);
         sessionStore.get(sessionId, function (error, session) {
@@ -63,9 +65,9 @@ io.set("authorization", function (data, callback) {
             // socket.handshake.sessionId.
             data.sessionId = sessionId;
             if (error) {
-                callback("ERROR", false);
+                callback('ERROR', false);
             } else if (!session) {
-                callback("NO_SESSION", false);
+                callback('NO_SESSION', false);
             } else {
                 // Add the session. This will show up in
                 // socket.handshake.session.
@@ -74,12 +76,8 @@ io.set("authorization", function (data, callback) {
             }
         });
     } else {
-        callback("NO_TOKEN", false);
+        callback('NO_TOKEN', false);
     }
-});
-
-io.on("connection", function (socket) {
-    console.log("Socket connection for session ID: " + socket.handshake.sessionId);
 });
 
 // Connect to the DB and then start the application
@@ -89,5 +87,5 @@ db.init(function(error) {
     }
     var port = argv.port || 3000;
     server.listen(port);
-    console.log("listening on " + port);
+    console.log('listening on ' + port);
 });

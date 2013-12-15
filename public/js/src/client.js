@@ -6,7 +6,8 @@ var INIT = (function ($, undefined) {
         previous_moves: [],
         clickEvent : /(iPad|iPhone)/i.test(navigator.userAgent) ? 'touchend' : 'click'
     },
-        board_tpl;
+        board_tpl,
+        socket;
 
     // touch navigation
     function pushMove() {
@@ -57,6 +58,8 @@ var INIT = (function ($, undefined) {
 
     function updateHand(data) {
         data = $.extend({}, data, {ajax: true});
+        console.log(data);
+        // socket.emit('discard', data);
         var _cfg = {url: cfg.base_path + '/game/' + cfg.game_id,
                     data: (data),
                     success: function (data) {
@@ -97,13 +100,8 @@ var INIT = (function ($, undefined) {
         });
 
         // initialize socket.io
-        var socket = io.connect(cfg.base_path + '/' +
-                                cfg.socketIo.namespace + '?token=' +
-                                cfg.socketIo.token);
-        socket.on('news', function (data) {
-            console.log(data);
-            socket.emit('my other event', { my: 'data' });
-        });
+        socket = io.connect(cfg.base_path + '?token=' +
+                            cfg.socketIo.token);
 
         // highlight the current tile to throw
         if (cfg.isSimulation && !cfg.msg) {
