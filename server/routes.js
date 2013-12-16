@@ -38,76 +38,66 @@ var isMobile = function(req) {
 }
 
 var getResponseJSON = function(game, session) {
-    console.log("player id is " + session.player_id);
-    console.log("seats are");
-    console.log(game.seats);
-    var player_id = session.player_id,
-        player = findPlayer(game.seats, player_id);
-    console.log("found player is");
-    console.log(player);
-    var result = ami.getDiscard(player.hand, player.discard),
-        obj = result.obj,
-        recommended = result.recommended;
-    var response = {socketIo: {namespace: config.SOCKET_IO_NAMESPACE,
-                               token: crypto.encrypt(session.id)},
-                    player: player,
-                    discard: player.discard,
-                    last_tile: player.last_tile,
-                    hand: player.hand,
-                    msg: obj.msg,
-                    discards: obj.discard,
-                    shanten: obj.shanten,
-                    game_id: game._id,
-                    recommended: {discard_tile: [recommended.discard],
-                                  discard: mahjong_util.toString(recommended.discard),
-                                  score: recommended.score},
-                    game: game};
-    return response;
+    var player_id = session.player_id;
+    return models.findOnePlayer(player_id).then(function(player) {
+        var seat = getSeat(game.seats, player_id);
+        var ami_result = ami.getDiscard(seat.hand, seat.discard),
+            ami_recommended = ami_result.recommended;
+        var response = {player: player,
+                        discard: seat.discard,
+                        last_tile: seat.last_tile,
+                        hand: seat.hand,
+                        msg: ami_result.obj.msg,
+                        shanten: ami_result.obj.shanten,
+                        recommended: {discard_tile: [ami_recommended.discard]},
+                        game: game};
+        return response;
+    });
 };
 
 var renderGame = function(game, req, res) {
     preventCache(res);
-    console.log("session");
-    console.log(req.session);
-    var response = getResponseJSON(game, req.session);
-    if (req.param('ajax')) {
-        res.json(response);
-    } else {
-        var mobile = isMobile(req);
-        var cfg = {
-            base_path: req.headers['x-script-name'] || '',
-            mobile: mobile,
-            tile_width: mobile ? 53 : 71, //width + 16
-            board_tpl: board_tpl,
-            isSimulation: true
-        };
-        if (response.game_id) {
-            _.extend(cfg, response);
-            shared.renderPlayerTiles(cfg, cfg.last_tile, cfg);
+    return getResponseJSON(game, req.session).then(function(response) {
+        if (req.param('ajax')) {
+            res.json(response);
+        } else {
+            var mobile = isMobile(req);
+            var cfg = {
+                socketIo: {token: crypto.encrypt(req.session.id)},
+                game_id: game._id,
+                base_path: req.headers['x-script-name'] || '',
+                mobile: mobile,
+                tile_width: mobile ? 53 : 71, //width + 16
+                board_tpl: board_tpl,
+                isSimulation: true
+            };
+            if (cfg.game_id) {
+                _.extend(cfg, response);
+                shared.renderPlayerTiles(cfg, cfg.last_tile, cfg);
+            }
+            cfg.js_cfg = JSON.stringify(cfg);
+            res.render('game', cfg);
         }
-        cfg.js_cfg = JSON.stringify(cfg);
-        res.render('game', cfg);
-    }
+    });
 };
 
-var findPlayer = function(seats, player_id) {
-    return _.find(seats, function(p) {
-        console.log(typeof p.player_id);
-        console.log(typeof player_id);
-        return p.player_id === player_id;
+var getSeat = function(seats, player_id) {
+    return _.find(seats, function(s) {
+        return s.player_id === player_id;
     });
 }
 
 var discardTile = function(player_id, game, tile) {
-    var player = findPlayer(game.seats, player_id);
-    if (!player) {
+    var seat = getSeat(game.seats, player_id);
+    if (!seat) {
         return false;
     }
+    console.log(tile);
     tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
-    player.discard.push(tile);
-    player.hand[tile] -= 1;
-    player.last_tile = game.wall.pop();
-    player.hand[player.last_tile] += 1;
+    seat.discard.push(tile);
+    seat.hand[tile] -= 1;
+    seat.last_tile = game.wall.pop();
+    seat.hand[seat.last_tile] += 1;
     return true;
 };
 
@@ -116,7 +106,8 @@ var takeTurn = function(player_id, game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
         models.findOneGame(game_id).then(function(game) {
-            if (tile) {
+            if (typeof tile === 'number') {
+                // Allow 0 but not false, null, undefined, etc.
                 var success = discardTile(player_id, game, tile);
                 if (!success) {
                     return deferred.reject(new Error('User or game not found'));
@@ -187,8 +178,6 @@ exports.addRoutes = function(app) {
                 });
             } else {
                 takeTurn(player_id, game_id, tile).then(function(game) {
-                    console.log("game is");
-                    console.log(game);
                     return renderGame(game, req, res);
                 }).fail(function(error) {
                     console.log("there was an error");
@@ -205,23 +194,25 @@ exports.addSockets = function(io) {
 
     // Socket triggers
     io.sockets.on('connection', function (socket) {
-        console.log('Socket connection for session ID: ' + socket.handshake.sessionId);
-        console.log(socket.handshake.session);
+        // console.log('Socket connection for session ID: ' + socket.handshake.sessionId);
+        // console.log(socket.handshake.session);
         socket.handshake.session.test = 'foo';
         socket.on('discard', function(data) {
             var game_id = data.game_id,
                 tile = data.tile,
                 player_id = socket.handshake.session.player_id;
-            takeTurn(player_id, game_id, tile).then(function(game) {
-                var response = getResponseJSON(game, socket.handshake.session);
-                socket.emit('response', response);
-            }).fail(function(error) {
-                console.log("there was an error");
-                console.log(error);
-                console.log(error.stack);
+            return takeTurn(player_id, game_id, tile)
+                .then(function(game) {
+                    return getResponseJSON(game, socket.handshake.session);
+                })
+                .then(function(response) {
+                    return socket.emit('response', response);
+                })
+                .fail(function(error) {
+                    console.log("there was an error");
+                    console.log(error);
+                    console.log(error.stack);
             });
-            console.log(socket);
-            console.log(data);
         });
         socket.on('disconnect', function () {
             io.sockets.emit('user disconnected');
