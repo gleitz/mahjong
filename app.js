@@ -72,6 +72,7 @@ io.set('authorization', function (data, callback) {
                 // Add the session. This will show up in
                 // socket.handshake.session.
                 data.session = session;
+                data.session.id = sessionId;
                 callback(null, true);
             }
         });

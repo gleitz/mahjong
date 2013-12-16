@@ -37,17 +37,20 @@ var isMobile = function(req) {
     return mobileRegex.test(req.header('User-Agent', ''))
 }
 
-var renderGame = function(game, req, res) {
-    preventCache(res);
-    var player_id = req.session.player_id,
-        player_name = req.session.player_name;
-    var player = findPlayer(game.players, player_id);
+var getResponseJSON = function(game, session) {
+    console.log("player id is " + session.player_id);
+    console.log("seats are");
+    console.log(game.seats);
+    var player_id = session.player_id,
+        player = findPlayer(game.seats, player_id);
+    console.log("found player is");
+    console.log(player);
     var result = ami.getDiscard(player.hand, player.discard),
         obj = result.obj,
         recommended = result.recommended;
     var response = {socketIo: {namespace: config.SOCKET_IO_NAMESPACE,
-                               token: crypto.encrypt(req.session.id)},
-                    player_name: player_name,
+                               token: crypto.encrypt(session.id)},
+                    player: player,
                     discard: player.discard,
                     last_tile: player.last_tile,
                     hand: player.hand,
@@ -59,6 +62,14 @@ var renderGame = function(game, req, res) {
                                   discard: mahjong_util.toString(recommended.discard),
                                   score: recommended.score},
                     game: game};
+    return response;
+};
+
+var renderGame = function(game, req, res) {
+    preventCache(res);
+    console.log("session");
+    console.log(req.session);
+    var response = getResponseJSON(game, req.session);
     if (req.param('ajax')) {
         res.json(response);
     } else {
@@ -79,15 +90,16 @@ var renderGame = function(game, req, res) {
     }
 };
 
-
-var findPlayer = function(players, player_id) {
-    return _.find(players, function(p) {
-        return p.id === player_id;
+var findPlayer = function(seats, player_id) {
+    return _.find(seats, function(p) {
+        console.log(typeof p.player_id);
+        console.log(typeof player_id);
+        return p.player_id === player_id;
     });
 }
 
 var discardTile = function(player_id, game, tile) {
-    var player = findPlayer(game.players, player_id);
+    var player = findPlayer(game.seats, player_id);
     if (!player) {
         return false;
     }
@@ -122,36 +134,9 @@ var takeTurn = function(player_id, game_id, tile) {
 
 var addPlayerToSession = function(req, player) {
     if (!req.session.player_id) {
-        req.session.player_id = player._id
-    }
-    if (!req.session.player_name) {
-        req.session.player_name = player.name;
+        req.session.player_id = player._id.toString();
     }
 }
-
-var loadOrPlayGame = function(req, res) {
-    return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
-        addPlayerToSession(req, player);
-        var game_id = req.params.id,
-            tile = req.param('tile', false),
-            player_id = req.session.player_id;
-        if (!game_id) {
-            return models.createGame([player_id]).then(function(game) {
-                res.redirect(formatUrl(req, '/game/' + game._id));
-                return renderGame(game, req, res);
-            });
-        } else {
-            takeTurn(player_id, game_id, tile).then(function(game) {
-                return renderGame(game, req, res);
-            }).fail(function(error) {
-                console.log("there was an error");
-                console.log(error);
-                console.log(error.stack);
-            });
-        }
-    });
-}
-
 
 /* Exported Functions */
 
@@ -190,7 +175,28 @@ exports.addRoutes = function(app) {
     // Load a game or play a tile. Can also be used to simulate a
     // mahjong game with AMI playing a single hand
     app.get('/game/:id?', function(req, res) {
-        return loadOrPlayGame(req, res);
+        return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
+            addPlayerToSession(req, player);
+            var game_id = req.params.id,
+                tile = req.param('tile', false),
+                player_id = req.session.player_id;
+            if (!game_id) {
+                return models.createGame([player_id]).then(function(game) {
+                    res.redirect(formatUrl(req, '/game/' + game._id));
+                    return renderGame(game, req, res);
+                });
+            } else {
+                takeTurn(player_id, game_id, tile).then(function(game) {
+                    console.log("game is");
+                    console.log(game);
+                    return renderGame(game, req, res);
+                }).fail(function(error) {
+                    console.log("there was an error");
+                    console.log(error);
+                    console.log(error.stack);
+                });
+            }
+        });
     });
 };
 
@@ -200,7 +206,20 @@ exports.addSockets = function(io) {
     // Socket triggers
     io.sockets.on('connection', function (socket) {
         console.log('Socket connection for session ID: ' + socket.handshake.sessionId);
+        console.log(socket.handshake.session);
+        socket.handshake.session.test = 'foo';
         socket.on('discard', function(data) {
+            var game_id = data.game_id,
+                tile = data.tile,
+                player_id = socket.handshake.session.player_id;
+            takeTurn(player_id, game_id, tile).then(function(game) {
+                var response = getResponseJSON(game, socket.handshake.session);
+                socket.emit('response', response);
+            }).fail(function(error) {
+                console.log("there was an error");
+                console.log(error);
+                console.log(error.stack);
+            });
             console.log(socket);
             console.log(data);
         });

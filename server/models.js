@@ -1,11 +1,12 @@
 /*global require module */
 
 /*
- * Models for mahjong players, hands, and game
+ * Models for the mahjong game
  */
 
 
 /* Imports */
+
 var db = require('./db'),
     ObjectID = require('mongodb').ObjectID,
     mahjong = require('./mahjong'),
@@ -16,22 +17,42 @@ var db = require('./db'),
 Q.longStackSupport = true;
 
 
+/* Database Objects (these have *._id) */
+
+function Player(name) {
+    this.name = name;
+}
+
+function Game(wall) {
+    this.wall = wall;
+    this.seats = [];
+    this.current_player_id = null;
+}
+
+
+/* JavaScript Objects */
+
+function Seat(player_id) {
+    this.player_id = player_id;
+    this.hand = [];
+    this.discard = [];
+    this.last_tile = null;
+}
+
+
 /* Exported Modules */
+
 module.exports.createGame = function(player_ids) {
     var insertGame = Q.nbind(db.games.insert, db.games);
     var deal = mahjong.deal(player_ids.length),
         hands = deal.hands,
         i;
-    var game = {wall: deal.wall,
-                players: [],
-                current_player: player_ids[0]
-               };
+    var game = new Game(deal.wall);
+    game.current_player_id = player_ids[0];
     for (i=0; i<hands.length; i++) {
-        var player = {id: player_ids[i],
-                      hand: hands[i],
-                      discard: [],
-                      last_tile: null};
-        game.players.push(player);
+        var seat = new Seat(player_ids[i]);
+        seat.hand = hands[i];
+        game.seats.push(seat);
     }
     return insertGame(game).then(function(games) {
         return games[0];
@@ -50,8 +71,7 @@ module.exports.saveGame = function(game) {
 
 module.exports.createPlayer = function() {
     var insertPlayer = Q.nbind(db.players.insert, db.players);
-    var player = {name: moniker.choose()
-                 };
+    var player = new Player(moniker.choose());
     return insertPlayer(player).then(function(players) {
         return players[0];
     });

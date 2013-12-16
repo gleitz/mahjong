@@ -422,17 +422,7 @@ var INIT = (function ($, undefined) {
     function updateHand(data) {
         data = $.extend({}, data, {ajax: true});
         console.log(data);
-        // socket.emit('discard', data);
-        var _cfg = {url: cfg.base_path + '/game/' + cfg.game_id,
-                    data: (data),
-                    success: function (data) {
-                        shared.renderPlayerTiles(data, data.last_tile, cfg);
-                        $('body').html(board_tpl(data));
-                        if (!data.msg) {
-                            $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
-                        }
-                    }};
-        ajax(_cfg);
+        socket.emit('discard', data);
     }
 
     function initialize(local_cfg) {
@@ -458,13 +448,21 @@ var INIT = (function ($, undefined) {
                 tile = $('#hand-tiles').find('div.tile-'+$a.data('tile')+':last');
             }
             tile.fadeOut('slow', function() {
-                updateHand({tile: $a.data('tile')});
+                updateHand({game_id: cfg.game_id,
+                            tile: $a.data('tile')});
             });
         });
 
         // initialize socket.io
         socket = io.connect(cfg.base_path + '?token=' +
                             cfg.socketIo.token);
+        socket.on('response', function(data) {
+            shared.renderPlayerTiles(data, data.last_tile, cfg);
+            $('body').html(board_tpl(data));
+            if (!data.msg) {
+                $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
+            }
+        });
 
         // highlight the current tile to throw
         if (cfg.isSimulation && !cfg.msg) {

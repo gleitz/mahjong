@@ -1,4 +1,3 @@
-- Remove req, res from loadOrPlayGame (use session instead)
 - When entering a game, establish a socketio connection with that game id
 - Notify other players when it is their turn to throw
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
