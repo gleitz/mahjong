@@ -23,7 +23,7 @@ var app = express(),
     cookieParser = express.cookieParser(config.EXPRESS_COOKIE_SECRET);
 
 // TODO(gleitz): disable in production
-io.set('log level', 1); // reduce logging
+// io.set('log level', 1); // reduce logging
 
 app.configure(function(){
     app.use(express['static'](__dirname + '/public'));
@@ -59,11 +59,11 @@ require('./server/routes').addSockets(io, sessionStore);
 // Socket.io session configuration
 io.set('authorization', function (data, callback) {
     if (data && data.query && data.query.token) {
-        var sessionId = crypto.decrypt(data.query.token);
-        sessionStore.get(sessionId, function (error, session) {
-            // Add the sessionId. This will show up in
-            // socket.handshake.sessionId.
-            data.sessionId = sessionId;
+        var session_id = crypto.decrypt(data.query.token);
+        sessionStore.get(session_id, function (error, session) {
+            // Add the session_id. This will show up in
+            // socket.handshake.session_id.
+            data.session_id = session_id;
             if (error) {
                 callback('ERROR', false);
             } else if (!session) {
@@ -72,7 +72,7 @@ io.set('authorization', function (data, callback) {
                 // Add the session. This will show up in
                 // socket.handshake.session.
                 data.session = session;
-                data.session.id = sessionId;
+                data.session.id = session_id;
                 callback(null, true);
             }
         });

@@ -58,26 +58,22 @@ var getResponseJSON = function(game, session) {
 var renderGame = function(game, req, res) {
     preventCache(res);
     return getResponseJSON(game, req.session).then(function(response) {
-        if (req.param('ajax')) {
-            res.json(response);
-        } else {
-            var mobile = isMobile(req);
-            var cfg = {
-                socketIo: {token: crypto.encrypt(req.session.id)},
-                game_id: game._id,
-                base_path: req.headers['x-script-name'] || '',
-                mobile: mobile,
-                tile_width: mobile ? 53 : 71, //width + 16
-                board_tpl: board_tpl,
-                isSimulation: true
-            };
-            if (cfg.game_id) {
-                _.extend(cfg, response);
-                shared.renderPlayerTiles(cfg, cfg.last_tile, cfg);
-            }
-            cfg.js_cfg = JSON.stringify(cfg);
-            res.render('game', cfg);
+        var mobile = isMobile(req);
+        var cfg = {
+            socketIo: {token: crypto.encrypt(req.session.id)},
+            game_id: game._id,
+            base_path: req.headers['x-script-name'] || '',
+            mobile: mobile,
+            tile_width: mobile ? 53 : 71, //width + 16
+            board_tpl: board_tpl,
+            isSimulation: true
+        };
+        if (cfg.game_id) {
+            _.extend(cfg, response);
+            shared.renderPlayerTiles(cfg, cfg.last_tile, cfg);
         }
+        cfg.js_cfg = JSON.stringify(cfg);
+        res.render('game', cfg);
     });
 };
 
@@ -92,7 +88,6 @@ var discardTile = function(player_id, game, tile) {
     if (!seat) {
         return false;
     }
-    console.log(tile);
     tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
     seat.discard.push(tile);
     seat.hand[tile] -= 1;
@@ -194,9 +189,9 @@ exports.addSockets = function(io) {
 
     // Socket triggers
     io.sockets.on('connection', function (socket) {
-        // console.log('Socket connection for session ID: ' + socket.handshake.sessionId);
-        // console.log(socket.handshake.session);
-        socket.handshake.session.test = 'foo';
+        socket.on('room', function(game_id) {
+            socket.join(game_id);
+        })
         socket.on('discard', function(data) {
             var game_id = data.game_id,
                 tile = data.tile,
@@ -206,7 +201,8 @@ exports.addSockets = function(io) {
                     return getResponseJSON(game, socket.handshake.session);
                 })
                 .then(function(response) {
-                    return socket.emit('response', response);
+                    // return socket.emit('response', response);
+                    return io.sockets['in'](game_id).emit('response', response)
                 })
                 .fail(function(error) {
                     console.log("there was an error");

@@ -406,13 +406,10 @@ var INIT = (function ($, undefined) {
     };
 
     function ajax(params) {
-        // a convenience wrapper around $.ajax that does some extra default stuff
-        // for making valid signed requests
         params = $.extend(
             {
                 type: 'GET',
                 dataType: 'json'
-                // error: ajaxError
             },
             params
         );
@@ -420,8 +417,6 @@ var INIT = (function ($, undefined) {
     }
 
     function updateHand(data) {
-        data = $.extend({}, data, {ajax: true});
-        console.log(data);
         socket.emit('discard', data);
     }
 
@@ -456,7 +451,11 @@ var INIT = (function ($, undefined) {
         // initialize socket.io
         socket = io.connect(cfg.base_path + '?token=' +
                             cfg.socketIo.token);
+        socket.on('connect', function() {
+            socket.emit('room', cfg.game_id);
+        });
         socket.on('response', function(data) {
+            console.log("got data");
             shared.renderPlayerTiles(data, data.last_tile, cfg);
             $('body').html(board_tpl(data));
             if (!data.msg) {

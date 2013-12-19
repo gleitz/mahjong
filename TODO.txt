@@ -1,5 +1,6 @@
-- When entering a game, establish a socketio connection with that game id
-- Notify other players when it is their turn to throw
+- When creating a game, add two computers
+- After you have thrown, make the computer throw
+- Notify other players when it is their turn to throw (use the room)
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
 - switch to rendered templates
 - Look into chaining calls - http://stackoverflow.com/questions/19506163/how-to-correctly-chain-conditional-promises-with-q-js https://github.com/bellbind/using-promise-q and https://github.com/kriskowal/q
