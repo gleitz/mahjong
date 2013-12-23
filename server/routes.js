@@ -37,12 +37,19 @@ var isMobile = function(req) {
 }
 
 var getResponseJSON = function(game, session) {
-    var player_id = session.player_id;
-    return models.findOnePlayer(player_id).then(function(player) {
+    console.log(game);
+    var player_id = session.player_id,
+        player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+    return models.findPlayers(player_ids).then(function(players) {
+        console.log("players");
+        console.log(players);
+        var player = _.find(players, function(player) { return player._id == player_id; });
+        console.log(player);
         var seat = getSeat(game.seats, player_id);
         var ami_result = ami.getDiscard(seat.hand, seat.discard),
             ami_recommended = ami_result.recommended;
-        var response = {player: player,
+        var response = {players: players,
+                        player: player,
                         discard: seat.discard,
                         last_tile: seat.last_tile,
                         hand: seat.hand,
@@ -174,6 +181,7 @@ exports.addRoutes = function(app) {
                 player_id = req.session.player_id;
             if (!game_id) {
                 return models.createGame([player_id, 0, 0]).then(function(game) {
+                    console.log(game);
                     res.redirect(formatUrl(req, '/game/' + game._id));
                     return renderGame(game, req, res);
                 });

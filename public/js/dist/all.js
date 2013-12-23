@@ -373,7 +373,6 @@ shared.renderPlayerTiles = function(game, cfg) {
             return memo + shared.tile(tile);
         }, '');
     });
-    console.log(game);
 };
 ;
 /*global jQuery swig console window shared io _ */

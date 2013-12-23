@@ -85,5 +85,4 @@ shared.renderPlayerTiles = function(game, cfg) {
             return memo + shared.tile(tile);
         }, '');
     });
-    console.log(game);
 };

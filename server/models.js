@@ -7,7 +7,8 @@
 
 /* Imports */
 
-var db = require('./db'),
+var _ = require('underscore'),
+    db = require('./db'),
     ObjectID = require('mongodb').ObjectID,
     mahjong = require('./mahjong'),
     moniker = require('moniker'),
@@ -88,6 +89,16 @@ module.exports.getOrCreatePlayer = function(player_id) {
 module.exports.findOnePlayer = function(player_id) {
     var findOnePlayer = Q.nbind(db.players.findOne, db.players);
     return findOnePlayer({_id: new ObjectID(player_id)});
+};
+
+module.exports.findPlayers = function(player_ids) {
+    var findPlayers = Q.nbind(db.players.find, db.players),
+        ids = _.map(player_ids, function(player_id) { return new ObjectID(player_id); });
+    console.log(ids);
+    return findPlayers({_id: {$in: ids}}).then(function(players) {
+        var findArray = Q.nbind(players.toArray, players);
+        return findArray();
+    });
 };
 
 module.exports.savePlayer = function(player) {
