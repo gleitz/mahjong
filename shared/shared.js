@@ -36,12 +36,24 @@ function sum (arr){
     return s;
 }
 
+var last_tile_compiled = swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
+
 shared.tile = function (input) {
-    return swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>')({tile_num: input});
+    return tile_compiled({tile_num: input});
 };
 
 shared.augmentSwig = function(swig) {
     swig.setFilter('tile', shared.tile);
+    swig.setTag('renderTiles',
+                function(str, line, parser, types, stack, options) {
+                    return true;
+                },
+                function(compiler, args, content, parents, options, blockName) {
+                    // console.log(result);
+                    // return '_output += shared.renderTiles(args[0], args[1], args[2]);'
+                },
+                false);
 };
 
 shared.renderTiles = function(hist, last_tile, cfg) {
@@ -56,7 +68,7 @@ shared.renderTiles = function(hist, last_tile, cfg) {
                  (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
                 // Separate the last discarded tile. If the game has just started
                 // then separate the last tile in the hand
-                last_tile_str = swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>')({tile_width: cfg.tile_width, tile_num: i});
+                last_tile_str = last_tile_compiled({tile_width: cfg.tile_width, tile_num: i});
             } else {
                 buffer.push(shared.tile(i));
             }
@@ -66,9 +78,12 @@ shared.renderTiles = function(hist, last_tile, cfg) {
     return buffer.join(' ');
 };
 
-shared.renderPlayerTiles = function(data, last_tile, cfg) {
-    data.rendered_tiles = shared.renderTiles(data.hand, last_tile, cfg);
-    data.discarded_tiles = _.reduce(data.discard, function(memo, tile) {
-        return memo + shared.tile(tile);
-    }, '');
+shared.renderPlayerTiles = function(game, cfg) {
+    _.each(game.seats, function(seat) {
+        seat.rendered_hand = shared.renderTiles(seat.hand, seat.last_tile, cfg);
+        seat.rendered_discard = _.reduce(seat.discard, function(memo, tile) {
+            return memo + shared.tile(tile);
+        }, '');
+    });
+    console.log(game);
 };

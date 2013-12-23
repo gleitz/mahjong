@@ -91,9 +91,11 @@ var INIT = (function ($, undefined) {
         socket.on('connect', function() {
             socket.emit('room', cfg.game_id);
         });
-        socket.on('response', function(data) {
-            console.log("got data");
-            shared.renderPlayerTiles(data, data.last_tile, cfg);
+        socket.on('discard_response_other_player', function(data) {
+
+        });
+        socket.on('discard_response_this_player', function(data) {
+            shared.renderPlayerTiles(data.game, cfg);
             $('body').html(board_tpl(data));
             if (!data.msg) {
                 $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');

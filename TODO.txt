@@ -1,9 +1,9 @@
-- When creating a game, add two computers
 - After you have thrown, make the computer throw
+- Only allow discards on your turn
 - Notify other players when it is their turn to throw (use the room)
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
+- Add production TODOs and detection
 - switch to rendered templates
-- Look into chaining calls - http://stackoverflow.com/questions/19506163/how-to-correctly-chain-conditional-promises-with-q-js https://github.com/bellbind/using-promise-q and https://github.com/kriskowal/q
 
 make sure the correct tile is thrown
 0,1,0,0,0,1,0,1,0,1,1,1,1,1,1,0,1,0,0,3,0,0,0,0,0,1,0

@@ -9,7 +9,6 @@
 
 var _ = require('underscore'),
     ami = require('./ami'),
-    config = require('./config'),
     crypto = require('./crypto'),
     fs = require('fs'),
     mahjong = require('./mahjong'),
@@ -70,7 +69,7 @@ var renderGame = function(game, req, res) {
         };
         if (cfg.game_id) {
             _.extend(cfg, response);
-            shared.renderPlayerTiles(cfg, cfg.last_tile, cfg);
+            shared.renderPlayerTiles(game, cfg);
         }
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
@@ -84,7 +83,14 @@ var getSeat = function(seats, player_id) {
 }
 
 var discardTile = function(player_id, game, tile) {
-    var seat = getSeat(game.seats, player_id);
+    var seats = game.seats,
+        seat;
+    for (var seat_pos=0; seat_pos<seats.length; seat_pos++) {
+        seat = seats[seat_pos];
+        if (seat.player_id === player_id) {
+            break;
+        }
+    }
     if (!seat) {
         return false;
     }
@@ -93,6 +99,7 @@ var discardTile = function(player_id, game, tile) {
     seat.hand[tile] -= 1;
     seat.last_tile = game.wall.pop();
     seat.hand[seat.last_tile] += 1;
+    game.current_player_id = seats[(seat_pos + 1) % seats.length]
     return true;
 };
 
@@ -134,7 +141,7 @@ exports.addRoutes = function(app) {
         res.render('home', cfg);
     });
 
-    // Analyze a hand in either form:
+    // Analyze a hand in the following form
     // analyze/111222333p NNN11
     // analyze/?raw_hand=[0,0,2,1,0,0,0,0,0,2,1,0,1,0,0,0,0,0,0,0,0,0,3,2,2,0,0]
     app.get('/analyze/:hand?', function(req, res) {
@@ -164,15 +171,14 @@ exports.addRoutes = function(app) {
         return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
             addPlayerToSession(req, player);
             var game_id = req.params.id,
-                tile = req.param('tile', false),
                 player_id = req.session.player_id;
             if (!game_id) {
-                return models.createGame([player_id]).then(function(game) {
+                return models.createGame([player_id, 0, 0]).then(function(game) {
                     res.redirect(formatUrl(req, '/game/' + game._id));
                     return renderGame(game, req, res);
                 });
             } else {
-                takeTurn(player_id, game_id, tile).then(function(game) {
+                takeTurn(player_id, game_id).then(function(game) {
                     return renderGame(game, req, res);
                 }).fail(function(error) {
                     console.log("there was an error");
@@ -201,8 +207,15 @@ exports.addSockets = function(io) {
                     return getResponseJSON(game, socket.handshake.session);
                 })
                 .then(function(response) {
-                    // return socket.emit('response', response);
-                    return io.sockets['in'](game_id).emit('response', response)
+                    _.each(io.sockets.clients(game_id), function(sub_socket) {
+                        var game_socket = io.sockets.socket(sub_socket.id);
+                        var socket_player_id = game_socket.handshake.session.player_id;
+                        if (socket_player_id === player_id) {
+                            game_socket.emit('discard_response_this_player', response)
+                        } else {
+                            game_socket.emit('discard_response_other_player', response)
+                        }
+                    });
                 })
                 .fail(function(error) {
                     console.log("there was an error");
