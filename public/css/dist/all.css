@@ -141,7 +141,7 @@ a.tile-holder {
   background: #FFFBE9;
   padding: 4px;
   border-radius: 8px;
-  margin: 4px 4px;
+  margin: 4px;
   -moz-box-shadow: 4px 4px 0px #000;
   -webkit-box-shadow: 4px 4px 0px #000;
   box-shadow: 4px 4px 0px #000;
@@ -149,8 +149,10 @@ a.tile-holder {
   height: 75px;
 }
 .other-player a.tile-holder {
-  width: 27.5px;
-  height: 37.5px;
+  width: 34.375px;
+  height: 46.875px;
+  padding: 2px;
+  margin: 2px;
 }
 .tile-row {
   font-size: 71px;
@@ -206,9 +208,9 @@ a.selected {
   background-size: 55px 75px;
 }
 .other-player .tile {
-  width: 27.5px;
-  height: 37.5px;
-  background-size: 27.5px 37.5px;
+  width: 34.375px;
+  height: 46.875px;
+  background-size: 34.375px 46.875px;
 }
 .mobile .tile {
   width: 37px;
@@ -309,9 +311,27 @@ a.selected {
   margin-left: 1em;
 }
 .discard-tiles {
-  width: 45%;
-  margin-left: 4em;
+  width: 80%;
 }
 .other-player .discard-tiles {
+  width: 100%;
   margin: 0;
+}
+.other-player {
+  width: 50%;
+  float: left;
+}
+.this-player {
+  position: absolute;
+  bottom: 1em;
+}
+#notifications {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+#player-info {
+  position: absolute;
+  right: 10px;
+  top: 10px;
 }

@@ -28,6 +28,7 @@ function Game(wall) {
     this.wall = wall;
     this.seats = [];
     this.current_player_id = null;
+    this.winner_id = null;
 }
 
 

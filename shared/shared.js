@@ -43,8 +43,13 @@ shared.tile = function (input) {
     return tile_compiled({tile_num: input});
 };
 
+shared.isComputer = function (player_id) {
+    return player_id <= 1;
+};
+
 shared.augmentSwig = function(swig) {
     swig.setFilter('tile', shared.tile);
+    swig.setFilter('isComputer', shared.isComputer);
     swig.setTag('renderTiles',
                 function(str, line, parser, types, stack, options) {
                     return true;
@@ -82,6 +87,9 @@ shared.renderTiles = function(hist, last_tile, is_hidden) {
 shared.renderPlayerTiles = function(game, player_id) {
     _.each(game.seats, function(seat) {
         var is_hidden = seat.player_id != player_id;
+        if (typeof game.winner_id === 'number' && game.winner_id == seat.player_id) {
+            is_hidden = false;
+        }
         seat.rendered_hand = shared.renderTiles(seat.hand,
                                                 seat.last_tile,
                                                 is_hidden);
@@ -90,3 +98,15 @@ shared.renderPlayerTiles = function(game, player_id) {
         }, '');
     });
 };
+
+shared.getSeat = function(seats, player_id) {
+    return _.find(seats, function(s) {
+        return s.player_id === player_id;
+    });
+}
+
+shared.getPlayer = function(players, player_id) {
+    return _.find(players, function(p) {
+        return p._id == player_id;
+    });
+}

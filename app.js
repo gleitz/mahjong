@@ -23,7 +23,7 @@ var app = express(),
     cookieParser = express.cookieParser(config.EXPRESS_COOKIE_SECRET);
 
 // TODO(gleitz): disable in production
-io.set('log level', 1); // reduce logging
+// io.set('log level', 1); // reduce logging
 
 app.configure(function(){
     app.use(express['static'](__dirname + '/public'));

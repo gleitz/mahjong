@@ -39,11 +39,28 @@ var isMobile = function(req) {
 var getResponseJSON = function(game, player_id) {
     var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
     return models.findPlayers(player_ids).then(function(players) {
-        var player = _.find(players, function(player) { return player._id == player_id; });
-        var seat = getSeat(game.seats, player_id);
+        var player = shared.getPlayer(players, player_id);
+        if (!player && player_id <=1) {
+            player = {_id: player_id,
+                      name: 'Computer ' + player_id.toString()};
+        }
+        var seat = shared.getSeat(game.seats, player_id);
         var ami_result = ami.getDiscard(seat.hand, seat.discard),
             ami_recommended = ami_result.recommended;
+        if (ami_result.obj.msg.indexOf('Tsumo') != -1) {
+            var winner_exists = (typeof game.winner_id === 'number');
+            game.winner_id = player_id;
+            // TODO(gleitz): work this into a promise
+            if (!winner_exists) {
+                models.saveGame(game);
+            }
+        }
+        var player_map = {};
+        _.each(players, function(player) {
+            player_map[player._id] = player;
+        });
         var response = {players: players,
+                        player_map: player_map,
                         player: player,
                         discard: seat.discard,
                         last_tile: seat.last_tile,
@@ -79,11 +96,41 @@ var renderGame = function(game, req, res) {
     });
 };
 
-var getSeat = function(seats, player_id) {
-    return _.find(seats, function(s) {
-        return s.player_id === player_id;
+var loadLobby = function(game, player_ids, req, res) {
+    return models.findPlayers(player_ids).then(function(players) {
+        var mobile = isMobile(req);
+        var cfg = {
+            socketIo: {token: crypto.encrypt(req.session.id)},
+            game_id: game._id.toString(),
+            base_path: req.headers['x-script-name'] || '',
+            mobile: mobile,
+            tile_width: mobile ? 53 : 71, //width + 16
+            board_tpl: board_tpl,
+            isLobby: true,
+            game: game,
+            players: players
+        };
+        cfg.js_cfg = JSON.stringify(cfg);
+        return res.render('lobby', cfg);
     });
 }
+
+var renderLobby = function(game, req, res) {
+    preventCache(res);
+    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+    if (_.contains(player_ids, req.session.player_id)) {
+        return loadLobby(game, player_ids, req, res);
+    } else {
+        var empty_seat = _.find(game.seats, function(seat) {
+            return seat.player_id <= 1;
+        });
+        empty_seat.player_id = req.session.player_id;
+        return models.saveGame(game).then(function() {
+            var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+            return loadLobby(game, player_ids, req, res);
+        });
+    }
+};
 
 var discardTile = function(player_id, game, tile) {
     var seats = game.seats,
@@ -140,7 +187,7 @@ exports.addRoutes = function(app) {
 
     // Homepage
     app.get('/', function(req, res) {
-        var cfg = {path: formatUrl(req, '/game')};
+        var cfg = {path: formatUrl(req, '/play')};
         res.render('home', cfg);
     });
 
@@ -166,6 +213,24 @@ exports.addRoutes = function(app) {
             }
         }
         res.send(result);
+    });
+
+    app.get('/play/:id?', function(req, res) {
+        return models.getOrCreatePlayer(req.session.player_id).then(function(player) {
+            addPlayerToSession(req, player);
+            var game_id = req.params.id,
+                player_id = req.session.player_id;
+            if (!game_id) {
+                return models.createGame([player_id, 0, 1]).then(function(game) {
+                    res.redirect(formatUrl(req, '/play/' + game._id));
+                    return renderLobby(game, req, res);
+                });
+            } else {
+                return models.findOneGame(game_id).then(function(game) {
+                    return renderLobby(game, req, res);
+                });
+            }
+        });
     });
 
     // Load a game or play a tile. Can also be used to simulate a
@@ -209,10 +274,15 @@ var handleDiscard = function(io, player_id, game_id, tile) {
                 }
             });
             var game = response.game;
-            if (game.current_player_id <= 1) { // AI's turn
-                var seat = getSeat(game.seats, game.current_player_id);
+            if (typeof game.winner_id !== 'number' && game.current_player_id <= 1) { // AI's turn
+                var seat = shared.getSeat(game.seats, game.current_player_id);
                 var ami_result = ami.getDiscard(seat.hand, seat.discard),
                     discard_tile = ami_result.recommended.discard;
+                if (ami_result.obj.msg) {
+                    console.log(ami_result.obj.msg);
+                    console.log(seat);
+                    console.log(discard_tile);
+                }
                 handleDiscard(io, game.current_player_id, game_id, discard_tile);
             }
         })
@@ -230,6 +300,18 @@ exports.addSockets = function(io) {
         socket.on('room', function(game_id) {
             socket.join(game_id);
         })
+        socket.on('start_game', function(data) {
+            io.sockets['in'](data.game_id).emit('start_game', {});
+        })
+        socket.on('join_lobby', function(data) {
+            var game_id = data.game_id;
+            return models.findOneGame(game_id).then(function(game) {
+                var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+                return models.findPlayers(player_ids)
+            }).then(function(players) {
+                io.sockets['in'](game_id).emit('player_joined', {players: players});
+            });
+        });
         socket.on('discard', function(data) {
             var game_id = data.game_id,
                 tile = data.tile,

@@ -1,6 +1,9 @@
 @tile-background-color: #D48623;
+
 @tile-height: 75px;
+@tile-height-other: @tile-height*5/8;
 @tile-width: 55px;
+@tile-width-other: @tile-width*5/8;
 @tile-font-height: 71px;
 @tile-font-height-mobile: 53px;
 
@@ -35,7 +38,7 @@ a.tile-holder {
     background: #FFFBE9;
     padding: 4px;
     border-radius: 8px;
-    margin: 4px 4px;
+    margin: 4px;
     -moz-box-shadow: 4px 4px 0px #000;
     -webkit-box-shadow: 4px 4px 0px #000;
     box-shadow: 4px 4px 0px #000;
@@ -44,8 +47,10 @@ a.tile-holder {
 }
 
 .other-player a.tile-holder {
-    width: @tile-width/2;
-    height: @tile-height/2;
+    width: @tile-width-other;
+    height: @tile-height-other;
+    padding: 2px;
+    margin: 2px;
 }
 
 .tile-row { font-size: @tile-font-height; }
@@ -80,9 +85,9 @@ a.selected {border: 4px solid #FF0000;
 .hide { display: none; }
 .tile { width: @tile-width; height: @tile-height; background-size: @tile-width @tile-height; }
 .other-player .tile {
-    width: @tile-width/2;
-    height: @tile-height/2;
-    background-size: @tile-width/2 @tile-height/2;
+    width: @tile-width-other;
+    height: @tile-height-other;
+    background-size: @tile-width-other @tile-height-other;
 }
 .mobile .tile { width: 37px; height: 50px; background-size: 37px 50px; }
 .padded { padding: 8px; }
@@ -118,7 +123,22 @@ a.selected {border: 4px solid #FF0000;
 
 
 .last-tile { margin-left: 1em; }
-.discard-tiles { width: 45%; margin-left: 4em; }
+.discard-tiles { width: 80%; }
 .other-player .discard-tiles {
+    width: 100%;
     margin: 0;
+}
+.other-player {
+    width: 50%;
+    float: left;
+}
+.this-player {
+    position: absolute;
+    bottom: 1em;
+}
+#notifications {
+    position: absolute; left: 10px; top: 10px;
+}
+#player-info {
+    position: absolute; right: 10px; top: 10px;
 }

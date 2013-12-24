@@ -1,22 +1,22 @@
-<span class="small" style="position: absolute; right: 10px; top: 10px;">{{ player.name }} | <a href="{{base_path}}/game">restart</a></span>
+<span id="notifications">
+    <span class="msg"></span>
+    {% if msg %}<a href="/game">play again!</a>{% endif %}
+</span>
+<span id="player-info" class="small">{{ player.name }} | <a href="{{base_path}}/game">restart</a></span>
 {% for seat in game.seats %}
 {% if seat.player_id != player._id %}
-<div style="margin-bottom: 8px;" class="other-player">
-<h4>{% if seat.player_id <= 1 %}Computer{% else %}{{ seat.player_id }}{% endif %}</h4>
-<div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
-<div class="clr padded tile-row hand-tiles">{{ seat.rendered_hand|safe }}</div>
+<div style="margin-bottom: 8px;" class="other-player player-{{ seat.player_id }}">
+    <h4>{% if seat.player_id|isComputer %}AMI {{ seat.player_id }}{% else %}{{ player_map[seat.player_id].name }}{% endif %}</h4>
+    <div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
+    <div class="clr padded tile-row hand-tiles">{{ seat.rendered_hand|safe }}</div>
 </div>
 {% endif %}
 {% endfor %}
 {% for seat in game.seats %}
 {% if seat.player_id == player._id %}
-<div>
+<div class="this-player player-{{ seat.player_id }} clr">
     <div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
     <div id="player-tiles" class="clr padded tile-row hand-tiles ">{{ seat.rendered_hand|safe }}</div>
-{% if msg %}
-<h3>{{ msg }}</h3>
-<a href="/game">play again!</a>
-{% endif %}
 </div>
 {% endif %}
 {% endfor %}

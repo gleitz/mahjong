@@ -1,3 +1,4 @@
+- Add your turn
 - Only allow discards on your turn
 - Notify other players when it is their turn to throw (use the room)
 - Make multiple AIs (don't use 0)
