@@ -19,9 +19,7 @@ var MongoStore = require('connect-mongo')(express),
 
 var app = express(),
     server = require('http').createServer(app),
-    io = require('socket.io').listen(server,
-                                     {resource: process.env.NODE_ENV == 'production' ?
-                                      '/apps/mahjong/socket.io' : '/socket.io'}),
+    io = require('socket.io').listen(server),
     cookieParser = express.cookieParser(config.EXPRESS_COOKIE_SECRET);
 
 // TODO(gleitz): disable in production
