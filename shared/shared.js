@@ -50,6 +50,9 @@ shared.getPlayer = function(players, player_id) {
     });
 }
 
+shared.exists = function(val) {
+    return _.contains(['string', 'number'], typeof val);
+}
 
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
@@ -86,7 +89,7 @@ shared.augmentSwig = function(swig) {
 
     function renderHand(game, seat, player_id) {
         var is_hidden = seat.player_id != player_id;
-        if (typeof game.winner_id === 'number' && game.winner_id == seat.player_id) {
+        if (shared.exists(game.winner_id) && game.winner_id == seat.player_id) {
             is_hidden = false;
         }
         return renderTiles(seat.hand,

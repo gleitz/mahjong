@@ -51,7 +51,7 @@ var getResponseJSON = function(game, player_id) {
         var ami_result = ami.getDiscard(seat.hand, seat.discard),
             ami_recommended = ami_result.recommended;
         if (ami_result.obj.msg.indexOf('Tsumo') != -1) {
-            var winner_exists = (typeof game.winner_id === 'number');
+            var winner_exists = (shared.exists(game.winner_id));
             game.winner_id = player_id;
             // TODO(gleitz): work this into a promise
             if (!winner_exists) {
@@ -163,7 +163,7 @@ var takeTurn = function(player_id, game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
         models.findOneGame(game_id).then(function(game) {
-            if (typeof tile === 'number') {
+            if (shared.exists(tile)) {
                 // Allow 0 but not false, null, undefined, etc.
                 var success = discardTile(player_id, game, tile);
                 if (!success) {

@@ -103,7 +103,7 @@ var INIT = (function ($, undefined) {
         if (cfg.game && cfg.player && cfg.game.current_player_id == cfg.player._id) {
             can_play = true;
         }
-        if (cfg.game && typeof cfg.game.winner_id === 'number') {
+        if (cfg.game && shared.exists(cfg.game.winner_id)) {
             markWinner(cfg.game.winner_id);
             can_play = false;
         }
