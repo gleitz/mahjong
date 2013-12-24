@@ -7,16 +7,16 @@
 {% if seat.player_id != player._id %}
 <div style="margin-bottom: 8px;" class="other-player player-{{ seat.player_id }}">
     <h4>{% if seat.player_id|isComputer %}AMI {{ seat.player_id }}{% else %}{{ player_map[seat.player_id].name }}{% endif %}</h4>
-    <div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
-    <div class="clr padded tile-row hand-tiles">{{ seat.rendered_hand|safe }}</div>
+    <div class="clr padded tile-row discard-tiles">{% renderDiscard seat %}</div>
+    <div class="clr padded tile-row hand-tiles">{% renderHand game seat player._id %}</div>
 </div>
 {% endif %}
 {% endfor %}
 {% for seat in game.seats %}
 {% if seat.player_id == player._id %}
 <div class="this-player player-{{ seat.player_id }} clr">
-    <div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
-    <div id="player-tiles" class="clr padded tile-row hand-tiles ">{{ seat.rendered_hand|safe }}</div>
+    <div class="clr padded tile-row discard-tiles">{% renderDiscard seat %}</div>
+    <div id="player-tiles" class="clr padded tile-row hand-tiles ">{% renderHand game seat player._id %}</div>
 </div>
 {% endif %}
 {% endfor %}

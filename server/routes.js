@@ -89,7 +89,6 @@ var renderGame = function(game, req, res) {
         };
         if (cfg.game_id) {
             _.extend(cfg, response);
-            shared.renderPlayerTiles(game, player_id);
         }
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
@@ -187,7 +186,8 @@ exports.addRoutes = function(app) {
 
     // Homepage
     app.get('/', function(req, res) {
-        var cfg = {path: formatUrl(req, '/play')};
+        var cfg = {path: formatUrl(req, '/play'),
+                   base_path: req.headers['x-script-name'] || ''};
         res.render('home', cfg);
     });
 

@@ -160,7 +160,6 @@ var INIT = (function ($, undefined) {
         });
         socket.on('discard_response_other_player', function(data) {
             var other_player = data.player;
-            shared.renderPlayerTiles(data.game, cfg.player._id);
             data.player = {_id: cfg.player._id,
                           name: cfg.player.name};
             $('body').html(board_tpl(data));
@@ -175,7 +174,6 @@ var INIT = (function ($, undefined) {
             }
         });
         socket.on('discard_response_this_player', function(data) {
-            shared.renderPlayerTiles(data.game, cfg.player._id);
             $('body').html(board_tpl(data));
             if (data.msg && data.msg.indexOf('Tsumo') != -1) {
                 markWinner(data.player._id);

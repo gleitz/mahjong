@@ -46,57 +46,83 @@ shared.tile = function (input) {
 shared.isComputer = function (player_id) {
     return player_id <= 1;
 };
-
 shared.augmentSwig = function(swig) {
-    swig.setFilter('tile', shared.tile);
-    swig.setFilter('isComputer', shared.isComputer);
-    swig.setTag('renderTiles',
-                function(str, line, parser, types, stack, options) {
-                    return true;
-                },
-                function(compiler, args, content, parents, options, blockName) {
-                    // console.log(result);
-                    // return '_output += shared.renderTiles(args[0], args[1], args[2]);'
-                },
-                false);
-};
 
-shared.renderTiles = function(hist, last_tile, is_hidden) {
-    var buffer = [],
-        last_tile_str,
-        i;
-    for (i=0; i<hist.length; i++) {
-        for (var j=0; j<hist[i]; j++) {
-            var hand_tmp = hist.slice(0);
-            hand_tmp[i] -= j;
-            var tile_num = is_hidden ? 'hidden' : i;
-            if (!last_tile_str &&
-                 (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
-                // Separate the last discarded tile. If the game has just started
-                // then separate the last tile in the hand
-                last_tile_str = last_tile_compiled({tile_num: tile_num});
-            } else {
-                buffer.push(shared.tile(tile_num));
+    /* Swig Helper Functions */
+    function renderTiles(hist, last_tile, is_hidden) {
+        var buffer = [],
+            last_tile_str,
+            i;
+        for (i=0; i<hist.length; i++) {
+            for (var j=0; j<hist[i]; j++) {
+                var hand_tmp = hist.slice(0);
+                hand_tmp[i] -= j;
+                var tile_num = is_hidden ? 'hidden' : i;
+                if (!last_tile_str &&
+                    (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
+                    // Separate the last discarded tile. If the game has just started
+                    // then separate the last tile in the hand
+                    last_tile_str = last_tile_compiled({tile_num: tile_num});
+                } else {
+                    buffer.push(shared.tile(tile_num));
+                }
             }
         }
+        buffer.push(last_tile_str);
+        return buffer.join(' ');
     }
-    buffer.push(last_tile_str);
-    return buffer.join(' ');
-};
 
-shared.renderPlayerTiles = function(game, player_id) {
-    _.each(game.seats, function(seat) {
+    function renderHand(game, seat, player_id) {
+        console.log(game);
+        console.log(seat);
+        console.log(player_id);
         var is_hidden = seat.player_id != player_id;
         if (typeof game.winner_id === 'number' && game.winner_id == seat.player_id) {
             is_hidden = false;
         }
-        seat.rendered_hand = shared.renderTiles(seat.hand,
-                                                seat.last_tile,
-                                                is_hidden);
-        seat.rendered_discard = _.reduce(seat.discard, function(memo, tile) {
+        return renderTiles(seat.hand,
+                           seat.last_tile,
+                           is_hidden);
+    }
+
+    function renderDiscard(seat) {
+        return _.reduce(seat.discard, function(memo, tile) {
             return memo + shared.tile(tile);
         }, '');
-    });
+    }
+
+    function variableParser(str, line, parser, types, stack, options) {
+        parser.on(types.VAR, function (token) {
+            // get the root object (e.g. player.name -> player)
+            var top_obj = token.match.split('.')[0];
+            // check to see root object exists in the local scope
+            // otherwise, look in the global scope
+            this.out.push('(typeof ' + top_obj + ' === "undefined" ? ' +
+                          '_ctx.' + token.match + ' : ' + token.match +
+                          ')');
+            return;
+        });
+        return true;
+    }
+
+    swig.setFilter('tile', shared.tile);
+    swig.setFilter('isComputer', shared.isComputer);
+    swig.setExtension('renderHand', renderHand);
+    swig.setExtension('renderDiscard', renderDiscard);
+    swig.setTag('renderHand',
+                variableParser,
+                function(compiler, args, content, parents, options, blockName) {
+                    return '_output += _ext.renderHand(' +
+                        args[0] + ',' + args[1] + ',' + args[2] + ');';
+                },
+                false);
+    swig.setTag('renderDiscard',
+                variableParser,
+                function(compiler, args, content, parents, options, blockName) {
+                    return '_output += _ext.renderDiscard(' +
+                        args[0] + ');';
+                },
+                false);
 };
 
 shared.getSeat = function(seats, player_id) {
