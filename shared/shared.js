@@ -26,9 +26,7 @@ if (typeof exports !== 'undefined') {
 // Import underscore if in **Node.js**
 // (import automatically available if in browser)
 if (typeof require !== 'undefined') {
-    var _ = require('underscore'),
-        swig = require('swig');
-
+    var _ = require('underscore');
 }
 
 function sum (arr){
@@ -36,19 +34,33 @@ function sum (arr){
     return s;
 }
 
-var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
-    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
-
-shared.tile = function (input) {
-    return tile_compiled({tile_num: input});
-};
-
 shared.isComputer = function (player_id) {
     return player_id <= 1;
 };
+
+shared.getSeat = function(seats, player_id) {
+    return _.find(seats, function(s) {
+        return s.player_id === player_id;
+    });
+}
+
+shared.getPlayer = function(players, player_id) {
+    return _.find(players, function(p) {
+        return p._id == player_id;
+    });
+}
+
+
+/* Swig templating functions */
 shared.augmentSwig = function(swig) {
 
-    /* Swig Helper Functions */
+    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+        tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
+
+    function tile(input) {
+        return tile_compiled({tile_num: input});
+    }
+
     function renderTiles(hist, last_tile, is_hidden) {
         var buffer = [],
             last_tile_str,
@@ -64,7 +76,7 @@ shared.augmentSwig = function(swig) {
                     // then separate the last tile in the hand
                     last_tile_str = last_tile_compiled({tile_num: tile_num});
                 } else {
-                    buffer.push(shared.tile(tile_num));
+                    buffer.push(tile(tile_num));
                 }
             }
         }
@@ -87,7 +99,7 @@ shared.augmentSwig = function(swig) {
 
     function renderDiscard(seat) {
         return _.reduce(seat.discard, function(memo, tile) {
-            return memo + shared.tile(tile);
+            return memo + tile(tile);
         }, '');
     }
 
@@ -105,7 +117,7 @@ shared.augmentSwig = function(swig) {
         return true;
     }
 
-    swig.setFilter('tile', shared.tile);
+    swig.setFilter('tile', tile);
     swig.setFilter('isComputer', shared.isComputer);
     swig.setExtension('renderHand', renderHand);
     swig.setExtension('renderDiscard', renderDiscard);
@@ -124,15 +136,3 @@ shared.augmentSwig = function(swig) {
                 },
                 false);
 };
-
-shared.getSeat = function(seats, player_id) {
-    return _.find(seats, function(s) {
-        return s.player_id === player_id;
-    });
-}
-
-shared.getPlayer = function(players, player_id) {
-    return _.find(players, function(p) {
-        return p._id == player_id;
-    });
-}

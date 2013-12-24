@@ -45,6 +45,9 @@ var getResponseJSON = function(game, player_id) {
                       name: 'Computer ' + player_id.toString()};
         }
         var seat = shared.getSeat(game.seats, player_id);
+        if (!seat) {
+            throw new Error('Player is not in this game');
+        }
         var ami_result = ami.getDiscard(seat.hand, seat.discard),
             ami_recommended = ami_result.recommended;
         if (ami_result.obj.msg.indexOf('Tsumo') != -1) {
@@ -92,6 +95,9 @@ var renderGame = function(game, req, res) {
         }
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
+    }).fail(function() {
+        // User is not in this game
+        return res.redirect(formatUrl(req, '/play/'));
     });
 };
 
