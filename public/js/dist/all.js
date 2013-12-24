@@ -533,8 +533,7 @@ var INIT = (function ($, undefined) {
         if (cfg.game && shared.exists(cfg.game.winner_id)) {
             markWinner(cfg.game.winner_id);
             can_play = false;
-        }
-        if (cfg.game && cfg.game.current_player_id && !cfg.isLobby) {
+        } else if (cfg.game && cfg.game.current_player_id && !cfg.isLobby) {
             notifyTurn(cfg.game.current_player_id);
         }
         if (cfg.isLobby) {
