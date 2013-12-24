@@ -486,14 +486,16 @@ var INIT = (function ($, undefined) {
     }
 
     function markWinner(player_id) {
-        var player_name;
+        var msg;
         if (player_id <= 1) {
-            player_name = 'Computer ' + player_id.toString();
+            msg = 'Computer ' + player_id.toString() + ' is the winner!';
+        } else if (player_id == cfg.player._id) {
+            msg = 'Tsumo! You are the winner!';
         } else {
             var player = shared.getPlayer(cfg.players, player_id);
-            player_name = player.name;
+            msg = player.name + " is the winner!"
         }
-        $('.msg').text(player_id.toString() + " is the winner!");
+        $('.msg').text(msg);
     }
 
     function notifyTurn(player_id) {
