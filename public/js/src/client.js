@@ -169,6 +169,7 @@ var INIT = (function ($, undefined) {
             }
             if (data.msg && data.msg.indexOf('Tsumo') != -1) {
                 markWinner(other_player._id);
+                can_play = false;
             } else {
                 notifyTurn(data.game.current_player_id);
             }
