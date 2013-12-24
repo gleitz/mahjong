@@ -57,7 +57,7 @@ shared.augmentSwig = function(swig) {
     var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
         tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
-    function tile(input) {
+    function renderTile(input) {
         return tile_compiled({tile_num: input});
     }
 
@@ -76,7 +76,7 @@ shared.augmentSwig = function(swig) {
                     // then separate the last tile in the hand
                     last_tile_str = last_tile_compiled({tile_num: tile_num});
                 } else {
-                    buffer.push(tile(tile_num));
+                    buffer.push(renderTile(tile_num));
                 }
             }
         }
@@ -85,9 +85,6 @@ shared.augmentSwig = function(swig) {
     }
 
     function renderHand(game, seat, player_id) {
-        console.log(game);
-        console.log(seat);
-        console.log(player_id);
         var is_hidden = seat.player_id != player_id;
         if (typeof game.winner_id === 'number' && game.winner_id == seat.player_id) {
             is_hidden = false;
@@ -99,7 +96,7 @@ shared.augmentSwig = function(swig) {
 
     function renderDiscard(seat) {
         return _.reduce(seat.discard, function(memo, tile) {
-            return memo + tile(tile);
+            return memo + renderTile(tile);
         }, '');
     }
 
@@ -117,7 +114,7 @@ shared.augmentSwig = function(swig) {
         return true;
     }
 
-    swig.setFilter('tile', tile);
+    swig.setFilter('tile', renderTile);
     swig.setFilter('isComputer', shared.isComputer);
     swig.setExtension('renderHand', renderHand);
     swig.setExtension('renderDiscard', renderDiscard);

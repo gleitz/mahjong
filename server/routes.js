@@ -307,7 +307,6 @@ exports.addSockets = function(io) {
             socket.join(game_id);
         })
         socket.on('start_game', function(data) {
-            console.log("game asked to be started!");
             io.sockets['in'](data.game_id).emit('start_game', {});
         })
         socket.on('join_lobby', function(data) {

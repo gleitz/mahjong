@@ -12,3 +12,4 @@
 - Add production TODOs and detection
 - switch to rendered templates
 - add reach
+- make a restart button for the two players
