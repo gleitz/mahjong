@@ -507,8 +507,15 @@ var INIT = (function ($, undefined) {
         if (cfg.game && typeof cfg.game.winner_id === 'number') {
             markWinner(cfg.game.winner_id);
             can_play = false;
-        } else {
+        }
+        if (cfg.game && cfg.game.current_player_id && !cfg.isLobby) {
             notifyTurn(cfg.game.current_player_id);
+        }
+        if (cfg.isLobby) {
+            var url = window.location.href;
+            url.replace('play', 'game');
+            console.log(url);
+            $('#start-label').val(url);
         }
         $('body').fastClick('a.start', function(evt) {
             evt.preventDefault();
@@ -537,6 +544,8 @@ var INIT = (function ($, undefined) {
         });
 
         // initialize socket.io
+        console.log(cfg.base_path + '?token=' +
+                    cfg.socketIo.token);
         socket = io.connect(cfg.base_path + '?token=' +
                             cfg.socketIo.token);
         socket.on('connect', function() {
