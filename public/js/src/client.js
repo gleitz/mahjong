@@ -144,8 +144,10 @@ var INIT = (function ($, undefined) {
         // initialize socket.io
         console.log(cfg.base_path + '?token=' +
                     cfg.socketIo.token);
+        console.log(cfg.base_path + '?token=' +
+                    cfg.socketIo.token, {resource: 'socket.io' + cfg.base_path});
         socket = io.connect(cfg.base_path + '?token=' +
-                            cfg.socketIo.token);
+                            cfg.socketIo.token, {resource: 'socket.io' + cfg.base_path});
         socket.on('connect', function() {
             socket.emit('room', cfg.game_id);
             if (cfg.isLobby) {

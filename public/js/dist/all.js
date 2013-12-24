@@ -514,7 +514,6 @@ var INIT = (function ($, undefined) {
         if (cfg.isLobby) {
             var url = window.location.href;
             url.replace('play', 'game');
-            console.log(url);
             $('#start-label').val(url);
         }
         $('body').fastClick('a.start', function(evt) {
@@ -546,8 +545,10 @@ var INIT = (function ($, undefined) {
         // initialize socket.io
         console.log(cfg.base_path + '?token=' +
                     cfg.socketIo.token);
+        console.log(cfg.base_path + '?token=' +
+                    cfg.socketIo.token, {resource: 'socket.io' + cfg.base_path});
         socket = io.connect(cfg.base_path + '?token=' +
-                            cfg.socketIo.token);
+                            cfg.socketIo.token, {resource: 'socket.io' + cfg.base_path});
         socket.on('connect', function() {
             socket.emit('room', cfg.game_id);
             if (cfg.isLobby) {
