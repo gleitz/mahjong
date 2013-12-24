@@ -148,9 +148,22 @@ a.tile-holder {
   width: 55px;
   height: 75px;
 }
+.other-player a.tile-holder {
+  width: 27.5px;
+  height: 37.5px;
+}
+.tile-row {
+  font-size: 71px;
+}
+.other-player .tile-row {
+  font-size: 35.5px;
+}
 .mobile a.tile-holder {
   width: 37px;
   height: 50px;
+}
+.mobile .tile-row {
+  font-size: 53px;
 }
 a.selected {
   border: 4px solid #FF0000;
@@ -192,6 +205,11 @@ a.selected {
   height: 75px;
   background-size: 55px 75px;
 }
+.other-player .tile {
+  width: 27.5px;
+  height: 37.5px;
+  background-size: 27.5px 37.5px;
+}
 .mobile .tile {
   width: 37px;
   height: 50px;
@@ -199,12 +217,6 @@ a.selected {
 }
 .padded {
   padding: 8px;
-}
-.tile-width {
-  width: 71px;
-}
-.mobile .tile-width {
-  width: 53px;
 }
 .center {
   text-align: center;
@@ -289,4 +301,17 @@ a.selected {
 }
 .tile-26 {
   background-image: url(../../img/tiles/character_9.png);
+}
+.tile-holder.hidden {
+  background-color: #d48623;
+}
+.last-tile {
+  margin-left: 1em;
+}
+.discard-tiles {
+  width: 45%;
+  margin-left: 4em;
+}
+.other-player .discard-tiles {
+  margin: 0;
 }

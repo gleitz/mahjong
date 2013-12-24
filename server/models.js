@@ -94,7 +94,6 @@ module.exports.findOnePlayer = function(player_id) {
 module.exports.findPlayers = function(player_ids) {
     var findPlayers = Q.nbind(db.players.find, db.players),
         ids = _.map(player_ids, function(player_id) { return new ObjectID(player_id); });
-    console.log(ids);
     return findPlayers({_id: {$in: ids}}).then(function(players) {
         var findArray = Q.nbind(players.toArray, players);
         return findArray();

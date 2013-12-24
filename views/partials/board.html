@@ -1,25 +1,18 @@
 <span class="small" style="position: absolute; right: 10px; top: 10px;">{{ player.name }} | <a href="{{base_path}}/game">restart</a></span>
-<h3>Other players</h3>
 {% for seat in game.seats %}
 {% if seat.player_id != player._id %}
-<div style="border: 5px solid #000;">
-<h1>Player: {{ seat.player_id }}</h1>
-<h3>Discard</h3>
-<div class="clr padded">{{ seat.rendered_discard|safe }}</div>
-<h3>Hand</h3>
-<div class="clr padded">{{ seat.rendered_hand|safe }}</div>
+<div style="margin-bottom: 8px;" class="other-player">
+<h4>{% if seat.player_id <= 1 %}Computer{% else %}{{ seat.player_id }}{% endif %}</h4>
+<div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
+<div class="clr padded tile-row hand-tiles">{{ seat.rendered_hand|safe }}</div>
 </div>
 {% endif %}
 {% endfor %}
-<h3>You</h3>
 {% for seat in game.seats %}
 {% if seat.player_id == player._id %}
-<div style="border: 5px solid #000;">
-<h1>Player: {{ seat.player_id }}</h1>
-<h3>Discard</h3>
-<div id="discard-tiles" class="clr padded">{{ seat.rendered_discard|safe }}</div>
-<h3>Hand</h3>
-<div id="hand-tiles" class="clr padded">{{ seat.rendered_hand|safe }}</div>
+<div>
+    <div class="clr padded tile-row discard-tiles">{{ seat.rendered_discard|safe }}</div>
+    <div id="player-tiles" class="clr padded tile-row hand-tiles ">{{ seat.rendered_hand|safe }}</div>
 {% if msg %}
 <h3>{{ msg }}</h3>
 <a href="/game">play again!</a>

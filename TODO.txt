@@ -1,8 +1,10 @@
-- Make multiple AIs (don't use 0)
-- After you have thrown, make the computer throw
 - Only allow discards on your turn
 - Notify other players when it is their turn to throw (use the room)
+- Make multiple AIs (don't use 0)
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
+- Make AMI call asynchronous
+- Make game_id always come before player_id
+- Break rendering down into two phases that share a common template
 - Add production TODOs and detection
 - switch to rendered templates
 

@@ -36,8 +36,8 @@ function sum (arr){
     return s;
 }
 
-var last_tile_compiled = swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
-    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
+var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
 shared.tile = function (input) {
     return tile_compiled({tile_num: input});
@@ -56,7 +56,7 @@ shared.augmentSwig = function(swig) {
                 false);
 };
 
-shared.renderTiles = function(hist, last_tile, cfg) {
+shared.renderTiles = function(hist, last_tile, is_hidden) {
     var buffer = [],
         last_tile_str,
         i;
@@ -64,13 +64,14 @@ shared.renderTiles = function(hist, last_tile, cfg) {
         for (var j=0; j<hist[i]; j++) {
             var hand_tmp = hist.slice(0);
             hand_tmp[i] -= j;
+            var tile_num = is_hidden ? 'hidden' : i;
             if (!last_tile_str &&
                  (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
                 // Separate the last discarded tile. If the game has just started
                 // then separate the last tile in the hand
-                last_tile_str = last_tile_compiled({tile_width: cfg.tile_width, tile_num: i});
+                last_tile_str = last_tile_compiled({tile_num: tile_num});
             } else {
-                buffer.push(shared.tile(i));
+                buffer.push(shared.tile(tile_num));
             }
         }
     }
@@ -78,9 +79,12 @@ shared.renderTiles = function(hist, last_tile, cfg) {
     return buffer.join(' ');
 };
 
-shared.renderPlayerTiles = function(game, cfg) {
+shared.renderPlayerTiles = function(game, player_id) {
     _.each(game.seats, function(seat) {
-        seat.rendered_hand = shared.renderTiles(seat.hand, seat.last_tile, cfg);
+        var is_hidden = seat.player_id != player_id;
+        seat.rendered_hand = shared.renderTiles(seat.hand,
+                                                seat.last_tile,
+                                                is_hidden);
         seat.rendered_discard = _.reduce(seat.discard, function(memo, tile) {
             return memo + shared.tile(tile);
         }, '');

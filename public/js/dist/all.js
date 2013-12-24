@@ -324,8 +324,8 @@ function sum (arr){
     return s;
 }
 
-var last_tile_compiled = swig.compile('<span class="left" style="margin-left: {{tile_width}}px;"><a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
-    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
+var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
 shared.tile = function (input) {
     return tile_compiled({tile_num: input});
@@ -344,7 +344,7 @@ shared.augmentSwig = function(swig) {
                 false);
 };
 
-shared.renderTiles = function(hist, last_tile, cfg) {
+shared.renderTiles = function(hist, last_tile, is_hidden) {
     var buffer = [],
         last_tile_str,
         i;
@@ -352,13 +352,14 @@ shared.renderTiles = function(hist, last_tile, cfg) {
         for (var j=0; j<hist[i]; j++) {
             var hand_tmp = hist.slice(0);
             hand_tmp[i] -= j;
+            var tile_num = is_hidden ? 'hidden' : i;
             if (!last_tile_str &&
                  (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
                 // Separate the last discarded tile. If the game has just started
                 // then separate the last tile in the hand
-                last_tile_str = last_tile_compiled({tile_width: cfg.tile_width, tile_num: i});
+                last_tile_str = last_tile_compiled({tile_num: tile_num});
             } else {
-                buffer.push(shared.tile(i));
+                buffer.push(shared.tile(tile_num));
             }
         }
     }
@@ -366,9 +367,12 @@ shared.renderTiles = function(hist, last_tile, cfg) {
     return buffer.join(' ');
 };
 
-shared.renderPlayerTiles = function(game, cfg) {
+shared.renderPlayerTiles = function(game, player_id) {
     _.each(game.seats, function(seat) {
-        seat.rendered_hand = shared.renderTiles(seat.hand, seat.last_tile, cfg);
+        var is_hidden = seat.player_id != player_id;
+        seat.rendered_hand = shared.renderTiles(seat.hand,
+                                                seat.last_tile,
+                                                is_hidden);
         seat.rendered_discard = _.reduce(seat.discard, function(memo, tile) {
             return memo + shared.tile(tile);
         }, '');
@@ -451,10 +455,10 @@ var INIT = (function ($, undefined) {
             var $t = $(this),
                 $a = $t.closest('a'),
                 tile;
-            if ($a.closest('#hand-tiles').length > 0) {
+            if ($a.closest('#player-tiles').length > 0) {
                 tile = $(this);
             } else {
-                tile = $('#hand-tiles').find('div.tile-'+$a.data('tile')+':last');
+                tile = $('#player-tiles').find('div.tile-'+$a.data('tile')+':last');
             }
             tile.fadeOut('slow', function() {
                 updateHand({game_id: cfg.game_id,
@@ -469,19 +473,28 @@ var INIT = (function ($, undefined) {
             socket.emit('room', cfg.game_id);
         });
         socket.on('discard_response_other_player', function(data) {
-
+            shared.renderPlayerTiles(data.game, cfg.player._id);
+            console.log(cfg);
+            data.player = {_id: cfg.player._id,
+                          name: cfg.player.name};
+            $('body').html(board_tpl(data));
+            if (data.msg) {
+                alert("somebody got a mahjong");
+            }
         });
         socket.on('discard_response_this_player', function(data) {
-            shared.renderPlayerTiles(data.game, cfg);
+            shared.renderPlayerTiles(data.game, cfg.player._id);
             $('body').html(board_tpl(data));
             if (!data.msg) {
-                $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
+                // TODO(gleitz): re-enable suggestions
+                // $('#player-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
             }
         });
 
         // highlight the current tile to throw
         if (cfg.isSimulation && !cfg.msg) {
-            $('#hand-tiles').find('div.tile-' + cfg.recommended.discard_tile + ':last').closest('a').addClass('selected');
+            //TODO(gleitz): allow enabling this option
+            // $('#player-tiles').find('div.tile-' + cfg.recommended.discard_tile + ':last').closest('a').addClass('selected');
         }
 
         $('body').bind('touchmove', pushMove);

@@ -74,10 +74,10 @@ var INIT = (function ($, undefined) {
             var $t = $(this),
                 $a = $t.closest('a'),
                 tile;
-            if ($a.closest('#hand-tiles').length > 0) {
+            if ($a.closest('#player-tiles').length > 0) {
                 tile = $(this);
             } else {
-                tile = $('#hand-tiles').find('div.tile-'+$a.data('tile')+':last');
+                tile = $('#player-tiles').find('div.tile-'+$a.data('tile')+':last');
             }
             tile.fadeOut('slow', function() {
                 updateHand({game_id: cfg.game_id,
@@ -92,19 +92,28 @@ var INIT = (function ($, undefined) {
             socket.emit('room', cfg.game_id);
         });
         socket.on('discard_response_other_player', function(data) {
-
+            shared.renderPlayerTiles(data.game, cfg.player._id);
+            console.log(cfg);
+            data.player = {_id: cfg.player._id,
+                          name: cfg.player.name};
+            $('body').html(board_tpl(data));
+            if (data.msg) {
+                alert("somebody got a mahjong");
+            }
         });
         socket.on('discard_response_this_player', function(data) {
-            shared.renderPlayerTiles(data.game, cfg);
+            shared.renderPlayerTiles(data.game, cfg.player._id);
             $('body').html(board_tpl(data));
             if (!data.msg) {
-                $('#hand-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
+                // TODO(gleitz): re-enable suggestions
+                // $('#player-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
             }
         });
 
         // highlight the current tile to throw
         if (cfg.isSimulation && !cfg.msg) {
-            $('#hand-tiles').find('div.tile-' + cfg.recommended.discard_tile + ':last').closest('a').addClass('selected');
+            //TODO(gleitz): allow enabling this option
+            // $('#player-tiles').find('div.tile-' + cfg.recommended.discard_tile + ':last').closest('a').addClass('selected');
         }
 
         $('body').bind('touchmove', pushMove);
