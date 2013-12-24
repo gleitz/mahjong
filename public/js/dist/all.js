@@ -544,7 +544,7 @@ var INIT = (function ($, undefined) {
 
         // initialize socket.io
         var socket_resource = (cfg.base_path + '/socket.io').slice(1);
-        socket = io.connect(cfg.base_path + '?token=' +
+        socket = io.connect('/?token=' +
                             cfg.socketIo.token, {resource: socket_resource});
         socket.on('connect', function() {
             socket.emit('room', cfg.game_id);
