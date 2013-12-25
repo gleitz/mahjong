@@ -57,7 +57,7 @@ shared.exists = function(val) {
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
 
-    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder hidden" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
         tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
     function renderTile(input) {

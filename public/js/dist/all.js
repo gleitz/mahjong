@@ -345,7 +345,7 @@ shared.exists = function(val) {
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
 
-    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder hidden" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
         tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
     function renderTile(input) {
@@ -519,12 +519,17 @@ var INIT = (function ($, undefined) {
             document.title = isOldTitle ? oldTitle : newTitle;
             isOldTitle = !isOldTitle;
         }
-        interval = setInterval(changeTitle, 700);
-
+        interval = setInterval(changeTitle, 1000);
         $(window).focus(function () {
             clearInterval(interval);
             $("title").text(oldTitle);
         });
+    }
+
+    function drawTile() {
+        can_play = true;
+        $('#player-tiles a.hidden').removeClass('hidden');
+        blinkTitle();
     }
 
     function clearNotifications() {
@@ -547,8 +552,7 @@ var INIT = (function ($, undefined) {
             $('body').addClass('mobile');
         }
         if (cfg.game && cfg.player && cfg.game.current_player_id == cfg.player._id) {
-            can_play = true;
-            blinkTitle();
+            drawTile();
         }
         if (cfg.game && shared.exists(cfg.game.winner_id)) {
             markWinner(cfg.game.winner_id);
@@ -610,8 +614,7 @@ var INIT = (function ($, undefined) {
                           name: cfg.player.name};
             $('body').html(board_tpl(data));
             if (data.game.current_player_id == cfg.player._id) {
-                can_play = true;
-                blinkTitle();
+                drawTile();
             }
             if (shared.exists(data.game.winner_id)) {
                 markWinner(other_player._id);

@@ -307,6 +307,9 @@ a.selected {
 .tile-holder.hidden {
   background-color: #d48623;
 }
+.hidden .tile {
+  background-image: none;
+}
 .last-tile {
   margin-left: 1em;
 }
