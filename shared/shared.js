@@ -35,7 +35,7 @@ function sum (arr){
 }
 
 shared.isComputer = function (player_id) {
-    return player_id <= 1;
+    return shared.exists(player_id) && player_id <= 1;
 };
 
 shared.getSeat = function(seats, player_id) {

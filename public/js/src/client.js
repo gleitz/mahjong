@@ -68,7 +68,9 @@ var INIT = (function ($, undefined) {
             var player = shared.getPlayer(cfg.players, player_id);
             msg = player.name + " is the winner!"
         }
+        $('.player-' + player_id + ' a.tile-holder.hidden').removeClass('hidden');
         $('.msg').text(msg);
+        can_play = false;
     }
 
     function notifyTurn(player_id) {
@@ -83,20 +85,23 @@ var INIT = (function ($, undefined) {
         $('.msg').text(msg);
     }
 
+    var blinkInterval;
     function blinkTitle() {
         var isOldTitle = true;
         var oldTitle = "Cock-eyed Mahjong";
         var newTitle = "YOUR TURN";
-        var interval = null;
         function changeTitle() {
             document.title = isOldTitle ? oldTitle : newTitle;
             isOldTitle = !isOldTitle;
         }
-        interval = setInterval(changeTitle, 1000);
+        blinkInterval = setInterval(changeTitle, 1000);
         $(window).focus(function () {
-            clearInterval(interval);
+            clearInterval(blinkInterval);
             $("title").text(oldTitle);
         });
+    }
+    function clearBlinkTitle() {
+        clearInterval(blinkInterval);
     }
 
     function drawTile() {
@@ -129,7 +134,6 @@ var INIT = (function ($, undefined) {
         }
         if (cfg.game && shared.exists(cfg.game.winner_id)) {
             markWinner(cfg.game.winner_id);
-            can_play = false;
         } else if (cfg.game && cfg.game.current_player_id && !cfg.isLobby) {
             notifyTurn(cfg.game.current_player_id);
         }
@@ -158,10 +162,24 @@ var INIT = (function ($, undefined) {
             } else {
                 tile = $('#player-tiles').find('div.tile-'+$a.data('tile')+':last');
             }
+            clearBlinkTitle();
             tile.fadeOut('slow', function() {
                 updateHand({game_id: cfg.game_id,
                             tile: $a.data('tile')});
             });
+        });
+
+        $(document).on('mouseenter mouseleave', '#player-tiles .tile-holder', function (evt) {
+            evt.preventDefault();
+            var $this = $(this);
+            if (evt.type === 'mouseenter') {
+                if (can_play) {
+                    $this.stop().animate({marginTop: '-8px'}, 100);
+                }
+            } else {
+                $this.stop().animate({marginTop: '4px'}, 300);
+            }
+            return false;
         });
 
         // initialize socket.io
@@ -191,7 +209,6 @@ var INIT = (function ($, undefined) {
             }
             if (shared.exists(data.game.winner_id)) {
                 markWinner(other_player._id);
-                can_play = false;
             } else {
                 notifyTurn(data.game.current_player_id);
             }

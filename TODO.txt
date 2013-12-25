@@ -1,7 +1,3 @@
-- Make AMI call asynchronous
-- make it more obvious who the winner is
-- don't let you submit a tile if there is a winner
-
 - Add a pon button
 - Make mobile work
 - Add the if statement on the save game

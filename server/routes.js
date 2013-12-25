@@ -37,19 +37,24 @@ var isMobile = function(req) {
 }
 
 var getResponseJSON = function(game, player_id) {
-    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
-    return models.findPlayers(player_ids).then(function(players) {
-        var player = shared.getPlayer(players, player_id);
+    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; }),
+        player,
+        players,
+        seat;
+    return models.findPlayers(player_ids).then(function(found_players) {
+        players = found_players;
+        player = shared.getPlayer(players, player_id);
         if (!player && player_id <=1) {
             player = {_id: player_id,
                       name: 'Computer ' + player_id.toString()};
         }
-        var seat = shared.getSeat(game.seats, player_id);
+        seat = shared.getSeat(game.seats, player_id);
         if (!seat) {
             throw new Error('Player is not in this game');
         }
-        var ami_result = ami.getDiscard(seat.hand, seat.discard),
-            ami_recommended = ami_result.recommended;
+        return ami.getDiscard(seat.hand, seat.discard);
+    }).then(function(ami_result) {
+        var ami_recommended = ami_result.recommended;
         if (ami_result.obj.msg.indexOf('Tsumo') != -1) {
             var winner_exists = (shared.exists(game.winner_id));
             game.winner_id = player_id;
@@ -283,17 +288,18 @@ var handleDiscard = function(io, player_id, game_id, tile) {
             if (typeof game.winner_id !== 'number' &&
                 shared.isComputer(game.current_player_id)) { // AI's turn
                 var seat = shared.getSeat(game.seats, game.current_player_id);
-                var ami_result = ami.getDiscard(seat.hand, seat.discard),
-                    discard_tile = ami_result.recommended.discard;
-                if (ami_result.obj.msg) {
-                    console.log(ami_result.obj.msg);
-                    console.log(seat);
-                    console.log(discard_tile);
-                }
-                // require the computer to take between 700ms-1s to play
-                setTimeout(function() {
-                    handleDiscard(io, game.current_player_id, game_id, discard_tile);
-                }, Math.floor(Math.random() * 300) + 700);
+                return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
+                    var discard_tile = ami_result.recommended.discard;
+                    if (ami_result.obj.msg) {
+                        console.log(ami_result.obj.msg);
+                        console.log(seat);
+                        console.log(discard_tile);
+                    }
+                    // require the computer to take between 700ms-1s to play
+                    setTimeout(function() {
+                        handleDiscard(io, game.current_player_id, game_id, discard_tile);
+                    }, Math.floor(Math.random() * 300) + 700);
+                });
             }
         })
         .fail(function(error) {
