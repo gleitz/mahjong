@@ -52,17 +52,19 @@ var getResponseJSON = function(game, player_id) {
         if (!seat) {
             throw new Error('Player is not in this game');
         }
-        return ami.getDiscard(seat.hand, seat.discard);
-    }).then(function(ami_result) {
-        var ami_recommended = ami_result.recommended;
-        if (ami_result.obj.msg.indexOf('Tsumo') != -1) {
+        return ami.checkMahjong(seat.hand);
+    }).then(function(is_mahjong) {
+        if (is_mahjong) {
             var winner_exists = (shared.exists(game.winner_id));
             game.winner_id = player_id;
-            // TODO(gleitz): work this into a promise
             if (!winner_exists) {
-                models.saveGame(game);
+                return models.saveGame(game);
             }
+        } else {
+            return ami.getDiscard(seat.hand, seat.discard);
         }
+    }).then(function(ami_result) {
+        var is_ami_result = ami_result && ami_result.recommended;
         var player_map = {};
         _.each(players, function(player) {
             player_map[player._id] = player;
@@ -73,10 +75,15 @@ var getResponseJSON = function(game, player_id) {
                         discard: seat.discard,
                         last_tile: seat.last_tile,
                         hand: seat.hand,
-                        msg: ami_result.obj.msg,
-                        shanten: ami_result.obj.shanten,
-                        recommended: {discard_tile: [ami_recommended.discard]},
                         game: game};
+        if (is_ami_result) {
+            var ami_recommended = ami_result.recommended;
+            _.extend(response, {
+                msg: ami_result.obj.msg,
+                shanten: ami_result.obj.shanten,
+                recommended: {discard_tile: [ami_recommended.discard]}
+            });
+        }
         return response;
     });
 };
@@ -93,7 +100,8 @@ var renderGame = function(game, req, res) {
             mobile: mobile,
             tile_width: mobile ? 53 : 71, //width + 16
             board_tpl: board_tpl,
-            isSimulation: true
+            isSimulation: true,
+            isOpen: req.query.open
         };
         if (cfg.game_id) {
             _.extend(cfg, response);
@@ -285,8 +293,9 @@ var handleDiscard = function(io, player_id, game_id, tile) {
                 }
             });
             var game = response.game;
-            if (typeof game.winner_id !== 'number' &&
-                shared.isComputer(game.current_player_id)) { // AI's turn
+            if (shared.isComputer(game.current_player_id) &&
+                !(shared.exists(game.winner_id) &&
+                  game.current_player_id == game.winner_id)) { // AI's turn
                 var seat = shared.getSeat(game.seats, game.current_player_id);
                 return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
                     var discard_tile = ami_result.recommended.discard;

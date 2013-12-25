@@ -348,11 +348,12 @@ shared.exists = function(val) {
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
 
-    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder hidden" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
-        tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
+    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+        tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
-    function renderTile(input) {
-        return tile_compiled({tile_num: input});
+    function renderTile(tile_num, is_hidden) {
+        return tile_compiled({tile_num: tile_num,
+                              is_hidden: is_hidden});
     }
 
     function renderTiles(hist, last_tile, is_hidden) {
@@ -363,14 +364,17 @@ shared.augmentSwig = function(swig) {
             for (var j=0; j<hist[i]; j++) {
                 var hand_tmp = hist.slice(0);
                 hand_tmp[i] -= j;
-                var tile_num = is_hidden ? 'hidden' : i;
+                var tile_num = i;
+                //TODO(gleitz): put back in production
+                // var tile_num = is_hidden ? 'hidden' : i;
                 if (!last_tile_str &&
                     (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
                     // Separate the last discarded tile. If the game has just started
                     // then separate the last tile in the hand
-                    last_tile_str = last_tile_compiled({tile_num: tile_num});
+                    last_tile_str = last_tile_compiled({tile_num: tile_num,
+                                                        is_hidden: is_hidden});
                 } else {
-                    buffer.push(renderTile(tile_num));
+                    buffer.push(renderTile(tile_num, is_hidden));
                 }
             }
         }
@@ -389,8 +393,8 @@ shared.augmentSwig = function(swig) {
     }
 
     function renderDiscard(seat) {
-        return _.reduce(seat.discard, function(memo, tile) {
-            return memo + renderTile(tile);
+        return _.reduce(seat.discard, function(memo, tile_num) {
+            return memo + renderTile(tile_num);
         }, '');
     }
 
@@ -488,33 +492,6 @@ var INIT = (function ($, undefined) {
         socket.emit('discard', data);
     }
 
-    function markWinner(player_id) {
-        var msg;
-        if (player_id <= 1) {
-            msg = 'Computer ' + player_id.toString() + ' is the winner!';
-        } else if (player_id == cfg.player._id) {
-            msg = 'Tsumo! You are the winner!';
-        } else {
-            var player = shared.getPlayer(cfg.players, player_id);
-            msg = player.name + " is the winner!"
-        }
-        $('.player-' + player_id + ' a.tile-holder.hidden').removeClass('hidden');
-        $('.msg').text(msg);
-        can_play = false;
-    }
-
-    function notifyTurn(player_id) {
-        var msg;
-        if (player_id == cfg.player._id) {
-            msg = 'Your turn';
-        } else if (shared.isComputer(player_id)) {
-            msg = 'Computer ' + player_id + '\'s turn';
-        } else {
-            msg = cfg.player_map[player_id].name + '\'s turn';
-        }
-        $('.msg').text(msg);
-    }
-
     var blinkInterval;
     function blinkTitle() {
         var isOldTitle = true;
@@ -534,10 +511,50 @@ var INIT = (function ($, undefined) {
         clearInterval(blinkInterval);
     }
 
+    function markWinner(player_id) {
+        var msg;
+        if (player_id <= 1) {
+            msg = 'Computer ' + player_id.toString() + ' is the winner!';
+        } else if (player_id == cfg.player._id) {
+            msg = 'Tsumo! You are the winner!';
+        } else {
+            var player = shared.getPlayer(cfg.players, player_id);
+            msg = player.name + " is the winner!"
+        }
+        $('.player-' + player_id + ' a.tile-holder.hidden').removeClass('hidden');
+        $('.msg').text(msg);
+        $('.play-again').removeClass('hide');
+        can_play = false;
+        clearBlinkTitle();
+    }
+
+    function notifyTurn(player_id) {
+        var msg;
+        if (player_id == cfg.player._id) {
+            msg = 'Your turn';
+        } else if (shared.isComputer(player_id)) {
+            msg = 'Computer ' + player_id + '\'s turn';
+        } else {
+            msg = cfg.player_map[player_id].name + '\'s turn';
+        }
+        $('.msg').text(msg);
+    }
+
     function drawTile() {
         can_play = true;
         $('#player-tiles a.hidden').removeClass('hidden');
         blinkTitle();
+    }
+
+    function revealHiddenTiles() {
+        $('a.tile-holder.hidden').removeClass('hidden');
+    }
+
+    function renderBoard(data) {
+        $('body').html(board_tpl(data));
+        if (cfg.isOpen) {
+            revealHiddenTiles();
+        }
     }
 
     function clearNotifications() {
@@ -556,13 +573,18 @@ var INIT = (function ($, undefined) {
             board_tpl = swig.compile($('#board_tpl').html());
         }
 
+        if (cfg.isOpen) {
+            revealHiddenTiles();
+        }
+
         if (cfg.mobile) {
             $('body').addClass('mobile');
         }
         if (cfg.game && cfg.player && cfg.game.current_player_id == cfg.player._id) {
             drawTile();
         }
-        if (cfg.game && shared.exists(cfg.game.winner_id)) {
+        if (cfg.game && shared.exists(cfg.game.winner_id) &&
+            cfg.game.current_player_id == cfg.game.winner_id) {
             markWinner(cfg.game.winner_id);
         } else if (cfg.game && cfg.game.current_player_id && !cfg.isLobby) {
             notifyTurn(cfg.game.current_player_id);
@@ -630,23 +652,24 @@ var INIT = (function ($, undefined) {
             $('.players').html(player_str.join(' '));
         });
         socket.on('discard_response_other_player', function(data) {
-            var other_player = data.player;
             data.player = {_id: cfg.player._id,
                           name: cfg.player.name};
-            $('body').html(board_tpl(data));
+            renderBoard(data);
             if (data.game.current_player_id == cfg.player._id) {
                 drawTile();
             }
-            if (shared.exists(data.game.winner_id)) {
-                markWinner(other_player._id);
+            if (shared.exists(data.game.winner_id) &&
+                data.game.current_player_id == data.game.winner_id) {
+                markWinner(data.game.winner_id);
             } else {
                 notifyTurn(data.game.current_player_id);
             }
         });
         socket.on('discard_response_this_player', function(data) {
-            $('body').html(board_tpl(data));
-            if (data.msg && data.msg.indexOf('Tsumo') != -1) {
-                markWinner(data.player._id);
+            renderBoard(data);
+            if (shared.exists(data.game.winner_id) &&
+                data.game.current_player_id == data.game.winner_id) {
+                markWinner(data.game.winner_id);
             } else {
                 notifyTurn(data.game.current_player_id);
             }

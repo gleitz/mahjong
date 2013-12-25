@@ -1,4 +1,5 @@
 - Add a pon button
+- allow winning on other people's tiles
 - Make mobile work
 - Add the if statement on the save game
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
@@ -8,4 +9,4 @@
 - switch to rendered templates
 - add reach
 - make a restart button for the two players
-- move tiles when you hover over them
+- detect broken game ids

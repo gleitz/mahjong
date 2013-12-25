@@ -57,11 +57,12 @@ shared.exists = function(val) {
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
 
-    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder hidden" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
-        tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if tile_num == \'hidden\' %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
+    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
+        tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
-    function renderTile(input) {
-        return tile_compiled({tile_num: input});
+    function renderTile(tile_num, is_hidden) {
+        return tile_compiled({tile_num: tile_num,
+                              is_hidden: is_hidden});
     }
 
     function renderTiles(hist, last_tile, is_hidden) {
@@ -72,14 +73,17 @@ shared.augmentSwig = function(swig) {
             for (var j=0; j<hist[i]; j++) {
                 var hand_tmp = hist.slice(0);
                 hand_tmp[i] -= j;
-                var tile_num = is_hidden ? 'hidden' : i;
+                var tile_num = i;
+                //TODO(gleitz): put back in production
+                // var tile_num = is_hidden ? 'hidden' : i;
                 if (!last_tile_str &&
                     (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
                     // Separate the last discarded tile. If the game has just started
                     // then separate the last tile in the hand
-                    last_tile_str = last_tile_compiled({tile_num: tile_num});
+                    last_tile_str = last_tile_compiled({tile_num: tile_num,
+                                                        is_hidden: is_hidden});
                 } else {
-                    buffer.push(renderTile(tile_num));
+                    buffer.push(renderTile(tile_num, is_hidden));
                 }
             }
         }
@@ -98,8 +102,8 @@ shared.augmentSwig = function(swig) {
     }
 
     function renderDiscard(seat) {
-        return _.reduce(seat.discard, function(memo, tile) {
-            return memo + renderTile(tile);
+        return _.reduce(seat.discard, function(memo, tile_num) {
+            return memo + renderTile(tile_num);
         }, '');
     }
 

@@ -10,6 +10,15 @@ var mahjong = require('./mahjong'),
     shanten = require('./shanten'),
     _ = require('underscore');
 
+module.exports.checkMahjong = function(hand, callback) {
+    var deferred = Q.defer();
+    setTimeout(function() {
+        var is_mahjong = mahjong.checkRegularMahjong(hand);
+        deferred.resolve(is_mahjong);
+    }, 0);
+    return deferred.promise.nodeify(callback)
+};
+
 module.exports.getDiscard = function(hand, thrown, callback) {
     var deferred = Q.defer();
     setTimeout(function() {
