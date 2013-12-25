@@ -83,6 +83,23 @@ var INIT = (function ($, undefined) {
         $('.msg').text(msg);
     }
 
+    function blinkTitle() {
+        var isOldTitle = true;
+        var oldTitle = "Cock-eyed Mahjong";
+        var newTitle = "YOUR TURN";
+        var interval = null;
+        function changeTitle() {
+            document.title = isOldTitle ? oldTitle : newTitle;
+            isOldTitle = !isOldTitle;
+        }
+        interval = setInterval(changeTitle, 700);
+
+        $(window).focus(function () {
+            clearInterval(interval);
+            $("title").text(oldTitle);
+        });
+    }
+
     function clearNotifications() {
         $('.msg').text("");
     }
@@ -104,6 +121,7 @@ var INIT = (function ($, undefined) {
         }
         if (cfg.game && cfg.player && cfg.game.current_player_id == cfg.player._id) {
             can_play = true;
+            blinkTitle();
         }
         if (cfg.game && shared.exists(cfg.game.winner_id)) {
             markWinner(cfg.game.winner_id);
@@ -166,8 +184,9 @@ var INIT = (function ($, undefined) {
             $('body').html(board_tpl(data));
             if (data.game.current_player_id == cfg.player._id) {
                 can_play = true;
+                blinkTitle();
             }
-            if (data.msg && data.msg.indexOf('Tsumo') != -1) {
+            if (shared.exists(data.game.winner_id)) {
                 markWinner(other_player._id);
                 can_play = false;
             } else {

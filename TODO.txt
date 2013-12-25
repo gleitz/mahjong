@@ -1,11 +1,10 @@
 - Hide your next tile
-- Add the if statement on the save game
-- better notification of your turn
 - make the computer take a second to decide (Make AMI call asynchronous)
 - make it more obvious who the winner is
 
 - Add a pon button
 - Make mobile work
+- Add the if statement on the save game
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
 - Make game_id always come before player_id
 - Break rendering down into two phases that share a common template
