@@ -54,7 +54,7 @@ app.set('view cache', false);
 // Add the application routes
 require('./server/routes').addRoutes(app);
 // Add socket.io triggers
-require('./server/routes').addSockets(io, sessionStore);
+require('./server/routes').addSockets(io);
 
 // Socket.io session configuration
 io.set('authorization', function (data, callback) {

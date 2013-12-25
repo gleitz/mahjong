@@ -15,7 +15,8 @@ var _ = require('underscore'),
     mahjong_util = require('../shared/mahjong_util'),
     models = require('./models'),
     Q = require('q'),
-    shared = require('../shared/shared');
+    shared = require('../shared/shared'),
+    io;
 
 // Fetch board template for rendering on the client side
 var board_tpl = fs.readFileSync('./views/partials/board.html', 'utf8');
@@ -36,6 +37,37 @@ var isMobile = function(req) {
     return mobileRegex.test(req.header('User-Agent', ''))
 }
 
+var getGameJSON = function(game, player_id) {
+    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; }),
+        player,
+        players,
+        seat;
+    return models.findPlayers(player_ids).then(function(found_players) {
+        players = found_players;
+        player = shared.getPlayer(players, player_id);
+        if (!player && player_id <=1) {
+            player = {_id: player_id,
+                      name: 'Computer ' + player_id.toString()};
+        }
+        seat = shared.getSeat(game.seats, player_id);
+        if (!seat) {
+            throw new Error('Player is not in this game');
+        }
+        var player_map = {};
+        _.each(players, function(player) {
+            player_map[player._id] = player;
+        });
+        var response = {players: players,
+                        player_map: player_map,
+                        player: player,
+                        discard: seat.discard,
+                        last_tile: seat.last_tile,
+                        hand: seat.hand,
+                        game: game};
+        return response;
+    });
+};
+
 var getResponseJSON = function(game, player_id) {
     var player_ids = _.map(game.seats, function(seat) { return seat.player_id; }),
         player,
@@ -52,11 +84,14 @@ var getResponseJSON = function(game, player_id) {
         if (!seat) {
             throw new Error('Player is not in this game');
         }
-        return ami.checkMahjong(seat.hand);
+        console.log("checking!");
+        console.log(seat.hand);
+        console.log(shared.getSeat(game.seats, game.current_player_id).hand)
+        return ami.checkMahjong(shared.getSeat(game.seats, game.current_player_id).hand);
     }).then(function(is_mahjong) {
         if (is_mahjong) {
             var winner_exists = (shared.exists(game.winner_id));
-            game.winner_id = player_id;
+            game.winner_id = game.current_player_id;
             if (!winner_exists) {
                 return models.saveGame(game);
             }
@@ -85,13 +120,15 @@ var getResponseJSON = function(game, player_id) {
             });
         }
         return response;
+    }).fail(function() {
+        //TODO: wall was depleted
     });
 };
 
 var renderGame = function(game, req, res) {
     preventCache(res);
     var player_id = req.session.player_id;
-    return getResponseJSON(game, player_id).then(function(response) {
+    return getGameJSON(game, player_id).then(function(response) {
         var mobile = isMobile(req);
         var cfg = {
             socketIo: {token: crypto.encrypt(req.session.id)},
@@ -165,10 +202,26 @@ var discardTile = function(player_id, game, tile) {
     tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
     seat.discard.push(tile);
     seat.hand[tile] -= 1;
-    seat.last_tile = game.wall.pop();
-    seat.hand[seat.last_tile] += 1;
-    game.current_player_id = seats[(seat_pos + 1) % seats.length].player_id
+    var next_seat = seats[(seat_pos + 1) % seats.length];
+    game.current_player_id = next_seat.player_id
     return true;
+};
+
+var drawTile = function(game, player_id) {
+    console.log("current player is");
+    console.log(game.current_player_id);
+    var seat = shared.getSeat(game.seats, game.current_player_id);
+    //TODO(gleitz): remove this and only draw 13 tiles
+    if (shared.sum(seat.hand) == 14) {
+        return getResponseJSON(game, player_id);
+    } else {
+        var next_tile = game.wall.pop();
+        seat.last_tile = next_tile;
+        seat.hand[next_tile] += 1;
+        return models.saveGame(game).then(function() {
+            return getResponseJSON(game, player_id);
+        });
+    }
 };
 
 
@@ -178,7 +231,11 @@ var takeTurn = function(player_id, game_id, tile) {
         models.findOneGame(game_id).then(function(game) {
             if (shared.exists(tile)) {
                 // Allow 0 but not false, null, undefined, etc.
+                console.log(shared.sum(shared.getSeat(game.seats, player_id).hand));
+                console.log("discarding!");
                 var success = discardTile(player_id, game, tile);
+                console.log("discarded!");
+                console.log(shared.sum(shared.getSeat(game.seats, player_id).hand));
                 if (!success) {
                     return deferred.reject(new Error('User or game not found'));
                 }
@@ -277,21 +334,49 @@ exports.addRoutes = function(app) {
     });
 };
 
-var handleDiscard = function(io, player_id, game_id, tile) {
+var handlePon = function(game_id, from_player_id, to_player_id) {
+    return models.findOneGame(game_id).then(function(game) {
+        var from_player = shared.getSeat(game.seats, from_player_id);
+        var to_player = shared.getSeat(game.seats, to_player_id);
+        // take the discarded tile from from_player and give it to toplayer
+    });
+}
+
+// discard tile
+// tell everyone you discarded
+// give opportunity to pon
+// next player draws tile
+// check for mahjong
+// discard
+
+var updateClients = function(game_id, player_id, response) {
+    _.each(io.sockets.clients(game_id), function(sub_socket) {
+        var game_socket = io.sockets.socket(sub_socket.id);
+        var socket_player_id = game_socket.handshake.session.player_id;
+        if (socket_player_id === player_id) {
+            game_socket.emit('discard_response_this_player', response)
+        } else {
+            game_socket.emit('discard_response_other_player', response)
+        }
+    });
+};
+
+var handleDiscard = function(player_id, game_id, tile) {
     return takeTurn(player_id, game_id, tile)
         .then(function(game) {
-            return getResponseJSON(game, player_id);
+            console.log("sum1");
+            console.log(shared.sum(shared.getSeat(game.seats, player_id).hand));
+            return getGameJSON(game, player_id);
         })
         .then(function(response) {
-            _.each(io.sockets.clients(game_id), function(sub_socket) {
-                var game_socket = io.sockets.socket(sub_socket.id);
-                var socket_player_id = game_socket.handshake.session.player_id;
-                if (socket_player_id === player_id) {
-                    game_socket.emit('discard_response_this_player', response)
-                } else {
-                    game_socket.emit('discard_response_other_player', response)
-                }
-            });
+            console.log("sum2");
+            console.log(shared.sum(shared.getSeat(response.game.seats, player_id).hand));
+            updateClients(game_id, player_id, response);
+            return drawTile(response.game, player_id);
+        }).then(function(response) {
+            console.log("sum3");
+            console.log(shared.sum(shared.getSeat(response.game.seats, player_id).hand));
+            updateClients(game_id, player_id, response);
             var game = response.game;
             if (shared.isComputer(game.current_player_id) &&
                 !(shared.exists(game.winner_id) &&
@@ -306,7 +391,7 @@ var handleDiscard = function(io, player_id, game_id, tile) {
                     }
                     // require the computer to take between 700ms-1s to play
                     setTimeout(function() {
-                        handleDiscard(io, game.current_player_id, game_id, discard_tile);
+                        handleDiscard(game.current_player_id, game_id, discard_tile);
                     }, Math.floor(Math.random() * 300) + 700);
                 });
             }
@@ -318,8 +403,8 @@ var handleDiscard = function(io, player_id, game_id, tile) {
         });
 }
 
-exports.addSockets = function(io) {
-
+exports.addSockets = function(_io) {
+    io = _io;
     // Socket triggers
     io.sockets.on('connection', function (socket) {
         socket.on('room', function(game_id) {
@@ -341,7 +426,7 @@ exports.addSockets = function(io) {
             var game_id = data.game_id,
                 tile = data.tile,
                 player_id = socket.handshake.session.player_id;
-            return handleDiscard(io, player_id, game_id, tile);
+            return handleDiscard(player_id, game_id, tile);
         });
         socket.on('disconnect', function () {
             io.sockets.emit('user disconnected');

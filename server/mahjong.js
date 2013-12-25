@@ -72,7 +72,7 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
     },
     checkRegularMahjong = function (hist) {
         if (mahjong_util.sum(hist) !== 14) {
-            throw "not enough tiles in hand";
+            throw ("Cannot check mahjong with " + mahjong_util.sum(hist) + " tiles in hand.");
         }
         /*
          * enumerate through all possible pairs

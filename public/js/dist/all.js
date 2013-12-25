@@ -320,7 +320,7 @@ if (typeof require !== 'undefined') {
     var _ = require('underscore');
 }
 
-function sum (arr){
+shared.sum = function(arr){
     for(var s = 0, i = arr.length; i; s += arr[--i]);
     return s;
 }
@@ -367,8 +367,8 @@ shared.augmentSwig = function(swig) {
                 var tile_num = i;
                 //TODO(gleitz): put back in production
                 // var tile_num = is_hidden ? 'hidden' : i;
-                if (!last_tile_str &&
-                    (i === last_tile || sum(hand_tmp.slice(i)) === 1)) {
+                if (shared.sum(hist) == 14 && !last_tile_str &&
+                    (i === last_tile || shared.sum(hand_tmp.slice(i)) === 1)) {
                     // Separate the last discarded tile. If the game has just started
                     // then separate the last tile in the hand
                     last_tile_str = last_tile_compiled({tile_num: tile_num,
@@ -377,6 +377,10 @@ shared.augmentSwig = function(swig) {
                     buffer.push(renderTile(tile_num, is_hidden));
                 }
             }
+        }
+        if (!last_tile_str) {
+            last_tile_str = last_tile_compiled({tile_num: "placeholder",
+                                                is_hidden: true});
         }
         buffer.push(last_tile_str);
         return buffer.join(' ');

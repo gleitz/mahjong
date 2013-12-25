@@ -304,6 +304,9 @@ a.selected {
 .tile-26 {
   background-image: url(../../img/tiles/character_9.png);
 }
+.tile-placeholder {
+  background-image: url(../../img/tiles/flower_plum.png);
+}
 .tile-holder.hidden {
   background-color: #d48623;
 }
