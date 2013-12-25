@@ -127,7 +127,7 @@ var renderLobby = function(game, req, res) {
         return loadLobby(game, player_ids, req, res);
     } else {
         var empty_seat = _.find(game.seats, function(seat) {
-            return seat.player_id <= 1;
+            return shared.isComputer(seat.player_id);
         });
         empty_seat.player_id = req.session.player_id;
         return models.saveGame(game).then(function() {
@@ -280,7 +280,8 @@ var handleDiscard = function(io, player_id, game_id, tile) {
                 }
             });
             var game = response.game;
-            if (typeof game.winner_id !== 'number' && game.current_player_id <= 1) { // AI's turn
+            if (typeof game.winner_id !== 'number' &&
+                shared.isComputer(game.current_player_id)) { // AI's turn
                 var seat = shared.getSeat(game.seats, game.current_player_id);
                 var ami_result = ami.getDiscard(seat.hand, seat.discard),
                     discard_tile = ami_result.recommended.discard;
@@ -289,7 +290,10 @@ var handleDiscard = function(io, player_id, game_id, tile) {
                     console.log(seat);
                     console.log(discard_tile);
                 }
-                handleDiscard(io, game.current_player_id, game_id, discard_tile);
+                // require the computer to take between 700ms-1s to play
+                setTimeout(function() {
+                    handleDiscard(io, game.current_player_id, game_id, discard_tile);
+                }, Math.floor(Math.random() * 300) + 700);
             }
         })
         .fail(function(error) {

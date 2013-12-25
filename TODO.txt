@@ -1,4 +1,4 @@
-- make the computer take a second to decide (Make AMI call asynchronous)
+- Make AMI call asynchronous
 - make it more obvious who the winner is
 - don't let you submit a tile if there is a winner
 
