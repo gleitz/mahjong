@@ -84,9 +84,6 @@ var getResponseJSON = function(game, player_id) {
         if (!seat) {
             throw new Error('Player is not in this game');
         }
-        console.log("checking!");
-        console.log(seat.hand);
-        console.log(shared.getSeat(game.seats, game.current_player_id).hand)
         return ami.checkMahjong(shared.getSeat(game.seats, game.current_player_id).hand);
     }).then(function(is_mahjong) {
         if (is_mahjong) {
@@ -187,29 +184,7 @@ var renderLobby = function(game, req, res) {
     }
 };
 
-var discardTile = function(player_id, game, tile) {
-    var seats = game.seats,
-        seat;
-    for (var seat_pos=0; seat_pos<seats.length; seat_pos++) {
-        seat = seats[seat_pos];
-        if (seat.player_id === player_id) {
-            break;
-        }
-    }
-    if (!seat) {
-        return false;
-    }
-    tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
-    seat.discard.push(tile);
-    seat.hand[tile] -= 1;
-    var next_seat = seats[(seat_pos + 1) % seats.length];
-    game.current_player_id = next_seat.player_id
-    return true;
-};
-
 var drawTile = function(game, player_id) {
-    console.log("current player is");
-    console.log(game.current_player_id);
     var seat = shared.getSeat(game.seats, game.current_player_id);
     //TODO(gleitz): remove this and only draw 13 tiles
     if (shared.sum(seat.hand) == 14) {
@@ -225,20 +200,28 @@ var drawTile = function(game, player_id) {
 };
 
 
-var takeTurn = function(player_id, game_id, tile) {
+var discardTile = function(player_id, game_id, tile) {
     var deferred = Q.defer();
     if (game_id) {
         models.findOneGame(game_id).then(function(game) {
             if (shared.exists(tile)) {
-                // Allow 0 but not false, null, undefined, etc.
-                console.log(shared.sum(shared.getSeat(game.seats, player_id).hand));
-                console.log("discarding!");
-                var success = discardTile(player_id, game, tile);
-                console.log("discarded!");
-                console.log(shared.sum(shared.getSeat(game.seats, player_id).hand));
-                if (!success) {
+                var seats = game.seats,
+                    seat;
+                for (var seat_pos=0; seat_pos<seats.length; seat_pos++) {
+                    seat = seats[seat_pos];
+                    if (seat.player_id === player_id) {
+                        break;
+                    }
+                }
+                if (!seat) {
                     return deferred.reject(new Error('User or game not found'));
                 }
+                tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
+                seat.discard.push(tile);
+                seat.hand[tile] -= 1;
+                var next_seat = seats[(seat_pos + 1) % seats.length];
+                game.current_player_id = next_seat.player_id
+                // Allow 0 but not false, null, undefined, etc.
                 return models.saveGame(game).then(function() {
                     return deferred.resolve(game);
                 });
@@ -322,7 +305,7 @@ exports.addRoutes = function(app) {
                     return renderGame(game, req, res);
                 });
             } else {
-                takeTurn(player_id, game_id).then(function(game) {
+                models.findOneGame(game_id).then(function(game) {
                     return renderGame(game, req, res);
                 }).fail(function(error) {
                     console.log("there was an error");
@@ -342,13 +325,6 @@ var handlePon = function(game_id, from_player_id, to_player_id) {
     });
 }
 
-// discard tile
-// tell everyone you discarded
-// give opportunity to pon
-// next player draws tile
-// check for mahjong
-// discard
-
 var updateClients = function(game_id, player_id, response) {
     _.each(io.sockets.clients(game_id), function(sub_socket) {
         var game_socket = io.sockets.socket(sub_socket.id);
@@ -361,21 +337,22 @@ var updateClients = function(game_id, player_id, response) {
     });
 };
 
+// discard tile
+// tell everyone you discarded
+// give opportunity to pon
+// next player draws tile
+// check for mahjong
+// discard
+
 var handleDiscard = function(player_id, game_id, tile) {
-    return takeTurn(player_id, game_id, tile)
+    return discardTile(player_id, game_id, tile)
         .then(function(game) {
-            console.log("sum1");
-            console.log(shared.sum(shared.getSeat(game.seats, player_id).hand));
             return getGameJSON(game, player_id);
         })
         .then(function(response) {
-            console.log("sum2");
-            console.log(shared.sum(shared.getSeat(response.game.seats, player_id).hand));
             updateClients(game_id, player_id, response);
             return drawTile(response.game, player_id);
         }).then(function(response) {
-            console.log("sum3");
-            console.log(shared.sum(shared.getSeat(response.game.seats, player_id).hand));
             updateClients(game_id, player_id, response);
             var game = response.game;
             if (shared.isComputer(game.current_player_id) &&

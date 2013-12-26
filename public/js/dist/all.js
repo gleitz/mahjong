@@ -497,7 +497,11 @@ var INIT = (function ($, undefined) {
     }
 
     var blinkInterval;
+    function clearBlinkTitle() {
+        clearInterval(blinkInterval);
+    }
     function blinkTitle() {
+        clearBlinkTitle();
         var isOldTitle = true;
         var oldTitle = "Cock-eyed Mahjong";
         var newTitle = "YOUR TURN";
@@ -510,9 +514,6 @@ var INIT = (function ($, undefined) {
             clearInterval(blinkInterval);
             $("title").text(oldTitle);
         });
-    }
-    function clearBlinkTitle() {
-        clearInterval(blinkInterval);
     }
 
     function markWinner(player_id) {
