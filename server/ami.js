@@ -11,11 +11,11 @@ var mahjong = require('./mahjong'),
     _ = require('underscore');
 
 module.exports.checkMahjong = function(hand, callback) {
+    //TODO(gleitz): check how to create callback
+    // perhaps use setTimeout / nextTick
     var deferred = Q.defer();
-    setTimeout(function() {
-        var is_mahjong = mahjong.checkRegularMahjong(hand);
-        deferred.resolve(is_mahjong);
-    }, 0);
+    var is_mahjong = mahjong.checkRegularMahjong(hand);
+    deferred.resolve(is_mahjong);
     return deferred.promise.nodeify(callback)
 };
 
@@ -94,4 +94,25 @@ module.exports.getDiscard = function(hand, thrown, callback) {
                           recommended: recommended});
     }, 0);
     return deferred.promise.nodeify(callback)
+};
+
+module.exports.shouldPon = function(seat, tile) {
+    // if (module.exports.canPon(seat, tile)) {
+        // return true;
+    // }
+    if (_.contains([21, 22, 23, 24], tile)) {
+        return true;
+    }
+    return false;
+};
+module.exports.canRon = function(hand, tile) {
+    var new_hand = hand.slice(0);
+    new_hand[tile] += 1;
+    return mahjong.checkRegularMahjong(new_hand);
+};
+module.exports.canPon = function(seat, tile) {
+    if (!_.contains(seat.side, tile) && seat.hand[tile] >= 2) {
+        return true;
+    }
+    return false;
 };

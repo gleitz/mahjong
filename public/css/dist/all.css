@@ -149,9 +149,9 @@ a.tile-holder {
   height: 75px;
 }
 .other-player a.tile-holder {
-  width: 34.375px;
-  height: 46.875px;
-  padding: 2px;
+  width: 30.555555555555557px;
+  height: 41.666666666666664px;
+  padding: 3px;
   margin: 2px;
 }
 .tile-row {
@@ -206,11 +206,12 @@ a.selected {
   width: 55px;
   height: 75px;
   background-size: 55px 75px;
+  background-repeat: no-repeat;
 }
 .other-player .tile {
-  width: 34.375px;
-  height: 46.875px;
-  background-size: 34.375px 46.875px;
+  width: 30.555555555555557px;
+  height: 41.666666666666664px;
+  background-size: 29.555555555555557px 40.666666666666664px;
 }
 .mobile .tile {
   width: 37px;
@@ -314,7 +315,7 @@ a.selected {
   background-image: none;
 }
 .last-tile {
-  margin-left: 1em;
+  margin-left: .5em;
 }
 .discard-tiles {
   width: 80%;
@@ -348,9 +349,10 @@ a.selected {
 }
 .side {
   float: left;
-  margin-left: 1em;
+  margin-left: .5em;
 }
-.side a {
+.side a,
+.other-player a {
   cursor: default;
 }
 .buttons {

@@ -79,7 +79,7 @@ shared.augmentSwig = function(swig) {
                 if (_.contains(side, i)) {
                     var index = side.indexOf(i);
                     side.splice(index, 1);
-                    side_buffer.push(renderTile(tile_num, is_hidden));
+                    side_buffer.push(renderTile(tile_num, false));
                     continue;
                 }
                 var hand_tmp = hist.slice(0);

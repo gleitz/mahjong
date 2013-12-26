@@ -24,6 +24,10 @@ var board_tpl = fs.readFileSync('./views/partials/board.html', 'utf8');
 
 /* Helper Functions */
 
+var debug = function(obj) {
+    console['log'](obj);
+}
+
 var formatUrl = function(req, path) {
     return (req.headers['x-script-name'] || '') + path
 }
@@ -85,9 +89,6 @@ var getResponseJSON = function(game) {
         if (!seat) {
             throw new Error('Player is not in this game');
         }
-        console.log("hand is ");
-        console.log(shared.sum(shared.getSeat(game.seats, current_player_id).hand));
-        console.log(current_player_id);
         return ami.checkMahjong(shared.getSeat(game.seats, current_player_id).hand);
     }).then(function(is_mahjong) {
         if (is_mahjong) {
@@ -97,9 +98,6 @@ var getResponseJSON = function(game) {
                 return models.saveGame(game);
             }
         } else {
-            console.log("hand 2 is ");
-            console.log(shared.sum(seat.hand));
-            console.log(seat.player_id);
             return ami.getDiscard(seat.hand, seat.discard);
         }
     }).then(function(ami_result) {
@@ -195,18 +193,13 @@ var drawTile = function(game, player_id) {
     // draws a tile for the current player, from the perspective of the
     // player_id
     var seat = shared.getSeat(game.seats, game.current_player_id);
-    console.log("current player id is ");
-    console.log(game.current_player_id);
-    console.log(shared.sum(seat.hand));
     //TODO(gleitz): remove this and only draw 13 tiles
     if (shared.sum(seat.hand) == 14) {
         return getResponseJSON(game, player_id);
     } else {
         var next_tile = game.wall.pop();
         seat.last_tile = next_tile;
-        console.log(shared.sum(seat.hand));
         seat.hand[next_tile] += 1;
-        console.log(shared.sum(seat.hand));
         return models.saveGame(game).then(function() {
             return getResponseJSON(game, player_id);
         });
@@ -333,14 +326,32 @@ exports.addRoutes = function(app) {
                 models.findOneGame(game_id).then(function(game) {
                     return renderGame(game, req, res);
                 }).fail(function(error) {
-                    console.log("there was an error");
-                    console.log(error);
-                    console.log(error.stack);
+                    debug("there was an error");
+                    debug(error);
+                    debug(error.stack);
                 });
             }
         });
     });
 };
+
+var handleRon = function(game_id, player_id) {
+    return models.findOneGame(game_id).then(function(game) {
+        var current_player_id = game.current_player_id,
+            from_discard = getPreviousSeat(game.seats, current_player_id).discard;
+        var tile = from_discard.pop();
+        var to_seat = shared.getSeat(game.seats, player_id);
+        to_seat.hand[tile] += 1;
+        to_seat.last_tile = tile;
+        game.current_player_id = player_id;
+        return models.saveGame(game).then(function() {
+            return getResponseJSON(game, player_id);
+        }).then(function(response) {
+            updateClients(game_id, response);
+            return game;
+        });
+    });
+}
 
 var handlePon = function(game_id, player_id) {
     return models.findOneGame(game_id).then(function(game) {
@@ -356,9 +367,10 @@ var handlePon = function(game_id, player_id) {
         to_seat.last_tile = tile;
         game.current_player_id = player_id;
         return models.saveGame(game).then(function() {
-            return getGameJSON(game, player_id);
+            return getResponseJSON(game, player_id);
         }).then(function(response) {
             updateClients(game_id, response);
+            return game;
         });
     });
 }
@@ -382,10 +394,8 @@ var handleDiscard = function(player_id, game_id, tile) {
         .then(function(response) {
             _.each(response.game.seats, function(seat) {
                 //TODO(gleitz): don't let the player that threw the tile pon it
-                var can_pon_test =  mahjong.canPon(seat.hand, tile);
+                var can_pon_test =  ami.canPon(seat, tile);
                 if (can_pon_test) {
-                    console.log(tile);
-                    console.log("PON!");
                     response.can_pon_player_id = seat.player_id;
                 }
             });
@@ -394,8 +404,6 @@ var handleDiscard = function(player_id, game_id, tile) {
         }).then(function(response) {
             function next(game, player_id) {
                 return drawTile(game, player_id).then(function(response) {
-                    console.log("GOT HERE!");
-                    console.log(response);
                     updateClients(game_id, response);
                     var game = response.game;
                     if (shared.isComputer(game.current_player_id) &&
@@ -405,9 +413,6 @@ var handleDiscard = function(player_id, game_id, tile) {
                         return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
                             var discard_tile = ami_result.recommended.discard;
                             if (ami_result.obj.msg) {
-                                console.log(ami_result.obj.msg);
-                                console.log(seat);
-                                console.log(discard_tile);
                             }
                             // require the computer to take between 700ms-1s to play
                             setTimeout(function() {
@@ -419,16 +424,30 @@ var handleDiscard = function(player_id, game_id, tile) {
             }
 
             if (shared.exists(response.can_pon_player_id)) {
-                console.log("WAITING FOR PON!");
                 var game = response.game,
                     wall_length = game.wall.length,
-                    current_player_id = game.current_player_id;
-                return Q.delay(5000).then(function() {
+                    current_player_id = game.current_player_id,
+                    seat = shared.getSeat(game.seats, response.can_pon_player_id),
+                    delay = 5000;
+                if (shared.isComputer(response.can_pon_player_id)) {
+                    delay = 0;
+                    if (ami.shouldPon(seat, tile)) {
+                        return handlePon(game_id, response.can_pon_player_id).then(function(game) {
+                            if (shared.isComputer(game.current_player_id)) {
+                                return next(game, game.current_player_id);
+                            }
+                        });
+                    }
+                    if (ami.canRon(seat.hand, tile)) {
+                        return handleRon(game_id, response.can_pon_player_id).then(function(game) {
+                            if (shared.isComputer(game.current_player_id)) {
+                                return next(game, game.current_player_id);
+                            }
+                        });
+                    }
+                }
+                return Q.delay(delay).then(function() {
                     return models.findOneGame(game_id).then(function(game) {
-                        console.log(game.wall_length);
-                        console.log(wall_length);
-                        console.log(game.current_player_id);
-                        console.log(current_player_id);
                         if (game.wall.length == wall_length &&
                             game.current_player_id == current_player_id) {
                             // pon timeout expired
@@ -436,15 +455,14 @@ var handleDiscard = function(player_id, game_id, tile) {
                         }
                     });
                 });
-                // handle a computer making a pon
             } else {
                 return next(response.game, player_id);
             }
             //TODO(gleitz): break out of the chain here
         }).fail(function(error) {
-            console.log("there was an error");
-            console.log(error);
-            console.log(error.stack);
+            debug("there was an error");
+            debug(error);
+            debug(error.stack);
         });
 }
 
