@@ -397,12 +397,12 @@ var handleDiscard = function(player_id, game_id, tile) {
                     response.can_pon_player_id = seat.player_id;
                 }
             });
-            // _.each(response.game.seats, function(seat) {
-            //     var can_kan_test =  ami.canKan(seat, tile);
-            //     if (can_kan_test && seat.player_id != player_id) {
-            //         response.can_kan_player_id = seat.player_id;
-            //     }
-            // });
+            _.each(response.game.seats, function(seat) {
+                var can_kan_test =  ami.canKan(seat, tile);
+                if (can_kan_test && seat.player_id != player_id) {
+                    response.can_kan_player_id = seat.player_id;
+                }
+            });
             updateClients(game_id, response);
             return response;
         }).then(function(response) {
@@ -459,32 +459,30 @@ var handleDiscard = function(player_id, game_id, tile) {
                         }
                     });
                 });
-            }
-            // else if (shared.exists(response.can_kan_player_id)) {
-            //     var game = response.game,
-            //         wall_length = game.wall.length,
-            //         current_player_id = game.current_player_id,
-            //         seat = shared.getSeat(game.seats, response.can_kan_player_id),
-            //         delay = 5000;
-            //     if (shared.isComputer(response.can_kan_player_id)) {
-            //         delay = 0;
-            //         return handleKan(game_id, response.can_kan_player_id).then(function(game) {
-            //             if (shared.isComputer(game.current_player_id)) {
-            //                 return next(game, game.current_player_id);
-            //             }
-            //         });
-            //     }
-            //     return Q.delay(delay).then(function() {
-            //         return models.findOneGame(game_id).then(function(game) {
-            //             if (game.wall.length == wall_length &&
-            //                 game.current_player_id == current_player_id) {
-            //                 // kan timeout expired
-            //                 return next(game, player_id);
-            //             }
-            //         });
-            //     });
-            // }
-            else {
+            } else if (shared.exists(response.can_kan_player_id)) {
+                var game = response.game,
+                    wall_length = game.wall.length,
+                    current_player_id = game.current_player_id,
+                    seat = shared.getSeat(game.seats, response.can_kan_player_id),
+                    delay = 5000;
+                if (shared.isComputer(response.can_kan_player_id)) {
+                    delay = 0;
+                    return handleKan(game_id, response.can_kan_player_id).then(function(game) {
+                        if (shared.isComputer(game.current_player_id)) {
+                            return next(game, game.current_player_id);
+                        }
+                    });
+                }
+                return Q.delay(delay).then(function() {
+                    return models.findOneGame(game_id).then(function(game) {
+                        if (game.wall.length == wall_length &&
+                            game.current_player_id == current_player_id) {
+                            // kan timeout expired
+                            return next(game, player_id);
+                        }
+                    });
+                });
+            } else {
                 return next(response.game, player_id);
             }
             //TODO(gleitz): break out of the chain here
