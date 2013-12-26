@@ -1,5 +1,5 @@
-- put the pons to the side
-- allow kan
+- remove the long pon timeout for computers
+- allow kan (use game 52bc5ba205ef4692650ebbdd)
 - allow winning on other people's tiles
 - Make mobile work
 - Add the if statement on the save game
@@ -13,4 +13,4 @@
 - detect broken game ids
 
 To duplicate a row
-db.games.find({_id: ObjectId("52bc5b0692e75600008922c2")}).forEach(function(x) { x._id = new ObjectId(); db.games.insert(x); print(x._id); })
+db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) { x._id = new ObjectId(); db.games.insert(x); print("" + x._id); })

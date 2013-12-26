@@ -15,9 +15,13 @@
 {% for seat in game.seats %}
 {% if seat.player_id == player._id %}
 <div class="this-player player-{{ seat.player_id }} clr">
+    <div class="buttons">
+        <div id="pon-button" class="hide"><a class="pon" href="javascript:;">Pon!</a></div>
+        <div id="kan-button" class="hide"><a class="kan" href="javascript:;">Kan!</a></div>
+        <div id="ron-button" class="hide"><a class="ron" href="javascript:;">Ron!</a></div>
+    </div>
     <div class="clr padded tile-row discard-tiles">{% renderDiscard seat %}</div>
     <div id="player-tiles" class="clr padded tile-row hand-tiles ">{% renderHand game seat player._id %}</div>
-    <div id="pon_button" class="hide"><a class="pon" href="javascript:;">Pon!</a></div>
 </div>
 {% endif %}
 {% endfor %}

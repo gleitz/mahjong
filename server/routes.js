@@ -349,6 +349,10 @@ var handlePon = function(game_id, player_id) {
         var tile = from_discard.pop();
         var to_seat = shared.getSeat(game.seats, player_id);
         to_seat.hand[tile] += 1;
+        to_seat.side = to_seat.side || [];
+        to_seat.side.push(tile);
+        to_seat.side.push(tile);
+        to_seat.side.push(tile);
         to_seat.last_tile = tile;
         game.current_player_id = player_id;
         return models.saveGame(game).then(function() {

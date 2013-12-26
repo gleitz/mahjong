@@ -65,15 +65,25 @@ shared.augmentSwig = function(swig) {
                               is_hidden: is_hidden});
     }
 
-    function renderTiles(hist, last_tile, is_hidden) {
-        var buffer = [],
+    function renderTiles(seat, is_hidden) {
+        var hist = seat.hand,
+            side = (seat.side && seat.side.slice(0)) || [],
+            last_tile = seat.last_tile,
+            buffer = [],
+            side_buffer = [],
             last_tile_str,
             i;
         for (i=0; i<hist.length; i++) {
             for (var j=0; j<hist[i]; j++) {
+                var tile_num = i;
+                if (_.contains(side, i)) {
+                    var index = side.indexOf(i);
+                    side.splice(index, 1);
+                    side_buffer.push(renderTile(tile_num, is_hidden));
+                    continue;
+                }
                 var hand_tmp = hist.slice(0);
                 hand_tmp[i] -= j;
-                var tile_num = i;
                 //TODO(gleitz): put back in production
                 // var tile_num = is_hidden ? 'hidden' : i;
                 if (shared.sum(hist) == 14 && !last_tile_str &&
@@ -92,7 +102,9 @@ shared.augmentSwig = function(swig) {
                                                 is_hidden: true});
         }
         buffer.push(last_tile_str);
-        return buffer.join(' ');
+        var buffer_str = buffer.join(' '),
+            side_str = '<div class="side clr">' + side_buffer.join(' ') + '</div>';
+        return buffer_str + side_str;
     }
 
     function renderHand(game, seat, player_id) {
@@ -100,9 +112,7 @@ shared.augmentSwig = function(swig) {
         if (shared.exists(game.winner_id) && game.winner_id == seat.player_id) {
             is_hidden = false;
         }
-        return renderTiles(seat.hand,
-                           seat.last_tile,
-                           is_hidden);
+        return renderTiles(seat, is_hidden);
     }
 
     function renderDiscard(seat) {

@@ -341,3 +341,19 @@ a.selected {
   right: 10px;
   top: 10px;
 }
+.rotated-tile {
+  -webkit-transform: rotate(90deg);
+  -webkit-transform-origin: 35% 50%;
+  margin-left: 28px;
+}
+.side {
+  float: left;
+  margin-left: 1em;
+}
+.side a {
+  cursor: default;
+}
+.buttons {
+  float: right;
+  font-size: 32px;
+}

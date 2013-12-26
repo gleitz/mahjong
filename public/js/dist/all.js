@@ -356,15 +356,25 @@ shared.augmentSwig = function(swig) {
                               is_hidden: is_hidden});
     }
 
-    function renderTiles(hist, last_tile, is_hidden) {
-        var buffer = [],
+    function renderTiles(seat, is_hidden) {
+        var hist = seat.hand,
+            side = (seat.side && seat.side.slice(0)) || [],
+            last_tile = seat.last_tile,
+            buffer = [],
+            side_buffer = [],
             last_tile_str,
             i;
         for (i=0; i<hist.length; i++) {
             for (var j=0; j<hist[i]; j++) {
+                var tile_num = i;
+                if (_.contains(side, i)) {
+                    var index = side.indexOf(i);
+                    side.splice(index, 1);
+                    side_buffer.push(renderTile(tile_num, is_hidden));
+                    continue;
+                }
                 var hand_tmp = hist.slice(0);
                 hand_tmp[i] -= j;
-                var tile_num = i;
                 //TODO(gleitz): put back in production
                 // var tile_num = is_hidden ? 'hidden' : i;
                 if (shared.sum(hist) == 14 && !last_tile_str &&
@@ -383,7 +393,9 @@ shared.augmentSwig = function(swig) {
                                                 is_hidden: true});
         }
         buffer.push(last_tile_str);
-        return buffer.join(' ');
+        var buffer_str = buffer.join(' '),
+            side_str = '<div class="side clr">' + side_buffer.join(' ') + '</div>';
+        return buffer_str + side_str;
     }
 
     function renderHand(game, seat, player_id) {
@@ -391,9 +403,7 @@ shared.augmentSwig = function(swig) {
         if (shared.exists(game.winner_id) && game.winner_id == seat.player_id) {
             is_hidden = false;
         }
-        return renderTiles(seat.hand,
-                           seat.last_tile,
-                           is_hidden);
+        return renderTiles(seat, is_hidden);
     }
 
     function renderDiscard(seat) {
@@ -604,14 +614,19 @@ var INIT = (function ($, undefined) {
             socket.emit('start_game', {game_id: cfg.game_id});
             return false;
         });
-        $('body').fastClick('#pon_button', function(evt) {
+        $('body').fastClick('#pon-button', function(evt) {
             evt.preventDefault();
             socket.emit('pon', {game_id: cfg.game_id});
             return false;
         });
         $('body').fastClick('div.tile', function(evt) {
             evt.preventDefault();
+            var $this = $(this);
             if (!can_play) {
+                return false;
+            }
+            if ($this.closest('div.side').length) {
+                // cannot throw tile you've pon'd, kan'd
                 return false;
             }
             can_play = false;
@@ -634,6 +649,10 @@ var INIT = (function ($, undefined) {
         $('body').on('mouseenter mouseleave', '#player-tiles .tile-holder', function (evt) {
             evt.preventDefault();
             var $this = $(this);
+            if ($this.closest('div.side').length) {
+                // disallow throwing tiles you've pon'd, kan'd
+                return false;
+            }
             if (evt.type === 'mouseenter') {
                 if (can_play) {
                     $this.stop().animate({marginTop: '-8px'}, 100);
@@ -676,7 +695,7 @@ var INIT = (function ($, undefined) {
             }
             if (shared.exists(data.can_pon_player_id) &&
                 data.can_pon_player_id == cfg.player._id) {
-                $('#pon_button').removeClass('hide');
+                $('#pon-button').removeClass('hide');
             }
             if (!data.msg) {
                 // TODO(gleitz): re-enable suggestions
