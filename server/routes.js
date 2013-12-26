@@ -68,31 +68,38 @@ var getGameJSON = function(game, player_id) {
     });
 };
 
-var getResponseJSON = function(game, player_id) {
+var getResponseJSON = function(game) {
     var player_ids = _.map(game.seats, function(seat) { return seat.player_id; }),
+        current_player_id = game.current_player_id,
         player,
         players,
         seat;
     return models.findPlayers(player_ids).then(function(found_players) {
         players = found_players;
-        player = shared.getPlayer(players, player_id);
-        if (!player && player_id <=1) {
-            player = {_id: player_id,
-                      name: 'Computer ' + player_id.toString()};
+        player = shared.getPlayer(players, current_player_id);
+        if (!player && current_player_id <=1) {
+            player = {_id: current_player_id,
+                      name: 'Computer ' + current_player_id.toString()};
         }
-        seat = shared.getSeat(game.seats, player_id);
+        seat = shared.getSeat(game.seats, current_player_id);
         if (!seat) {
             throw new Error('Player is not in this game');
         }
-        return ami.checkMahjong(shared.getSeat(game.seats, game.current_player_id).hand);
+        console.log("hand is ");
+        console.log(shared.sum(shared.getSeat(game.seats, current_player_id).hand));
+        console.log(current_player_id);
+        return ami.checkMahjong(shared.getSeat(game.seats, current_player_id).hand);
     }).then(function(is_mahjong) {
         if (is_mahjong) {
             var winner_exists = (shared.exists(game.winner_id));
-            game.winner_id = game.current_player_id;
+            game.winner_id = current_player_id;
             if (!winner_exists) {
                 return models.saveGame(game);
             }
         } else {
+            console.log("hand 2 is ");
+            console.log(shared.sum(seat.hand));
+            console.log(seat.player_id);
             return ami.getDiscard(seat.hand, seat.discard);
         }
     }).then(function(ami_result) {
@@ -185,51 +192,69 @@ var renderLobby = function(game, req, res) {
 };
 
 var drawTile = function(game, player_id) {
+    // draws a tile for the current player, from the perspective of the
+    // player_id
     var seat = shared.getSeat(game.seats, game.current_player_id);
+    console.log("current player id is ");
+    console.log(game.current_player_id);
+    console.log(shared.sum(seat.hand));
     //TODO(gleitz): remove this and only draw 13 tiles
     if (shared.sum(seat.hand) == 14) {
         return getResponseJSON(game, player_id);
     } else {
         var next_tile = game.wall.pop();
         seat.last_tile = next_tile;
+        console.log(shared.sum(seat.hand));
         seat.hand[next_tile] += 1;
+        console.log(shared.sum(seat.hand));
         return models.saveGame(game).then(function() {
             return getResponseJSON(game, player_id);
         });
     }
 };
 
+function getSeatPosForPlayerId(seats, player_id) {
+    for (var seat_pos=0; seat_pos<seats.length; seat_pos++) {
+        var seat = seats[seat_pos];
+        if (seat.player_id === player_id) {
+            return seat_pos;
+        }
+    }
+}
+
+function getNextSeat(seats, player_id) {
+    var seat_pos = getSeatPosForPlayerId(seats, player_id),
+        next_pos = (seat_pos + 1) % seats.length;
+    return seats[next_pos];
+}
+
+function getPreviousSeat(seats, player_id) {
+    var seat_pos = getSeatPosForPlayerId(seats, player_id),
+        next_pos = (seat_pos - 1) % seats.length;
+    return seats[next_pos];
+}
 
 var discardTile = function(player_id, game_id, tile) {
     var deferred = Q.defer();
-    if (game_id) {
-        models.findOneGame(game_id).then(function(game) {
-            if (shared.exists(tile)) {
-                var seats = game.seats,
-                    seat;
-                for (var seat_pos=0; seat_pos<seats.length; seat_pos++) {
-                    seat = seats[seat_pos];
-                    if (seat.player_id === player_id) {
-                        break;
-                    }
-                }
-                if (!seat) {
-                    return deferred.reject(new Error('User or game not found'));
-                }
-                tile = parseInt(tile, 10); //TODO(gleitz): should this happen earlier?
-                seat.discard.push(tile);
-                seat.hand[tile] -= 1;
-                var next_seat = seats[(seat_pos + 1) % seats.length];
-                game.current_player_id = next_seat.player_id
-                // Allow 0 but not false, null, undefined, etc.
-                return models.saveGame(game).then(function() {
-                    return deferred.resolve(game);
-                });
-            } else {
-                return deferred.resolve(game);
+    models.findOneGame(game_id).then(function(game) {
+        if (shared.exists(tile)) {
+            var seats = game.seats,
+                seat = shared.getSeat(seats, player_id);
+            if (!seat) {
+                return deferred.reject(new Error('User or game not found'));
             }
-        });
-    }
+            seat.discard.push(tile);
+            seat.hand[tile] -= 1;
+            var next_seat = getNextSeat(seats, player_id);
+            game.current_player_id = next_seat.player_id
+            // Allow 0 but not false, null, undefined, etc.
+            return models.saveGame(game).then(function() {
+                return deferred.resolve(game);
+            });
+        } else {
+            return deferred.resolve(game);
+        }
+    });
     return deferred.promise;
 };
 
@@ -317,24 +342,25 @@ exports.addRoutes = function(app) {
     });
 };
 
-var handlePon = function(game_id, from_player_id, to_player_id) {
+var handlePon = function(game_id, player_id) {
     return models.findOneGame(game_id).then(function(game) {
-        var from_player = shared.getSeat(game.seats, from_player_id);
-        var to_player = shared.getSeat(game.seats, to_player_id);
-        // take the discarded tile from from_player and give it to toplayer
+        var current_player_id = game.current_player_id,
+            from_discard = getPreviousSeat(game.seats, current_player_id).discard;
+        var tile = from_discard.pop();
+        var to_seat = shared.getSeat(game.seats, player_id);
+        to_seat.hand[tile] += 1;
+        to_seat.last_tile = tile;
+        game.current_player_id = player_id;
+        return models.saveGame(game).then(function() {
+            return getGameJSON(game, player_id);
+        }).then(function(response) {
+            updateClients(game_id, response);
+        });
     });
 }
 
-var updateClients = function(game_id, player_id, response) {
-    _.each(io.sockets.clients(game_id), function(sub_socket) {
-        var game_socket = io.sockets.socket(sub_socket.id);
-        var socket_player_id = game_socket.handshake.session.player_id;
-        if (socket_player_id === player_id) {
-            game_socket.emit('discard_response_this_player', response)
-        } else {
-            game_socket.emit('discard_response_other_player', response)
-        }
-    });
+var updateClients = function(game_id, response) {
+    io.sockets['in'](game_id).emit('update', response);
 };
 
 // discard tile
@@ -350,30 +376,68 @@ var handleDiscard = function(player_id, game_id, tile) {
             return getGameJSON(game, player_id);
         })
         .then(function(response) {
-            updateClients(game_id, player_id, response);
-            return drawTile(response.game, player_id);
+            _.each(response.game.seats, function(seat) {
+                //TODO(gleitz): don't let the player that threw the tile pon it
+                var can_pon_test =  mahjong.canPon(seat.hand, tile);
+                if (can_pon_test) {
+                    console.log(tile);
+                    console.log("PON!");
+                    response.can_pon_player_id = seat.player_id;
+                }
+            });
+            updateClients(game_id, response);
+            return response;
         }).then(function(response) {
-            updateClients(game_id, player_id, response);
-            var game = response.game;
-            if (shared.isComputer(game.current_player_id) &&
-                !(shared.exists(game.winner_id) &&
-                  game.current_player_id == game.winner_id)) { // AI's turn
-                var seat = shared.getSeat(game.seats, game.current_player_id);
-                return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
-                    var discard_tile = ami_result.recommended.discard;
-                    if (ami_result.obj.msg) {
-                        console.log(ami_result.obj.msg);
-                        console.log(seat);
-                        console.log(discard_tile);
+            function next(game, player_id) {
+                return drawTile(game, player_id).then(function(response) {
+                    console.log("GOT HERE!");
+                    console.log(response);
+                    updateClients(game_id, response);
+                    var game = response.game;
+                    if (shared.isComputer(game.current_player_id) &&
+                        !(shared.exists(game.winner_id) &&
+                          game.current_player_id == game.winner_id)) { // AI's turn
+                        var seat = shared.getSeat(game.seats, game.current_player_id);
+                        return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
+                            var discard_tile = ami_result.recommended.discard;
+                            if (ami_result.obj.msg) {
+                                console.log(ami_result.obj.msg);
+                                console.log(seat);
+                                console.log(discard_tile);
+                            }
+                            // require the computer to take between 700ms-1s to play
+                            setTimeout(function() {
+                                handleDiscard(game.current_player_id, game_id, discard_tile);
+                            }, Math.floor(Math.random() * 300) + 700);
+                        });
                     }
-                    // require the computer to take between 700ms-1s to play
-                    setTimeout(function() {
-                        handleDiscard(game.current_player_id, game_id, discard_tile);
-                    }, Math.floor(Math.random() * 300) + 700);
                 });
             }
-        })
-        .fail(function(error) {
+
+            if (shared.exists(response.can_pon_player_id)) {
+                console.log("WAITING FOR PON!");
+                var game = response.game,
+                    wall_length = game.wall.length,
+                    current_player_id = game.current_player_id;
+                return Q.delay(5000).then(function() {
+                    return models.findOneGame(game_id).then(function(game) {
+                        console.log(game.wall_length);
+                        console.log(wall_length);
+                        console.log(game.current_player_id);
+                        console.log(current_player_id);
+                        if (game.wall.length == wall_length &&
+                            game.current_player_id == current_player_id) {
+                            // pon timeout expired
+                            return next(game, player_id);
+                        }
+                    });
+                });
+                // handle a computer making a pon
+            } else {
+                return next(response.game, player_id);
+            }
+            //TODO(gleitz): break out of the chain here
+        }).fail(function(error) {
             console.log("there was an error");
             console.log(error);
             console.log(error.stack);
@@ -401,9 +465,14 @@ exports.addSockets = function(_io) {
         });
         socket.on('discard', function(data) {
             var game_id = data.game_id,
-                tile = data.tile,
+                tile = parseInt(data.tile, 10),
                 player_id = socket.handshake.session.player_id;
             return handleDiscard(player_id, game_id, tile);
+        });
+        socket.on('pon', function(data) {
+            var game_id = data.game_id,
+                player_id = socket.handshake.session.player_id;
+            return handlePon(game_id, player_id);
         });
         socket.on('disconnect', function () {
             io.sockets.emit('user disconnected');

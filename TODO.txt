@@ -1,4 +1,5 @@
-- Add a pon button
+- put the pons to the side
+- allow kan
 - allow winning on other people's tiles
 - Make mobile work
 - Add the if statement on the save game
@@ -10,3 +11,6 @@
 - add reach
 - make a restart button for the two players
 - detect broken game ids
+
+To duplicate a row
+db.games.find({_id: ObjectId("52bc5b0692e75600008922c2")}).forEach(function(x) { x._id = new ObjectId(); db.games.insert(x); print(x._id); })

@@ -519,7 +519,7 @@ var INIT = (function ($, undefined) {
     function markWinner(player_id) {
         var msg;
         if (player_id <= 1) {
-            msg = 'Computer ' + player_id.toString() + ' is the winner!';
+            msg = 'AMI ' + player_id.toString() + ' is the winner!';
         } else if (player_id == cfg.player._id) {
             msg = 'Tsumo! You are the winner!';
         } else {
@@ -528,7 +528,7 @@ var INIT = (function ($, undefined) {
         }
         $('.player-' + player_id + ' a.tile-holder.hidden').removeClass('hidden');
         $('.msg').text(msg);
-        $('.play-again').removeClass('hide');
+        $('#play-again').removeClass('hide');
         can_play = false;
         clearBlinkTitle();
     }
@@ -538,14 +538,14 @@ var INIT = (function ($, undefined) {
         if (player_id == cfg.player._id) {
             msg = 'Your turn';
         } else if (shared.isComputer(player_id)) {
-            msg = 'Computer ' + player_id + '\'s turn';
+            msg = 'AMI ' + player_id + '\'s turn';
         } else {
             msg = cfg.player_map[player_id].name + '\'s turn';
         }
         $('.msg').text(msg);
     }
 
-    function drawTile() {
+    function enablePlayer() {
         can_play = true;
         $('#player-tiles a.hidden').removeClass('hidden');
         blinkTitle();
@@ -586,7 +586,7 @@ var INIT = (function ($, undefined) {
             $('body').addClass('mobile');
         }
         if (cfg.game && cfg.player && cfg.game.current_player_id == cfg.player._id) {
-            drawTile();
+            enablePlayer();
         }
         if (cfg.game && shared.exists(cfg.game.winner_id) &&
             cfg.game.current_player_id == cfg.game.winner_id) {
@@ -602,6 +602,11 @@ var INIT = (function ($, undefined) {
         $('body').fastClick('a.start', function(evt) {
             evt.preventDefault();
             socket.emit('start_game', {game_id: cfg.game_id});
+            return false;
+        });
+        $('body').fastClick('#pon_button', function(evt) {
+            evt.preventDefault();
+            socket.emit('pon', {game_id: cfg.game_id});
             return false;
         });
         $('body').fastClick('div.tile', function(evt) {
@@ -626,7 +631,7 @@ var INIT = (function ($, undefined) {
             });
         });
 
-        $(document).on('mouseenter mouseleave', '#player-tiles .tile-holder', function (evt) {
+        $('body').on('mouseenter mouseleave', '#player-tiles .tile-holder', function (evt) {
             evt.preventDefault();
             var $this = $(this);
             if (evt.type === 'mouseenter') {
@@ -656,27 +661,22 @@ var INIT = (function ($, undefined) {
             });
             $('.players').html(player_str.join(' '));
         });
-        socket.on('discard_response_other_player', function(data) {
+        socket.on('update', function(data) {
             data.player = {_id: cfg.player._id,
                           name: cfg.player.name};
             renderBoard(data);
+            if (shared.exists(data.game.winner_id) &&
+                data.game.current_player_id == data.game.winner_id) {
+                markWinner(data.game.winner_id);
+            } else {
+                notifyTurn(data.game.current_player_id);
+            }
             if (data.game.current_player_id == cfg.player._id) {
-                drawTile();
+                enablePlayer();
             }
-            if (shared.exists(data.game.winner_id) &&
-                data.game.current_player_id == data.game.winner_id) {
-                markWinner(data.game.winner_id);
-            } else {
-                notifyTurn(data.game.current_player_id);
-            }
-        });
-        socket.on('discard_response_this_player', function(data) {
-            renderBoard(data);
-            if (shared.exists(data.game.winner_id) &&
-                data.game.current_player_id == data.game.winner_id) {
-                markWinner(data.game.winner_id);
-            } else {
-                notifyTurn(data.game.current_player_id);
+            if (shared.exists(data.can_pon_player_id) &&
+                data.can_pon_player_id == cfg.player._id) {
+                $('#pon_button').removeClass('hide');
             }
             if (!data.msg) {
                 // TODO(gleitz): re-enable suggestions

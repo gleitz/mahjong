@@ -364,6 +364,9 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
             }
         }
         return discard;
+    },
+    canPon = function (hist, tile) {
+        return hist[tile] >= 2;
     };
 
 module.exports = {
@@ -375,5 +378,6 @@ module.exports = {
     deal: deal,
     generateHand: generateHand,
     getWaits: getWaits,
-    findBestDiscardWait: findBestDiscardWait
+    findBestDiscardWait: findBestDiscardWait,
+    canPon: canPon
 };
