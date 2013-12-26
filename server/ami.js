@@ -116,3 +116,11 @@ module.exports.canPon = function(seat, tile) {
     }
     return false;
 };
+module.exports.canKan = function(seat, tile) {
+    return false;
+    //TODO(gleitz): fill this in
+    if (!_.contains(seat.side, tile) && seat.hand[tile] >= 2) {
+        return true;
+    }
+    return false;
+};

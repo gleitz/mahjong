@@ -189,19 +189,18 @@ var renderLobby = function(game, req, res) {
     }
 };
 
-var drawTile = function(game, player_id) {
-    // draws a tile for the current player, from the perspective of the
-    // player_id
+var drawTile = function(game) {
+    // draws a tile for the current player
     var seat = shared.getSeat(game.seats, game.current_player_id);
     //TODO(gleitz): remove this and only draw 13 tiles
     if (shared.sum(seat.hand) == 14) {
-        return getResponseJSON(game, player_id);
+        return getResponseJSON(game);
     } else {
         var next_tile = game.wall.pop();
         seat.last_tile = next_tile;
         seat.hand[next_tile] += 1;
         return models.saveGame(game).then(function() {
-            return getResponseJSON(game, player_id);
+            return getResponseJSON(game);
         });
     }
 };
@@ -345,7 +344,7 @@ var handleRon = function(game_id, player_id) {
         to_seat.last_tile = tile;
         game.current_player_id = player_id;
         return models.saveGame(game).then(function() {
-            return getResponseJSON(game, player_id);
+            return getResponseJSON(game);
         }).then(function(response) {
             updateClients(game_id, response);
             return game;
@@ -367,7 +366,7 @@ var handlePon = function(game_id, player_id) {
         to_seat.last_tile = tile;
         game.current_player_id = player_id;
         return models.saveGame(game).then(function() {
-            return getResponseJSON(game, player_id);
+            return getResponseJSON(game);
         }).then(function(response) {
             updateClients(game_id, response);
             return game;
@@ -393,17 +392,22 @@ var handleDiscard = function(player_id, game_id, tile) {
         })
         .then(function(response) {
             _.each(response.game.seats, function(seat) {
-                //TODO(gleitz): don't let the player that threw the tile pon it
                 var can_pon_test =  ami.canPon(seat, tile);
-                if (can_pon_test) {
+                if (can_pon_test && seat.player_id != player_id) {
                     response.can_pon_player_id = seat.player_id;
+                }
+            });
+            _.each(response.game.seats, function(seat) {
+                var can_kan_test =  ami.canKan(seat, tile);
+                if (can_kan_test && seat.player_id != player_id) {
+                    response.can_kan_player_id = seat.player_id;
                 }
             });
             updateClients(game_id, response);
             return response;
         }).then(function(response) {
-            function next(game, player_id) {
-                return drawTile(game, player_id).then(function(response) {
+            function next(game) {
+                return drawTile(game).then(function(response) {
                     updateClients(game_id, response);
                     var game = response.game;
                     if (shared.isComputer(game.current_player_id) &&
@@ -434,14 +438,14 @@ var handleDiscard = function(player_id, game_id, tile) {
                     if (ami.shouldPon(seat, tile)) {
                         return handlePon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
-                                return next(game, game.current_player_id);
+                                return next(game);
                             }
                         });
                     }
                     if (ami.canRon(seat.hand, tile)) {
                         return handleRon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
-                                return next(game, game.current_player_id);
+                                return next(game);
                             }
                         });
                     }
@@ -451,6 +455,29 @@ var handleDiscard = function(player_id, game_id, tile) {
                         if (game.wall.length == wall_length &&
                             game.current_player_id == current_player_id) {
                             // pon timeout expired
+                            return next(game, player_id);
+                        }
+                    });
+                });
+            } else if (shared.exists(response.can_kan_player_id)) {
+                var game = response.game,
+                    wall_length = game.wall.length,
+                    current_player_id = game.current_player_id,
+                    seat = shared.getSeat(game.seats, response.can_kan_player_id),
+                    delay = 5000;
+                if (shared.isComputer(response.can_kan_player_id)) {
+                    delay = 0;
+                    return handleKan(game_id, response.can_kan_player_id).then(function(game) {
+                        if (shared.isComputer(game.current_player_id)) {
+                            return next(game, game.current_player_id);
+                        }
+                    });
+                }
+                return Q.delay(delay).then(function() {
+                    return models.findOneGame(game_id).then(function(game) {
+                        if (game.wall.length == wall_length &&
+                            game.current_player_id == current_player_id) {
+                            // kan timeout expired
                             return next(game, player_id);
                         }
                     });
