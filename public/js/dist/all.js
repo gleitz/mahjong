@@ -619,6 +619,11 @@ var INIT = (function ($, undefined) {
             socket.emit('pon', {game_id: cfg.game_id});
             return false;
         });
+        $('body').fastClick('#ron-button', function(evt) {
+            evt.preventDefault();
+            socket.emit('ron', {game_id: cfg.game_id});
+            return false;
+        });
         $('body').fastClick('div.tile', function(evt) {
             evt.preventDefault();
             var $this = $(this);
@@ -696,6 +701,10 @@ var INIT = (function ($, undefined) {
             if (shared.exists(data.can_pon_player_id) &&
                 data.can_pon_player_id == cfg.player._id) {
                 $('#pon-button').removeClass('hide');
+            }
+            if (shared.exists(data.can_ron_player_id) &&
+                data.can_ron_player_id == cfg.player._id) {
+                $('#ron-button').removeClass('hide');
             }
             if (!data.msg) {
                 // TODO(gleitz): re-enable suggestions

@@ -105,10 +105,15 @@ module.exports.shouldPon = function(seat, tile) {
     }
     return false;
 };
-module.exports.canRon = function(hand, tile) {
-    var new_hand = hand.slice(0);
+module.exports.canRon = function(seat, tile) {
+    var new_hand = seat.hand.slice(0);
     new_hand[tile] += 1;
-    return mahjong.checkRegularMahjong(new_hand);
+    try {
+        return mahjong.checkRegularMahjong(new_hand);
+    }
+    catch (e) {
+        return false;
+    }
 };
 module.exports.canPon = function(seat, tile) {
     if (!_.contains(seat.side, tile) && seat.hand[tile] >= 2) {

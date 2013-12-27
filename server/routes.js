@@ -392,14 +392,26 @@ var handleDiscard = function(player_id, game_id, tile) {
         })
         .then(function(response) {
             _.each(response.game.seats, function(seat) {
-                var can_pon_test =  ami.canPon(seat, tile);
-                if (can_pon_test && seat.player_id != player_id) {
+                if (seat.player_id == player_id) {
+                    return;
+                }
+                if (ami.canPon(seat, tile)) {
                     response.can_pon_player_id = seat.player_id;
                 }
             });
             _.each(response.game.seats, function(seat) {
-                var can_kan_test =  ami.canKan(seat, tile);
-                if (can_kan_test && seat.player_id != player_id) {
+                if (seat.player_id == player_id) {
+                    return;
+                }
+                if (ami.canRon(seat, tile)) {
+                    response.can_ron_player_id = seat.player_id;
+                }
+            });
+            _.each(response.game.seats, function(seat) {
+                if (seat.player_id == player_id) {
+                    return;
+                }
+                if (ami.canKan(seat, tile)) {
                     response.can_kan_player_id = seat.player_id;
                 }
             });
@@ -427,13 +439,15 @@ var handleDiscard = function(player_id, game_id, tile) {
                 });
             }
 
-            if (shared.exists(response.can_pon_player_id)) {
+            if (shared.exists(response.can_pon_player_id) ||
+                shared.exists(response.can_ron_player_id)) {
                 var game = response.game,
                     wall_length = game.wall.length,
                     current_player_id = game.current_player_id,
                     seat = shared.getSeat(game.seats, response.can_pon_player_id),
                     delay = 5000;
-                if (shared.isComputer(response.can_pon_player_id)) {
+                if (shared.isComputer(response.can_pon_player_id) ||
+                    shared.isComputer(response.can_ron_player_id)) {
                     delay = 0;
                     if (ami.shouldPon(seat, tile)) {
                         return handlePon(game_id, response.can_pon_player_id).then(function(game) {
@@ -442,7 +456,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                             }
                         });
                     }
-                    if (ami.canRon(seat.hand, tile)) {
+                    if (ami.canRon(seat, tile)) {
                         return handleRon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
                                 return next(game);
@@ -522,6 +536,11 @@ exports.addSockets = function(_io) {
             var game_id = data.game_id,
                 player_id = socket.handshake.session.player_id;
             return handlePon(game_id, player_id);
+        });
+        socket.on('ron', function(data) {
+            var game_id = data.game_id,
+                player_id = socket.handshake.session.player_id;
+            return handleRon(game_id, player_id);
         });
         socket.on('disconnect', function () {
             io.sockets.emit('user disconnected');
