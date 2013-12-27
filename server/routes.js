@@ -449,14 +449,14 @@ var handleDiscard = function(player_id, game_id, tile) {
                 if (shared.isComputer(response.can_pon_player_id) ||
                     shared.isComputer(response.can_ron_player_id)) {
                     delay = 0;
-                    if (ami.shouldPon(seat, tile)) {
+                    if (seat && ami.shouldPon(seat, tile)) {
                         return handlePon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
                                 return next(game);
                             }
                         });
                     }
-                    if (ami.canRon(seat, tile)) {
+                    if (seat && ami.canRon(seat, tile)) {
                         return handleRon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
                                 return next(game);
