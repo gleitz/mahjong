@@ -16,6 +16,9 @@ db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) {
 
 
 - show the tile you're going to pon
-- give the person 10 seconds and count down
+- more prominent you are the winner
+- count down the time you have to pon
 - identifier window when hovering over tiles
-- scrolling text window
+- scrolling text window with historical movements
+
+
