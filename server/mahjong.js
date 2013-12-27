@@ -71,7 +71,7 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
             checkRegularMahjongNoPairColor(hist, vals.sou_beg, vals.sou_end);
     },
     checkSevenPairs = function (hist) {
-        for (var i = mahjong_util.vals.id_min; i <= mahjong_util.vals.id_min; i++) {
+        for (var i = mahjong_util.vals.id_min; i <= mahjong_util.vals.id_max; i++) {
             if ((hist[i] % 2) !== 0) {
                 return false;
             }

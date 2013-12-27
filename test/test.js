@@ -105,8 +105,10 @@ describe('mahjong functions', function(){
                 ['12333s 789p EEESSS', true],
                 ['12333s WWWEEESSS', true],
                 ['11223333s EEESSS', true],
+                ['11223335s EEESSS', false],
                 ['11334455667788s', true],
-                ['115577s 224466p RR', true]
+                ['115577s 224466p RR', true],
+                ['115577s 224466p GR', false]
             ];
             _.each(hands, function(elem) {
                 var hand_string = elem[0],
