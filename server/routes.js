@@ -222,7 +222,7 @@ function getNextSeat(seats, player_id) {
 
 function getPreviousSeat(seats, player_id) {
     var seat_pos = getSeatPosForPlayerId(seats, player_id),
-        next_pos = (seat_pos - 1) % seats.length;
+        next_pos = Math.abs(seat_pos - 1) % seats.length;
     return seats[next_pos];
 }
 
