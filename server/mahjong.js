@@ -70,9 +70,20 @@ var checkRegularMahjongNoPairHonor = function (hist, beg, end) {
             checkRegularMahjongNoPairColor(hist, vals.pin_beg, vals.pin_end) &&
             checkRegularMahjongNoPairColor(hist, vals.sou_beg, vals.sou_end);
     },
+    checkSevenPairs = function (hist) {
+        for (var i = mahjong_util.vals.id_min; i <= mahjong_util.vals.id_min; i++) {
+            if ((hist[i] % 2) !== 0) {
+                return false;
+            }
+        }
+        return true;
+    },
     checkRegularMahjong = function (hist) {
         if (mahjong_util.sum(hist) !== 14) {
             throw ("Cannot check mahjong with " + mahjong_util.sum(hist) + " tiles in hand.");
+        }
+        if (checkSevenPairs(hist)) {
+            return true;
         }
         /*
          * enumerate through all possible pairs
