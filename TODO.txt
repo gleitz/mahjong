@@ -15,3 +15,9 @@
 
 To duplicate a row
 db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) { x._id = new ObjectId(); db.games.insert(x); print("" + x._id); })
+
+
+- show the tile you're going to pon
+- give the person 10 seconds and count down
+- identifier window when hovering over tiles
+- scrolling text window

@@ -456,7 +456,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                     wall_length = game.wall.length,
                     current_player_id = game.current_player_id,
                     seat = shared.getSeat(game.seats, response.can_pon_player_id),
-                    delay = 5000;
+                    delay = 10000;
                 if (shared.isComputer(response.can_pon_player_id) ||
                     shared.isComputer(response.can_ron_player_id)) {
                     delay = 0;
