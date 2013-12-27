@@ -250,13 +250,12 @@ var INIT = (function ($, undefined) {
             if (data.game.current_player_id == cfg.player._id) {
                 enablePlayer();
             }
-            if (shared.exists(data.can_pon_player_id) &&
-                data.can_pon_player_id == cfg.player._id) {
-                $('#pon-button').removeClass('hide');
-            }
             if (shared.exists(data.can_ron_player_id) &&
                 data.can_ron_player_id == cfg.player._id) {
                 $('#ron-button').removeClass('hide');
+            } else if (shared.exists(data.can_pon_player_id) &&
+                data.can_pon_player_id == cfg.player._id) {
+                $('#pon-button').removeClass('hide');
             }
             if (!data.msg) {
                 // TODO(gleitz): re-enable suggestions
