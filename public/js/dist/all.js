@@ -617,9 +617,14 @@ var INIT = (function ($, undefined) {
             socket.emit('start_game', {game_id: cfg.game_id});
             return false;
         });
-        $('body').fastClick('#pon-button', function(evt) {
+        $('body').fastClick('.pon', function(evt) {
             evt.preventDefault();
             socket.emit('pon', {game_id: cfg.game_id});
+            return false;
+        });
+        $('body').fastClick('.pon-dismiss', function(evt) {
+            evt.preventDefault();
+            socket.emit('pon_dismiss', {game_id: cfg.game_id});
             return false;
         });
         $('body').fastClick('#ron-button', function(evt) {

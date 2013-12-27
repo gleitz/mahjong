@@ -134,7 +134,7 @@ var renderGame = function(game, req, res) {
         var mobile = isMobile(req);
         var cfg = {
             socketIo: {token: crypto.encrypt(req.session.id)},
-            game_id: game._id,
+            game_id: game._id.toString(),
             base_path: req.headers['x-script-name'] || '',
             mobile: mobile,
             tile_width: mobile ? 53 : 71, //width + 16
@@ -208,6 +208,28 @@ var drawTile = function(game) {
         });
     }
 };
+
+function handleNextTurn(game) {
+    var game_id = game._id.toString();
+    return drawTile(game).then(function(response) {
+        updateClients(game_id, response);
+        var game = response.game;
+        if (shared.isComputer(game.current_player_id) &&
+            !(shared.exists(game.winner_id) &&
+              game.current_player_id == game.winner_id)) { // AI's turn
+            var seat = shared.getSeat(game.seats, game.current_player_id);
+            return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
+                var discard_tile = ami_result.recommended.discard;
+                // require the computer to take between 700ms-1s to play
+                setTimeout(function() {
+                    handleDiscard(game.current_player_id, game_id, discard_tile);
+                }, Math.floor(Math.random() * 300) + 700);
+            });
+        }
+    }).fail(function() {
+        io.sockets['in'](game_id).emit('game_over');
+    });
+}
 
 function getSeatPosForPlayerId(seats, player_id) {
     for (var seat_pos=0; seat_pos<seats.length; seat_pos++) {
@@ -429,27 +451,6 @@ var handleDiscard = function(player_id, game_id, tile) {
             updateClients(game_id, response);
             return response;
         }).then(function(response) {
-            function next(game) {
-                return drawTile(game).then(function(response) {
-                    updateClients(game_id, response);
-                    var game = response.game;
-                    if (shared.isComputer(game.current_player_id) &&
-                        !(shared.exists(game.winner_id) &&
-                          game.current_player_id == game.winner_id)) { // AI's turn
-                        var seat = shared.getSeat(game.seats, game.current_player_id);
-                        return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
-                            var discard_tile = ami_result.recommended.discard;
-                            // require the computer to take between 700ms-1s to play
-                            setTimeout(function() {
-                                handleDiscard(game.current_player_id, game_id, discard_tile);
-                            }, Math.floor(Math.random() * 300) + 700);
-                        });
-                    }
-                }).fail(function() {
-                    io.sockets['in'](game_id).emit('game_over');
-                });
-            }
-
             if (shared.exists(response.can_pon_player_id) ||
                 shared.exists(response.can_ron_player_id)) {
                 var game = response.game,
@@ -463,14 +464,14 @@ var handleDiscard = function(player_id, game_id, tile) {
                     if (seat && ami.shouldPon(seat, tile)) {
                         return handlePon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
-                                return next(game);
+                                return handleNextTurn(game);
                             }
                         });
                     }
                     if (seat && ami.canRon(seat, tile)) {
                         return handleRon(game_id, response.can_pon_player_id).then(function(game) {
                             if (shared.isComputer(game.current_player_id)) {
-                                return next(game);
+                                return handleNextTurn(game);
                             }
                         });
                     }
@@ -480,7 +481,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                         if (game.wall.length == wall_length &&
                             game.current_player_id == current_player_id) {
                             // pon timeout expired
-                            return next(game, player_id);
+                            return handleNextTurn(game, player_id);
                         }
                     });
                 });
@@ -494,7 +495,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                     delay = 0;
                     return handleKan(game_id, response.can_kan_player_id).then(function(game) {
                         if (shared.isComputer(game.current_player_id)) {
-                            return next(game, game.current_player_id);
+                            return handleNextTurn(game, game.current_player_id);
                         }
                     });
                 }
@@ -503,12 +504,12 @@ var handleDiscard = function(player_id, game_id, tile) {
                         if (game.wall.length == wall_length &&
                             game.current_player_id == current_player_id) {
                             // kan timeout expired
-                            return next(game, player_id);
+                            return handleNextTurn(game, player_id);
                         }
                     });
                 });
             } else {
-                return next(response.game, player_id);
+                return handleNextTurn(response.game, player_id);
             }
             //TODO(gleitz): break out of the chain here
         }).fail(function(error) {
@@ -547,6 +548,11 @@ exports.addSockets = function(_io) {
             var game_id = data.game_id,
                 player_id = socket.handshake.session.player_id;
             return handlePon(game_id, player_id);
+        });
+        socket.on('pon_dismiss', function(data) {
+            return models.findOneGame(data.game_id).then(function(game) {
+                return handleNextTurn(game);
+            });
         });
         socket.on('ron', function(data) {
             var game_id = data.game_id,
