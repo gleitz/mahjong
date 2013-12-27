@@ -226,8 +226,11 @@ function getNextSeat(seats, player_id) {
 
 function getPreviousSeat(seats, player_id) {
     var seat_pos = getSeatPosForPlayerId(seats, player_id),
-        next_pos = Math.abs(seat_pos - 1) % seats.length;
-    return seats[next_pos];
+        previous_pos = seat_pos - 1;
+    if (previous_pos < 0) {
+        previous_pos += seats.length;
+    }
+    return seats[previous_pos];
 }
 
 var discardTile = function(player_id, game_id, tile) {
@@ -360,8 +363,12 @@ var handlePon = function(game_id, player_id) {
     return models.findOneGame(game_id).then(function(game) {
         var current_player_id = game.current_player_id,
             from_discard = getPreviousSeat(game.seats, current_player_id).discard;
+        console.log("handling pon");
+        console.log(getPreviousSeat(game.seats, current_player_id));
         var tile = from_discard.pop();
+        console.log(tile);
         var to_seat = shared.getSeat(game.seats, player_id);
+        console.log(to_seat);
         to_seat.hand[tile] += 1;
         to_seat.side = to_seat.side || [];
         to_seat.side.push(tile);

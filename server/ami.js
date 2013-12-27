@@ -117,6 +117,8 @@ module.exports.canRon = function(seat, tile) {
 };
 module.exports.canPon = function(seat, tile) {
     if (!_.contains(seat.side, tile) && seat.hand[tile] >= 2) {
+        console.log(seat);
+        console.log(tile);
         return true;
     }
     return false;
