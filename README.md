@@ -1,6 +1,8 @@
+![mahjong tiles](https://dl.dropboxusercontent.com/u/101688/website/img/mahjong-tiles.png)
+
 # Cock-eyed Mahjong
 
-### Application for simulating, analyzing, and playing [Three-Player mahjong](http://www.japanese-mahjong.com/3pmjintro.html).
+#### Application for simulating, analyzing, and playing [Three-Player mahjong](http://www.japanese-mahjong.com/3pmjintro.html). ####
 
 Example
 -------
