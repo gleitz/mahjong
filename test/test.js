@@ -1,7 +1,8 @@
 /*global describe it */
 
-var shanten = require('../shanten');
-var m_util = require("../mahjong_util");
+var shanten = require('../server/shanten');
+var mahjong = require('../server/mahjong');
+var m_util = require("../shared/mahjong_util");
 var assert = require("assert");
 var util = require("util");
 var _ = require('underscore');
@@ -89,6 +90,32 @@ describe('shanten functions', function(){
                     shanten_num = shanten.shantenGeneralized(m_util.toTileString(hand_string));
                 assert(shanten_num_oracle == shanten_num,
                        util.format("Hand: %s, Expected: %s, Actual: %s", hand_string, shanten_num_oracle, shanten_num));
+            });
+        });
+    });
+});
+
+describe('mahjong functions', function(){
+    describe('mahjongCalculation', function(){
+        it('should return if hand is a mahjong', function(){
+            var hands = [
+                ['12333345s EEESSS', true],
+                ['11133355577799s', true],
+                ['EEESSSWWWGGRRR', true],
+                ['12333s 789p EEESSS', true],
+                ['12333s WWWEEESSS', true],
+                ['11223333s EEESSS', true],
+                ['11223335s EEESSS', false],
+                ['11334455667788s', true],
+                ['115577s 224466p RR', true],
+                ['115577s 224466p GR', false]
+            ];
+            _.each(hands, function(elem) {
+                var hand_string = elem[0],
+                    mahjong_oracle = elem[1],
+                    is_mahjong = mahjong.checkRegularMahjong(m_util.toTileString(hand_string));
+                assert(mahjong_oracle == is_mahjong,
+                       util.format("Hand: %s, Expected: %s, Actual: %s", hand_string, mahjong_oracle, is_mahjong));
             });
         });
     });

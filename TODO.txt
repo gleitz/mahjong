@@ -1,0 +1,24 @@
+- allow kan (use game 52bc5ba205ef4692650ebbdd/ 52bcb8c417c8e10bd1554771)
+- Add the winds
+- Enhance mobile layout
+- Add the if statement on the save game
+- Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
+- Make game_id always come before player_id
+- Break rendering down into two phases that share a common template
+- Add production TODOs and detection
+- switch to rendered templates
+- add reach
+- make a restart button for the two players
+- detect broken game ids
+
+To duplicate a row
+db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) { x._id = new ObjectId(); db.games.insert(x); print("" + x._id); })
+
+
+- show the tile you're going to pon
+- more prominent you are the winner
+- count down the time you have to pon
+- identifier window when hovering over tiles
+- scrolling text window with historical movements
+
+
