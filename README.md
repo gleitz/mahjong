@@ -1,4 +1,4 @@
-![mahjong tiles](https://dl.dropboxusercontent.com/u/101688/website/img/mahjong-tiles.png)
+![mahjong tiles](https://dl.dropboxusercontent.com/u/101688/website/img/mahjong-tiles.jpg)
 
 # Cock-eyed Mahjong
 
