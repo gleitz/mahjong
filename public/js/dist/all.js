@@ -531,7 +531,7 @@ var INIT = (function ($, undefined) {
         if (player_id <= 1) {
             msg = 'AMI ' + player_id.toString() + ' is the winner!';
         } else if (player_id == cfg.player._id) {
-            msg = 'Tsumo! You are the winner!';
+            msg = 'You are the winner!';
         } else {
             var player = shared.getPlayer(cfg.players, player_id);
             msg = player.name + " is the winner!"

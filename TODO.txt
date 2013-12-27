@@ -1,5 +1,6 @@
 - allow kan (use game 52bc5ba205ef4692650ebbdd/ 52bcb8c417c8e10bd1554771)
 - add 7 pairs
+- put a "no" on the pon button
 - Make mobile work
 - Add the winds
 - Add the if statement on the save game
