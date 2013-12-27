@@ -713,6 +713,10 @@ var INIT = (function ($, undefined) {
         socket.on('start_game', function() {
             window.location = cfg.base_path + '/game/' + cfg.game_id;
         });
+        socket.on('game_over', function() {
+            $('.msg').text("Game over, man. No more tiles");
+            $('#play-again').removeClass('hide');
+        });
         // highlight the current tile to throw
         if (cfg.isSimulation && !cfg.msg) {
             //TODO(gleitz): allow enabling this option

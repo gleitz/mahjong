@@ -196,7 +196,11 @@ var drawTile = function(game) {
     if (shared.sum(seat.hand) == 14) {
         return getResponseJSON(game);
     } else {
+        // TODO(gleitz): check for end of the wall
         var next_tile = game.wall.pop();
+        if (!shared.exists(next_tile)) {
+            throw new Error("not enough tiles");
+        }
         seat.last_tile = next_tile;
         seat.hand[next_tile] += 1;
         return models.saveGame(game).then(function() {
@@ -428,14 +432,14 @@ var handleDiscard = function(player_id, game_id, tile) {
                         var seat = shared.getSeat(game.seats, game.current_player_id);
                         return ami.getDiscard(seat.hand, seat.discard).then(function(ami_result) {
                             var discard_tile = ami_result.recommended.discard;
-                            if (ami_result.obj.msg) {
-                            }
                             // require the computer to take between 700ms-1s to play
                             setTimeout(function() {
                                 handleDiscard(game.current_player_id, game_id, discard_tile);
                             }, Math.floor(Math.random() * 300) + 700);
                         });
                     }
+                }).fail(function() {
+                    io.sockets['in'](game_id).emit('game_over');
                 });
             }
 
