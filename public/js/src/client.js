@@ -118,6 +118,9 @@ var INIT = (function ($, undefined) {
     }
 
     function renderBoard(data) {
+        //TODO(gleitz): extend automatically
+        // or only refresh parts of the page
+        data.base_path = cfg.base_path;
         $('body').html(board_tpl(data));
         if (cfg.isOpen) {
             revealHiddenTiles();
