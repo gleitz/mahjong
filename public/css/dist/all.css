@@ -379,3 +379,6 @@ a.selected {
 .mobile .name {
   display: none;
 }
+#audio {
+  display: none;
+}

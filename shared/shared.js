@@ -66,27 +66,26 @@ shared.augmentSwig = function(swig) {
     }
 
     function renderTiles(seat, is_hidden) {
-        var hist = seat.hand,
+        var hist = seat.hand.slice(0),
             side = (seat.side && seat.side.slice(0)) || [],
             last_tile = seat.last_tile,
             buffer = [],
             side_buffer = [],
             last_tile_str,
             i;
+        _.each(side, function(tile_num) {
+            side_buffer.push(renderTile(tile_num, false));
+            hist[tile_num] -= 1;
+        });
         for (i=0; i<hist.length; i++) {
             for (var j=0; j<hist[i]; j++) {
                 var tile_num = i;
-                if (_.contains(side, i)) {
-                    var index = side.indexOf(i);
-                    side.splice(index, 1);
-                    side_buffer.push(renderTile(tile_num, false));
-                    continue;
-                }
                 var hand_tmp = hist.slice(0);
                 hand_tmp[i] -= j;
                 //TODO(gleitz): put back in production
                 // var tile_num = is_hidden ? 'hidden' : i;
-                if (shared.sum(hist) == 14 && !last_tile_str &&
+                if ((shared.sum(hist) + side.length == 14) &&
+                    !last_tile_str &&
                     (i === last_tile || shared.sum(hand_tmp.slice(i)) === 1)) {
                     // Separate the last discarded tile. If the game has just started
                     // then separate the last tile in the hand

@@ -121,6 +121,9 @@ var getResponseJSON = function(game) {
                 recommended: {discard_tile: [ami_recommended.discard]}
             });
         }
+        if (shared.exists(game.winner_id)) {
+            response.action = 'win';
+        }
         return response;
     }).fail(function() {
         //TODO: wall was depleted
@@ -401,6 +404,7 @@ var handlePon = function(game_id, player_id) {
         return models.saveGame(game).then(function() {
             return getResponseJSON(game);
         }).then(function(response) {
+            response.action = 'pon';
             updateClients(game_id, response);
             return game;
         });
@@ -448,6 +452,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                     response.can_kan_player_id = seat.player_id;
                 }
             });
+            response.action = 'discard';
             updateClients(game_id, response);
             return response;
         }).then(function(response) {

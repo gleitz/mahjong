@@ -107,6 +107,13 @@ var INIT = (function ($, undefined) {
         $('.msg').text(msg);
     }
 
+    function playSound(type) {
+        var sound = $('#' + type).get(0);
+        sound.pause();
+        sound.currentTime = 0;
+        sound.play();
+    }
+
     function enablePlayer() {
         can_play = true;
         $('#player-tiles a.hidden').removeClass('hidden');
@@ -121,7 +128,7 @@ var INIT = (function ($, undefined) {
         //TODO(gleitz): extend automatically
         // or only refresh parts of the page
         data.base_path = cfg.base_path;
-        $('body').html(board_tpl(data));
+        $('#board').html(board_tpl(data));
         if (cfg.isOpen) {
             revealHiddenTiles();
         }
@@ -254,6 +261,9 @@ var INIT = (function ($, undefined) {
                 markWinner(data.game.winner_id);
             } else {
                 notifyTurn(data.game.current_player_id);
+            }
+            if (data.action) {
+                playSound(data.action);
             }
             if (data.game.current_player_id == cfg.player._id) {
                 enablePlayer();

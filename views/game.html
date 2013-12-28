@@ -13,12 +13,34 @@
         <script>INIT.initialize({{ js_cfg|safe }});</script>
     </head>
     <body>
-        {% if game_id %}
-        {% include "./partials/board.html" %}
-        {% else %}
-        <h1>Okaerinasai</h1>
-        <div>Shuffling...</div>
-        {% endif %}
+        <div id="board">
+            {% if game_id %}
+            {% include "./partials/board.html" %}
+            {% else %}
+            <h1>Okaerinasai</h1>
+            <div>Shuffling...</div>
+            {% endif %}
+        </div>
+        <div id="audio">
+            <audio id="discard">
+                <source type="audio/mpeg" src="{{base_path}}/sound/tile-down.mp3"></source>
+                <source type="audio/ogg" src="{{base_path}}/sound/tile-down.ogg"></source>
+                <source type="audio/wav" src="{{base_path}}/sound/tile-down.wav"></source>
+                <embed src="{{base_path}}/sound/tile-down.mp3">
+            </audio>
+            <audio id="pon">
+                <source type="audio/mpeg" src="{{base_path}}/sound/tense-challenge.mp3"></source>
+                <source type="audio/ogg" src="{{base_path}}/sound/tense-challenge.ogg"></source>
+                <source type="audio/wav" src="{{base_path}}/sound/tense-challenge.wav"></source>
+                <embed src="{{base_path}}/sound/tense-challenge.mp3">
+            </audio>
+            <audio id="win">
+                <source type="audio/mpeg" src="{{base_path}}/sound/jingle.mp3"></source>
+                <source type="audio/ogg" src="{{base_path}}/sound/jingle.ogg"></source>
+                <source type="audio/wav" src="{{base_path}}/sound/jingle.wav"></source>
+                <embed src="{{base_path}}/sound/jingle.mp3">
+            </audio>
+        </div>
     </body>
 </html>
 
