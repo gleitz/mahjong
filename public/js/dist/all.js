@@ -528,7 +528,7 @@ var INIT = (function ($, undefined) {
     function markWinner(player_id) {
         var msg;
         if (player_id <= 1) {
-            msg = 'AMI ' + player_id.toString() + ' is the winner!';
+            msg = 'Computer ' + player_id.toString() + ' is the winner!';
         } else if (player_id == cfg.player._id) {
             msg = 'You are the winner!';
         } else {
@@ -547,7 +547,7 @@ var INIT = (function ($, undefined) {
         if (player_id == cfg.player._id) {
             msg = 'Your turn';
         } else if (shared.isComputer(player_id)) {
-            msg = 'AMI ' + player_id + '\'s turn';
+            msg = 'Computer ' + player_id + '\'s turn';
         } else {
             msg = cfg.player_map[player_id].name + '\'s turn';
         }

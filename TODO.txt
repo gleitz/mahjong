@@ -3,7 +3,6 @@
 - show the tile you're going to pon
 - more prominent you are the winner
 - identifier window when hovering over tiles
-- sound effects
 - Add the winds
 - Enhance mobile layout
 - make a restart button for the two players (advance the winds?)
@@ -25,3 +24,4 @@ db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) {
 - scrolling text window with historical movements
 - figure out why game over man appears when clicking fast
 - disable animation mobile
+- advanced pon for computer (when you have a dragon you can pon anything)
