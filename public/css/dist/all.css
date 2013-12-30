@@ -238,6 +238,12 @@ a.selected {
 .padded {
   padding: 8px;
 }
+.br-top {
+  margin-top: 8px;
+}
+.br {
+  margin-bottom: 8px;
+}
 .center {
   text-align: center;
 }
@@ -381,4 +387,7 @@ a.selected {
 }
 #audio {
   display: none;
+}
+#msg-other {
+  margin-left: 8px;
 }

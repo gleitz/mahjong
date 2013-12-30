@@ -1,8 +1,28 @@
 <html>
-<head>
-    <link rel="shortcut icon" href="{{ base_path }}/favicon.ico">
-</head>
-<body>
-    Konnichiwa. Would you like to <a href="{{ path }}">play a game</a>?
-</body>
+    <head>
+        <title>Cock-eyed Mahjong</title>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+        <link rel="shortcut icon" href="{{ base_path }}/favicon.ico">
+        <link rel="stylesheet" href="{{ base_path }}/css/dist/all.min.css">
+        <script src="{{ base_path }}/js/dist/all.js"></script> <!-- TODO(gleitz): change in production -->
+        <script src="{{ base_path }}/socket.io/socket.io.js"></script>
+        <script>INIT.initialize({{ js_cfg|safe }});</script>
+    </head>
+    <body>
+        <h2 class="br">Konnichiwa and Welcome to Cock-eyed Mahjong</h2>
+        <h3 class="br">Create a New Game</h3>
+        <ul class="br">
+            <li><a href="/game">Single Player</a></li>
+            <li><a href="/play">Multiple Players</a></li>
+        </ul>
+        <div id="games" class="{% if games %}hide{% endif %}">
+            <h3 class="br">Current Games</h3>
+            <ul class="games">
+                {% for game_id in game_ids %}
+                <li><a href="{{ base_path }}/play{{ game_id }}">{{ game_id }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </body>
 </html>

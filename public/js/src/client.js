@@ -138,6 +138,10 @@ var INIT = (function ($, undefined) {
         $('.msg').text("");
     }
 
+    function describeTile(tile_num) {
+        return cfg.tile_info[tile_num];
+    }
+
     function initialize(local_cfg) {
         $.extend(cfg, local_cfg);
     }
@@ -218,7 +222,26 @@ var INIT = (function ($, undefined) {
             });
         });
 
-        $('body').on('mouseenter mouseleave', '#player-tiles .tile-holder', function (evt) {
+        var infoTimeout;
+        $('body').on('mouseenter mouseleave', 'a.tile-holder', function (evt) {
+            evt.preventDefault();
+            var $this = $(this),
+                tile_num = $this.data('tile');
+            if ($this.hasClass('hidden')) {
+                return false;
+            }
+            clearTimeout(infoTimeout);
+            if (evt.type === 'mouseenter') {
+                $('#msg-other').text(describeTile(tile_num));
+            } else {
+                infoTimeout = setTimeout(function() {
+                    $('#msg-other').text('');
+                }, 300);
+            }
+            return false;
+        });
+
+        $('body').on('mouseenter mouseleave', '#player-tiles a.tile-holder', function (evt) {
             evt.preventDefault();
             var $this = $(this);
             if ($this.closest('div.side').length) {
@@ -273,6 +296,7 @@ var INIT = (function ($, undefined) {
                 $('#ron-button').removeClass('hide');
             } else if (shared.exists(data.can_pon_player_id) &&
                 data.can_pon_player_id == cfg.player._id) {
+                $('#pon-tile').html(shared.renderTile(data.can_pon_tile));
                 $('#pon-button').removeClass('hide');
             }
             if (!data.msg) {

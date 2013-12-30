@@ -4,7 +4,7 @@
 
 // Establish the root object, `window` in the browser, or `exports` on the server.
 var root = this;
-// Create a safe reference to the mahjong_util object for use below.
+// Create a safe reference to the shared object for use below.
 var shared = function(obj) {
     if (obj instanceof shared) return obj;
     if (!(this instanceof shared)) return new shared(obj);
@@ -54,16 +54,17 @@ shared.exists = function(val) {
     return _.contains(['string', 'number'], typeof val);
 }
 
+var tile_compiled;
+shared.renderTile = function(tile_num, is_hidden) {
+    return tile_compiled({tile_num: tile_num,
+                          is_hidden: is_hidden});
+}
+
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
 
-    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>'),
-        tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
-
-    function renderTile(tile_num, is_hidden) {
-        return tile_compiled({tile_num: tile_num,
-                              is_hidden: is_hidden});
-    }
+    var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>');
+    tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 
     function renderTiles(seat, is_hidden) {
         var hist = seat.hand.slice(0),
@@ -74,7 +75,7 @@ shared.augmentSwig = function(swig) {
             last_tile_str,
             i;
         _.each(side, function(tile_num) {
-            side_buffer.push(renderTile(tile_num, false));
+            side_buffer.push(shared.renderTile(tile_num, false));
             hist[tile_num] -= 1;
         });
         for (i=0; i<hist.length; i++) {
@@ -92,7 +93,7 @@ shared.augmentSwig = function(swig) {
                     last_tile_str = last_tile_compiled({tile_num: tile_num,
                                                         is_hidden: is_hidden});
                 } else {
-                    buffer.push(renderTile(tile_num, is_hidden));
+                    buffer.push(shared.renderTile(tile_num, is_hidden));
                 }
             }
         }
@@ -116,7 +117,7 @@ shared.augmentSwig = function(swig) {
 
     function renderDiscard(seat) {
         return _.reduce(seat.discard, function(memo, tile_num) {
-            return memo + renderTile(tile_num);
+            return memo + shared.renderTile(tile_num);
         }, '');
     }
 
@@ -134,7 +135,7 @@ shared.augmentSwig = function(swig) {
         return true;
     }
 
-    swig.setFilter('tile', renderTile);
+    swig.setFilter('tile', shared.renderTile);
     swig.setFilter('isComputer', shared.isComputer);
     swig.setExtension('renderHand', renderHand);
     swig.setExtension('renderDiscard', renderDiscard);

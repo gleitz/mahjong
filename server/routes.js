@@ -135,6 +135,10 @@ var renderGame = function(game, req, res) {
     var player_id = req.session.player_id;
     return getGameJSON(game, player_id).then(function(response) {
         var mobile = isMobile(req);
+        var tile_info = {};
+        for (var i=mahjong_util.vals.id_min; i<=mahjong_util.vals.id_max; i++) {
+            tile_info[i] = mahjong_util.toString(i);
+        }
         var cfg = {
             socketIo: {token: crypto.encrypt(req.session.id)},
             game_id: game._id.toString(),
@@ -143,14 +147,18 @@ var renderGame = function(game, req, res) {
             tile_width: mobile ? 53 : 71, //width + 16
             board_tpl: board_tpl,
             isSimulation: true,
-            isOpen: req.query.open
+            isOpen: req.query.open,
+            tile_info: tile_info
         };
         if (cfg.game_id) {
             _.extend(cfg, response);
         }
         cfg.js_cfg = JSON.stringify(cfg);
         res.render('game', cfg);
-    }).fail(function() {
+    }).fail(function(error) {
+        debug("there was an error");
+        debug(error);
+        debug(error.stack);
         // User is not in this game
         return res.redirect(formatUrl(req, '/play/'));
     });
@@ -294,8 +302,11 @@ exports.addRoutes = function(app) {
 
     // Homepage
     app.get('/', function(req, res) {
+        var game_ids = _.keys(io.sockets.manager.rooms);
         var cfg = {path: formatUrl(req, '/play'),
-                   base_path: req.headers['x-script-name'] || ''};
+                   base_path: req.headers['x-script-name'] || '',
+                   game_ids: game_ids};
+        cfg.js_cfg = JSON.stringify(cfg);
         res.render('home', cfg);
     });
 
@@ -331,6 +342,7 @@ exports.addRoutes = function(app) {
             if (!game_id) {
                 return models.createGame([player_id, 0, 1]).then(function(game) {
                     res.redirect(formatUrl(req, '/play/' + game._id));
+                    debug(game._id)
                     return renderLobby(game, req, res);
                 });
             } else {
@@ -434,6 +446,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                 }
                 if (ami.canPon(seat, tile)) {
                     response.can_pon_player_id = seat.player_id;
+                    response.can_pon_tile = tile;
                 }
             });
             _.each(response.game.seats, function(seat) {
