@@ -1,6 +1,4 @@
-- fix clicking on the pon tile
-- put pon/ron in a different place (available on mobile)
-- button to restart with same players
+- highlight pon tile in own hand (with hover overlay)
 - Add the winds
 - Enhance mobile layout
 - make a restart button for the two players (advance the winds?)

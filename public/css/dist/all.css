@@ -379,7 +379,7 @@ a.selected {
   cursor: default;
 }
 .buttons {
-  float: right;
+  float: left;
   font-size: 32px;
 }
 .mobile .name {

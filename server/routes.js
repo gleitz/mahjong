@@ -41,8 +41,13 @@ var isMobile = function(req) {
     return mobileRegex.test(req.header('User-Agent', ''))
 }
 
+
+function getPlayerIds(game) {
+    return _.map(game.seats, function(seat) { return seat.player_id; });
+}
+
 var getGameJSON = function(game, player_id) {
-    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; }),
+    var player_ids = getPlayerIds(game),
         player,
         players,
         seat;
@@ -73,7 +78,7 @@ var getGameJSON = function(game, player_id) {
 };
 
 var getResponseJSON = function(game) {
-    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; }),
+    var player_ids = getPlayerIds(game),
         current_player_id = game.current_player_id,
         player,
         players,
@@ -185,7 +190,7 @@ var loadLobby = function(game, player_ids, req, res) {
 
 var renderLobby = function(game, req, res) {
     preventCache(res);
-    var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+    var player_ids = getPlayerIds(game);
     if (_.contains(player_ids, req.session.player_id)) {
         return loadLobby(game, player_ids, req, res);
     } else {
@@ -194,7 +199,7 @@ var renderLobby = function(game, req, res) {
         });
         empty_seat.player_id = req.session.player_id;
         return models.saveGame(game).then(function() {
-            var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+            var player_ids = getPlayerIds(game);
             return loadLobby(game, player_ids, req, res);
         });
     }
@@ -401,12 +406,8 @@ var handlePon = function(game_id, player_id) {
     return models.findOneGame(game_id).then(function(game) {
         var current_player_id = game.current_player_id,
             from_discard = getPreviousSeat(game.seats, current_player_id).discard;
-        console.log("handling pon");
-        console.log(getPreviousSeat(game.seats, current_player_id));
         var tile = from_discard.pop();
-        console.log(tile);
         var to_seat = shared.getSeat(game.seats, player_id);
-        console.log(to_seat);
         to_seat.hand[tile] += 1;
         to_seat.side = to_seat.side || [];
         to_seat.side.push(tile);
@@ -541,17 +542,22 @@ var handleDiscard = function(player_id, game_id, tile) {
 exports.addSockets = function(_io) {
     io = _io;
     // Socket triggers
+
+    function startGame(room_id, game_id) {
+        io.sockets['in'](room_id).emit('start_game', {game_id: game_id});
+    }
+
     io.sockets.on('connection', function (socket) {
         socket.on('room', function(game_id) {
             socket.join(game_id);
         })
         socket.on('start_game', function(data) {
-            io.sockets['in'](data.game_id).emit('start_game', {});
+            startGame(data.game_id, data.game_id);
         })
         socket.on('join_lobby', function(data) {
             var game_id = data.game_id;
             return models.findOneGame(game_id).then(function(game) {
-                var player_ids = _.map(game.seats, function(seat) { return seat.player_id; });
+                var player_ids = getPlayerIds(game);
                 return models.findPlayers(player_ids)
             }).then(function(players) {
                 io.sockets['in'](game_id).emit('player_joined', {players: players});
@@ -577,6 +583,15 @@ exports.addSockets = function(_io) {
             var game_id = data.game_id,
                 player_id = socket.handshake.session.player_id;
             return handleRon(game_id, player_id);
+        });
+        socket.on('play_again', function(data) {
+            var game_id = data.game_id;
+            return models.findOneGame(game_id).then(function(game) {
+                //TODO(gleitz): rotate winds properly
+                return models.createGame(getPlayerIds(game));
+            }).then(function(game) {
+                return startGame(game_id, game._id);
+            });
         });
         socket.on('disconnect', function () {
             io.sockets.emit('user disconnected');

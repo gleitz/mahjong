@@ -1,4 +1,4 @@
-/*global jQuery swig console window shared io _ */
+/*global jQuery swig window shared io _ */
 
 var INIT = (function ($, undefined) {
 
@@ -180,6 +180,11 @@ var INIT = (function ($, undefined) {
             socket.emit('start_game', {game_id: cfg.game_id});
             return false;
         });
+        $('body').fastClick('#play-again', function(evt) {
+            evt.preventDefault();
+            socket.emit('play_again', {game_id: cfg.game_id});
+            return false;
+        });
         $('body').fastClick('.pon', function(evt) {
             evt.preventDefault();
             socket.emit('pon', {game_id: cfg.game_id});
@@ -201,7 +206,8 @@ var INIT = (function ($, undefined) {
             if (!can_play) {
                 return false;
             }
-            if ($this.closest('div.side').length) {
+            if ($this.closest('div.side').length ||
+                $this.closest('#pon-tile').length) {
                 // cannot throw tile you've pon'd, kan'd
                 return false;
             }
@@ -304,8 +310,8 @@ var INIT = (function ($, undefined) {
                 // $('#player-tiles').find('div.tile-' + data.recommended.discard_tile + ':last').closest('a').addClass('selected');
             }
         });
-        socket.on('start_game', function() {
-            window.location = cfg.base_path + '/game/' + cfg.game_id;
+        socket.on('start_game', function(data) {
+            window.location = cfg.base_path + '/game/' + data.game_id;
         });
         socket.on('game_over', function() {
             $('.msg').text("Game over, man. No more tiles");

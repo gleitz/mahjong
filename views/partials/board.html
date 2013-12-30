@@ -1,6 +1,6 @@
 <span id="notifications">
     <span class="msg"></span><span id="msg-other"></span>
-    <a id="play-again" class="hide" href="{{ base_path }}/game">...play again</a>
+    <a id="play-again" class="hide" href="javascript:;">...play again</a>
 </span>
 <span id="player-info" class="small">{{ player.name }} | <a href="{{ base_path }}/game">restart</a></span>
 {% for seat in game.seats %}
@@ -15,8 +15,8 @@
 {% for seat in game.seats %}
 {% if seat.player_id == player._id %}
 <div class="this-player player-{{ seat.player_id }} clr">
-    <div class="buttons">
-        <div id="pon-button" class="hide"><span id="pon-tile"></span><a class="pon" href="javascript:;">Pon!</a> <a class="pon-dismiss" href="javascript:;">(no thanks)</a></div>
+    <div class="buttons clr">
+        <div id="pon-button" class="hide"><a class="pon" href="javascript:;"><span id="pon-tile"></span>Pon!</a> <a class="pon-dismiss" href="javascript:;">(no thanks)</a></div>
         <div id="kan-button" class="hide"><a class="kan" href="javascript:;">Kan!</a></div>
         <div id="ron-button" class="hide"><a class="ron" href="javascript:;">Ron!</a></div>
     </div>
