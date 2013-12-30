@@ -1,3 +1,6 @@
+- fix clicking on the pon tile
+- put pon/ron in a different place (available on mobile)
+- button to restart with same players
 - Add the winds
 - Enhance mobile layout
 - make a restart button for the two players (advance the winds?)
@@ -27,3 +30,4 @@ db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) {
 - rename computers
 - add sound effect toggle
 - more prominent you are the winner
+- don't show placeholder when someone is thinking about poning
