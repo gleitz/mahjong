@@ -17,9 +17,6 @@ var cgh = function (sites, callback) {
             req.body.payload : JSON.parse(req.body.payload);
         var site_data = self.sites[req.url],
             site_url = site_data.url
-        console.log(site_data);
-        console.log(req.params);
-        console.log(payload);
         if (payload.repository.url === site_url) {
             res.send({ result: 'ok' }, 200);
             callback(payload.repository.name, payload);            
