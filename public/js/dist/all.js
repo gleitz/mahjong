@@ -649,14 +649,10 @@ var INIT = (function ($, undefined) {
             hideTooltips();
             return false;
         });
-        $('body').fastClick('.qtip-pon .qtip-close', function(evt) {
-            evt.preventDefault();
-            socket.emit('pon_dismiss', {game_id: cfg.game_id});
-            return false;
-        });
-        $('body').fastClick('#ron-button', function(evt) {
+        $('body').fastClick('.qtip-ron', function(evt) {
             evt.preventDefault();
             socket.emit('ron', {game_id: cfg.game_id});
+            hideTooltips();
             return false;
         });
         $('body').fastClick('div.tile', function(evt) {
@@ -665,7 +661,8 @@ var INIT = (function ($, undefined) {
             if (!can_play) {
                 return false;
             }
-            if ($this.closest('div.side').length) {
+            if ($this.closest('div.side').length ||
+                $this.closest('.qtip').length) {
                 // cannot throw tile you've pon'd, kan'd
                 return false;
             }
@@ -760,10 +757,21 @@ var INIT = (function ($, undefined) {
             }
             if (shared.exists(data.can_ron_player_id) &&
                 data.can_ron_player_id == cfg.player._id) {
-                $('#ron-button').removeClass('hide');
+                    var $from_tile = $('div.player-' + data.can_ron_from_player_id + ' div.discard-tiles').find('a[data-tile="' + data.can_ron_tile + '"]').last();
+                    var tile_str = shared.renderTile(data.can_ron_tile);
+                    $from_tile.qtip({
+                        content: {text: tile_str + '<h1 class="shadowed clickable">Ron!</h1>',
+                                  button: true},
+                        style: {classes: 'qtip-ron qtip-mahjong qtip-rounded qtip-shadow'},
+                        position: {
+                            my: 'center center',  // Position my top left...
+                            at: 'center center' // at the bottom right of...
+                        },
+                        show: true
+                    });
             } else if (shared.exists(data.can_pon_player_id) &&
                 data.can_pon_player_id == cfg.player._id) {
-                var $from_tile = $('div.player-' + data.can_pon_from_player_id + ' div.discard-tiles').find('a[data-tile="' + data.can_pon_tile + '"]');
+                var $from_tile = $('div.player-' + data.can_pon_from_player_id + ' div.discard-tiles').find('a[data-tile="' + data.can_pon_tile + '"]').last();
                 var tile_str = shared.renderTile(data.can_pon_tile);
                 $from_tile.qtip({
                     content: {text: tile_str + '<h1 class="shadowed clickable">Pon!</h1>',
@@ -772,6 +780,11 @@ var INIT = (function ($, undefined) {
                     position: {
                         my: 'center center',  // Position my top left...
                         at: 'center center' // at the bottom right of...
+                    },
+                    events: {
+                        hide: function() {
+                            socket.emit('pon_dismiss', {game_id: cfg.game_id});
+                        }
                     },
                     show: true
                 });

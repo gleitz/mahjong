@@ -1,4 +1,4 @@
-- highlight pon tile in own hand (with hover overlay)
+- add ron button with overlay
 - Add the winds
 - Enhance mobile layout
 

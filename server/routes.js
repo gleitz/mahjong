@@ -460,7 +460,9 @@ var handleDiscard = function(player_id, game_id, tile) {
                     return;
                 }
                 if (ami.canRon(seat, tile)) {
+                    response.can_ron_from_player_id = player_id;
                     response.can_ron_player_id = seat.player_id;
+                    response.can_ron_tile = tile;
                 }
             });
             _.each(response.game.seats, function(seat) {
