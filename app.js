@@ -48,8 +48,6 @@ app.configure(function(){
     app.use(cgh(github_hook_obj,
                 function(repo, payload) {
                     console.log('Post-receive trigger. Exiting in 1 second');
-                    console.log(repo);
-                    console.log(payload);
                     setTimeout(function() {
                         process.exit(1);
                     }, 1000);
