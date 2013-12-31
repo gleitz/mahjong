@@ -18,6 +18,8 @@ var cgh = function (sites, callback) {
         var site_data = self.sites[req.url],
             site_url = site_data.url,
             site_secret = site_data.secret;
+        console.log(site_data);
+        console.log(req.params.secret);
         if (payload.repository.url === site_url &&
             req.params.secret === site_secret) {
             res.send({ result: 'ok' }, 200);
