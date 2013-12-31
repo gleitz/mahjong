@@ -39,9 +39,12 @@ app.configure(function(){
     app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
     app.use(express.errorHandler({dumpExceptions: true,
                                   showStack: true}));
+
+    // github hook reloading
     var github_hook_path = '/' + config.GITHUBHOOK_SECRET,
         github_hook_obj = {};
-    github_hook_obj[github_hook_path] = {url: 'https://github.com/gleitz/mahjong'}
+    github_hook_obj[github_hook_path] = {url: 'https://github.com/gleitz/mahjong',
+                                         branch: 'master'}
     app.use(cgh(github_hook_obj,
                 function(repo, payload) {
                     console.log('Post-receive trigger. Exiting in 1 second');
