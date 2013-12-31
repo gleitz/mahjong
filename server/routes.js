@@ -450,6 +450,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                     return;
                 }
                 if (ami.canPon(seat, tile)) {
+                    response.can_pon_from_player_id = player_id;
                     response.can_pon_player_id = seat.player_id;
                     response.can_pon_tile = tile;
                 }

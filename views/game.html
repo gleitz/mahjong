@@ -13,7 +13,7 @@
         <script>INIT.initialize({{ js_cfg|safe }});</script>
     </head>
     <body>
-        <div id="board">
+        <div id="board" class="shadowed">
             {% if game_id %}
             {% include "./partials/board.html" %}
             {% else %}

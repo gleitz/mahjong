@@ -58,6 +58,12 @@ var INIT = (function ($, undefined) {
         socket.emit('discard', data);
     }
 
+    function hideTooltips() {
+        $('.qtip').each(function(){
+            $(this).remove();
+        });
+    }
+
     var blinkInterval;
     function clearBlinkTitle() {
         clearInterval(blinkInterval);
@@ -185,12 +191,13 @@ var INIT = (function ($, undefined) {
             socket.emit('play_again', {game_id: cfg.game_id});
             return false;
         });
-        $('body').fastClick('.pon', function(evt) {
+        $('body').fastClick('.qtip-pon', function(evt) {
             evt.preventDefault();
             socket.emit('pon', {game_id: cfg.game_id});
+            hideTooltips();
             return false;
         });
-        $('body').fastClick('.pon-dismiss', function(evt) {
+        $('body').fastClick('.qtip-pon .qtip-close', function(evt) {
             evt.preventDefault();
             socket.emit('pon_dismiss', {game_id: cfg.game_id});
             return false;
@@ -206,8 +213,7 @@ var INIT = (function ($, undefined) {
             if (!can_play) {
                 return false;
             }
-            if ($this.closest('div.side').length ||
-                $this.closest('#pon-tile').length) {
+            if ($this.closest('div.side').length) {
                 // cannot throw tile you've pon'd, kan'd
                 return false;
             }
@@ -286,6 +292,7 @@ var INIT = (function ($, undefined) {
         socket.on('update', function(data) {
             data.player = {_id: cfg.player._id,
                           name: cfg.player.name};
+            hideTooltips();
             renderBoard(data);
             if (shared.exists(data.game.winner_id) &&
                 data.game.current_player_id == data.game.winner_id) {
@@ -304,8 +311,18 @@ var INIT = (function ($, undefined) {
                 $('#ron-button').removeClass('hide');
             } else if (shared.exists(data.can_pon_player_id) &&
                 data.can_pon_player_id == cfg.player._id) {
-                $('#pon-tile').html(shared.renderTile(data.can_pon_tile));
-                $('#pon-button').removeClass('hide');
+                var $from_tile = $('div.player-' + data.can_pon_from_player_id + ' div.discard-tiles').find('a[data-tile="' + data.can_pon_tile + '"]');
+                var tile_str = shared.renderTile(data.can_pon_tile);
+                $from_tile.qtip({
+                    content: {text: tile_str + '<h1 class="shadowed clickable">Pon!</h1>',
+                              button: true},
+                    style: {classes: 'qtip-pon qtip-mahjong qtip-rounded qtip-shadow'},
+                    position: {
+                        my: 'center center',  // Position my top left...
+                        at: 'center center' // at the bottom right of...
+                    },
+                    show: true
+                });
             }
             if (!data.msg) {
                 // TODO(gleitz): re-enable suggestions

@@ -10,17 +10,19 @@
         <script>INIT.initialize({{ js_cfg|safe }});</script>
     </head>
     <body>
-        <h1 class="br">Current Players</h1>
-        <ul class="players br">
-            {% for player in players %}
-            <li>{{ player.name }}</li>
-            {% endfor %}
-        </ul>
-        <div class="br">To invite a friend, send them this URL:</div>
-        <div class="br">
-            <input id="start-label" style="width: 500px;">
+        <div class="shadowed">
+            <h1 class="br">Current Players</h1>
+            <ul class="players br">
+                {% for player in players %}
+                <li>{{ player.name }}</li>
+                {% endfor %}
+            </ul>
+            <div class="br">To invite a friend, send them this URL:</div>
+            <div class="br">
+                <input id="start-label" style="width: 500px;">
+            </div>
+            <div>and then click <a class="start" href="{{ base_path }}/game/{{ game_id }}">Start</a>.</div>
         </div>
-        <div>and then click <a class="start" href="{{ base_path }}/game/{{ game_id }}">Start</a>.</div>
     </body>
 </html>
 
