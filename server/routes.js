@@ -307,7 +307,10 @@ exports.addRoutes = function(app) {
 
     // Homepage
     app.get('/', function(req, res) {
-        var game_ids = _.keys(io.sockets.manager.rooms);
+        var game_ids = _.filter(_.keys(io.sockets.manager.rooms), function(name) {
+            return name;
+        });
+        console.log(game_ids);
         var cfg = {path: formatUrl(req, '/play'),
                    socketIo: {token: crypto.encrypt(req.session.id)},
                    base_path: req.headers['x-script-name'] || '',

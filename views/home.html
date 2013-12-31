@@ -16,7 +16,7 @@
             <li><a href="{{ base_path }}/game">Single Player</a></li>
             <li><a href="{{ base_path }}/play">Multiple Players</a></li>
         </ul>
-        <div id="games" class="{% if games %}hide{% endif %}">
+        <div id="games" class="{% if not game_ids.length %}hide{% endif %}">
             <h3 class="br">Current Games</h3>
             <ul class="games">
                 {% for game_id in game_ids %}
