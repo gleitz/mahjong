@@ -19,7 +19,7 @@ var cgh = function (sites, callback) {
             site_url = site_data.url,
             site_branch = site_data.branch;
         if (payload.repository.url === site_url &&
-            payload.repository.branch === site_branch) {
+            payload.ref.indexOf(site_branch) != -1) {
             res.send({ result: 'ok' }, 200);
             callback(payload.repository.name, payload);            
         } else {
