@@ -717,7 +717,9 @@ var INIT = (function ($, undefined) {
         socket = io.connect('/?token=' +
                             cfg.socketIo.token, {resource: socket_resource});
         socket.on('connect', function() {
-            socket.emit('room', cfg.game_id);
+            if (cfg.game_id) {
+                socket.emit('room', cfg.game_id);
+            }
             if (cfg.isLobby) {
                 socket.emit('join_lobby', {game_id: cfg.game_id});
             }

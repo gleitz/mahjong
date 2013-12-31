@@ -7,7 +7,7 @@
 Example
 -------
 
-For an example of the mahjong AI visit [http://gleitzman.com/apps/mahjong/game](http://gleitzman.com/apps/mahjong/game).
+For an example of the mahjong application and AI visit [http://gleitzman.com/apps/mahjong](http://gleitzman.com/apps/mahjong).
 
 Usage
 -----

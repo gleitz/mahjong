@@ -1,7 +1,6 @@
 - highlight pon tile in own hand (with hover overlay)
 - Add the winds
 - Enhance mobile layout
-- make a restart button for the two players (advance the winds?)
 
 - allow kan (use game 52bc5ba205ef4692650ebbdd/ 52bcb8c417c8e10bd1554771)
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
@@ -29,3 +28,4 @@ db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) {
 - add sound effect toggle
 - more prominent you are the winner
 - don't show placeholder when someone is thinking about poning
+- allow mahjong to be automatically pulled (https://github.com/shyam-habarakada/rscds)

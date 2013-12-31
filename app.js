@@ -7,6 +7,7 @@
  */
 var argv = require('optimist').argv,
     config = require('./server/config'),
+    cgh = require('./server/connect-githubhook'),
     crypto = require('./server/crypto'),
     db = require('./server/db'),
     express = require('express'),
@@ -38,6 +39,15 @@ app.configure(function(){
     app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
     app.use(express.errorHandler({dumpExceptions: true,
                                   showStack: true}));
+    app.use(cgh({'/github-hook': 'https://github.com/gleitz/mahjong'},
+                function(repo, payload) {
+                    console.log('Post-receive trigger. Exiting in 1 second');
+                    console.log(repo);
+                    console.log(payload);
+                    setTimeout(function() {
+                        process.exit(1);
+                    }, 1000);
+                }));
 });
 
 // Swig templating
