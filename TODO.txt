@@ -28,4 +28,3 @@ db.games.find({_id: ObjectId("52bc5ba205ef4692650ebbdd")}).forEach(function(x) {
 - add sound effect toggle
 - more prominent you are the winner
 - don't show placeholder when someone is thinking about poning
-- allow mahjong to be automatically pulled (https://github.com/shyam-habarakada/rscds)
