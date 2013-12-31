@@ -15,7 +15,11 @@ var cgh = function (sites, callback) {
         var payload;
         payload = typeof req.body.payload === 'object' ?
             req.body.payload : JSON.parse(req.body.payload);
-        if (payload.repository.url === self.sites[req.url]) {
+        var site_data = self.sites[req.url],
+            site_url = site_data.url,
+            site_secret = site_data.secret;
+        if (payload.repository.url === site_url &&
+            req.params.secret === site_secret) {
             res.send({ result: 'ok' }, 200);
             callback(payload.repository.name, payload);            
         } else {
