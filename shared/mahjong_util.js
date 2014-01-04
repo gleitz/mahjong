@@ -36,19 +36,19 @@ var debug = function() {
     false && console.log && console.log.apply(console, arguments);
 },
     honors = [
-        'E',
-        'S',
-        'W',
-        'N',
-        'B',
-        'G',
-        'R',
-        '1',
-        '9'
+        ['E', 'East'],
+        ['S', 'South'],
+        ['W', 'West'],
+        ['N', 'North'],
+        ['B', 'White Dragon'],
+        ['G', 'Green Dragon'],
+        ['R', 'Red Dragon'],
+        ['1', '1 Crack'],
+        ['9', '9 Crack']
     ],
     colors = [
-        'Pin',
-        'Sou',
+        'Pin (dot)',
+        'Sou (bamboo)',
         'Honor'
     ],
     vals = {
@@ -91,9 +91,14 @@ var debug = function() {
         // return value at specific position
         return tile % 9;
     },
-    getHonor =  function (tile) {
+    getHonor =  function (tile, is_verbose) {
         // return honor at specific position
-        return honors[getValue(tile)];
+        var value = getValue(tile);
+        if (is_verbose) {
+            return honors[value][1];
+        } else {
+            return honors[value][0];
+        }
     },
     isHonor = function (tile) {
         return tile >= vals.honor_beg;
@@ -104,11 +109,11 @@ var debug = function() {
     isSou = function (tile) {
         return tile >= vals.sou_beg && tile <= vals.sou_end;
     },
-    toString = function (tile) {
+    toString = function (tile, is_verbose) {
         if (isHonor(tile)) {
-            return getHonor(tile);
+            return getHonor(tile, is_verbose);
         } else {
-            return (getValue(tile) + 1) + getColor(tile);
+            return (getValue(tile) + 1) + ' ' + getColor(tile);
         }
     },
     translateToBufferedNoHonors = function (hist) {

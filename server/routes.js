@@ -142,7 +142,7 @@ var renderGame = function(game, req, res) {
         var mobile = isMobile(req);
         var tile_info = {};
         for (var i=mahjong_util.vals.id_min; i<=mahjong_util.vals.id_max; i++) {
-            tile_info[i] = mahjong_util.toString(i);
+            tile_info[i] = mahjong_util.toString(i, true);
         }
         var cfg = {
             socketIo: {token: crypto.encrypt(req.session.id)},
@@ -337,7 +337,7 @@ exports.addRoutes = function(app) {
             result += '<br/><br/>' + obj.msg;
             if (obj.msg.indexOf('mahjong') == -1) {
                 result += '<br/><br/>shanten is ' + obj.shanten;
-                result += '<br/><br/>probably best to throw the ' + mahjong_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard);
+                result += '<br/><br/>probably best to throw the ' + mahjong_util.toString(mahjong.findBestDiscard(hand, obj.discard).discard, true);
             }
         }
         res.send(result);
@@ -483,7 +483,7 @@ var handleDiscard = function(player_id, game_id, tile) {
                     wall_length = game.wall.length,
                     current_player_id = game.current_player_id,
                     seat = shared.getSeat(game.seats, response.can_pon_player_id),
-                    delay = 10000;
+                    delay = 12000;
                 if (shared.isComputer(response.can_pon_player_id) ||
                     shared.isComputer(response.can_ron_player_id)) {
                     delay = 0;
