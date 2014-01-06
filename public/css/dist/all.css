@@ -633,6 +633,13 @@ a.tile-holder {
   width: 24.66666px;
   height: 33.3333px;
 }
+h3 a.tile-holder {
+  width: 13.2px;
+  height: 18px;
+  padding: 3px;
+  margin: 1px;
+  border-radius: 4px;
+}
 .mobile .tile-row {
   font-size: 53px;
 }
@@ -691,6 +698,11 @@ a.selected {
   width: 24.66666px;
   height: 33.3333px;
   background-size: 24.66666px 33.3333px;
+}
+h3 .tile {
+  width: 13.2px;
+  height: 18px;
+  background-size: 13.2px 18px;
 }
 .padded {
   padding: 8px;

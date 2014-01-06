@@ -12,19 +12,21 @@
     <body>
         <div class="shadowed">
             <h2 class="br">Konnichiwa and Welcome to Cock-eyed Mahjong</h2>
-            <h3 class="br">Create a New Game</h3>
+            <h3 class="br">{{ 24|tile|safe }}&nbsp;Create a New Game</h3>
             <ul class="br">
                 <li><a href="{{ base_path }}/game">Single Player</a></li>
                 <li><a href="{{ base_path }}/play">Multiple Players</a></li>
             </ul>
-            <div id="games" class="{% if not game_ids.length %}hide{% endif %}">
-                <h3 class="br">Current Games</h3>
+            <div id="games" class="br{% if not game_ids.length %} hide{% endif %}">
+                <h3 class="br">{{ 24|tile|safe }}&nbsp;Current Games</h3>
                 <ul class="games">
                     {% for game_id in game_ids %}
                     <li><a href="{{ base_path }}/play{{ game_id }}">{{ game_id }}</li>
                     {% endfor %}
                 </ul>
             </div>
+            <h3 class="br">{{ 24|tile|safe }}&nbsp;Learn the Rules</h3>
+            <p>Cock-eyed Mahjong (or Three-Player Mahjong) is a fast-paced Japanese variation on the classic Japanese version of the game.<br/>For the full set of rules head over to <a href="http://japanese-mahjong.com/3pmjintro.html">japanese-mahjong.com</a>.</p>
         </div>
     </body>
 </html>
