@@ -46,10 +46,13 @@ var debug = function() {
         ['1', '1 Crack'],
         ['9', '9 Crack']
     ],
+    basic_honors = _.map(honors, function(honor) {
+        return honor[0];
+    }),
     colors = [
-        'Pin (dot)',
-        'Sou (bamboo)',
-        'Honor'
+        ['Pin', 'Pin (dot)'],
+        ['Sou', 'Sou (bamboo)'],
+        ['Honor', 'Honor']
     ],
     vals = {
         // id = value + (9 * color);
@@ -78,14 +81,18 @@ var debug = function() {
         // return an array of the value of 'n' repeated 'times' number of time
         return Array.apply(null, new Array(times)).map(Number.prototype.valueOf,n);
     },
-    getColor = function (tile) {
+    getColor = function (tile, is_verbose) {
         // return color at specific position
         if (tile < 0) {
             return null;
         }
         tile = tile - (tile % 9);
         tile /= 9;
-        return colors[tile];
+        var color_tuple = colors[tile];
+        if (!color_tuple) {
+            return null;
+        }
+        return is_verbose ? color_tuple[1] : color_tuple[0];
     },
     getValue =  function (tile) {
         // return value at specific position
@@ -113,7 +120,7 @@ var debug = function() {
         if (isHonor(tile)) {
             return getHonor(tile, is_verbose);
         } else {
-            return (getValue(tile) + 1) + ' ' + getColor(tile);
+            return (getValue(tile) + 1) + ' ' + getColor(tile, is_verbose);
         }
     },
     translateToBufferedNoHonors = function (hist) {
@@ -192,7 +199,7 @@ var debug = function() {
             tiles[tile+9-1] += 1;
         }
         for (i=0; i<s_honors.length; i++) {
-            tile = honors.indexOf(s_honors[i]);
+            tile = basic_honors.indexOf(s_honors[i]);
             tiles[tile+18] += 1;
         }
         return tiles;

@@ -1,4 +1,3 @@
-- don't show placeholder when someone is thinking about poning
 - Add the winds
 - Enhance mobile layout
 
@@ -23,6 +22,7 @@
 - rename computers
 - add sound effect toggle
 - more prominent you are the winner
+- don't show placeholder when someone is thinking about poning
 
 Notes
 To duplicate a row
