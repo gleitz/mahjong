@@ -1,1 +1,1 @@
-grunt concurrent:compress && grunt test
+grunt less && grunt test
