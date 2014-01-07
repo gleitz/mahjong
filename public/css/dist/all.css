@@ -637,7 +637,7 @@ h3 a.tile-holder {
   width: 13.2px;
   height: 18px;
   padding: 3px;
-  margin: 1px;
+  margin: 0px;
   border-radius: 4px;
 }
 .mobile .tile-row {

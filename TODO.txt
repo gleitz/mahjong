@@ -1,5 +1,6 @@
 - Add the winds
 - Enhance mobile layout
+- Make website responsive
 
 - allow kan (use game 52bc5ba205ef4692650ebbdd/ 52bcb8c417c8e10bd1554771)
 - Reconstruct the rest of the board http://www.indiegames.com/images/timw/mahjong2a.jpg
