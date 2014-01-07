@@ -1,1 +1,1 @@
-cd .. && mocha
+grunt test

@@ -199,7 +199,7 @@ var debug = function() {
             tiles[tile+9-1] += 1;
         }
         for (i=0; i<s_honors.length; i++) {
-            tile = basic_honors.indexOf(s_honors[i]);
+            tile = honors.indexOf(s_honors[i]);
             tiles[tile+18] += 1;
         }
         return tiles;
