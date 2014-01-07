@@ -20,6 +20,7 @@ var _ = require('underscore'),
 
 // Fetch board template for rendering on the client side
 var board_tpl = fs.readFileSync('./views/partials/board.html', 'utf8');
+var discard_tiles_tpl = fs.readFileSync('./views/partials/discard_tiles.html', 'utf8');
 
 
 /* Helper Functions */
@@ -151,6 +152,7 @@ var renderGame = function(game, req, res) {
             mobile: mobile,
             tile_width: mobile ? 53 : 71, //width + 16
             board_tpl: board_tpl,
+            discard_tiles_tpl: discard_tiles_tpl,
             isSimulation: true,
             isOpen: req.query.open,
             tile_info: tile_info

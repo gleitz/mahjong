@@ -62,7 +62,6 @@ shared.renderTile = function(tile_num, is_hidden) {
 
 /* Swig templating functions */
 shared.augmentSwig = function(swig) {
-
     var last_tile_compiled = swig.compile('<span class="left last-tile"><a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a></span>');
     tile_compiled = swig.compile('<a data-tile="{{ tile_num }}" class="left tile-holder{% if is_hidden %} hidden{% endif %}" href="javascript:;"><div class="tile tile-{{ tile_num }}"></div></a>');
 

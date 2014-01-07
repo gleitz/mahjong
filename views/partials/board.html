@@ -8,7 +8,7 @@
 <div style="margin-bottom: 8px;" class="other-player player-{{ seat.player_id }}">
     <h4 class="name">{% if seat.player_id|isComputer %}Computer {{ seat.player_id }}{% else %}{{ player_map[seat.player_id].name }}{% endif %}</h4>
     <div class="clr padded tile-row hand-tiles">{% renderHand game seat player._id %}</div>
-    <div class="clr padded tile-row discard-tiles">{% renderDiscard seat %}</div>
+    {% include "./discard_tiles.html" with {seat: seat} %}
 </div>
 {% endif %}
 {% endfor %}
@@ -19,7 +19,7 @@
         <div id="kan-button" class="hide"><a class="kan" href="javascript:;">Kan!</a></div>
         <div id="ron-button" class="hide"><a class="ron" href="javascript:;">Ron!</a></div>
     </div>
-    <div class="clr padded tile-row discard-tiles">{% renderDiscard seat %}</div>
+    {% include "./discard_tiles.html" with {seat: seat} %}
     <div id="player-tiles" class="clr padded tile-row hand-tiles ">{% renderHand game seat player._id %}</div>
 </div>
 {% endif %}

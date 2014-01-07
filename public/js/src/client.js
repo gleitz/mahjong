@@ -134,7 +134,8 @@ var INIT = (function ($, undefined) {
         //TODO(gleitz): extend automatically
         // or only refresh parts of the page
         data.base_path = cfg.base_path;
-        $('#board').html(board_tpl(data));
+        var rendered = swig.renderFile('board.html', data);
+        $('#board').html(rendered);
         if (cfg.isOpen) {
             revealHiddenTiles();
         }
@@ -152,13 +153,19 @@ var INIT = (function ($, undefined) {
         $.extend(cfg, local_cfg);
     }
 
-    $(function () {
+    function initializeSwig() {
         // swig initialization
-        shared.augmentSwig(swig);
         board_tpl = $('#board_tpl').html();
         if (board_tpl) {
-            board_tpl = swig.compile($('#board_tpl').html());
+            var templates = {'discard_tiles.html': $('#discard_tiles_tpl').html(),
+                             'board.html': $('#board_tpl').html()};
+            swig.setDefaults({loader: swig.loaders.Memory(templates)});
         }
+        shared.augmentSwig(swig);
+    }
+
+    $(function () {
+        initializeSwig();
 
         if (cfg.isOpen) {
             revealHiddenTiles();
