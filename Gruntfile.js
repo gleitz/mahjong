@@ -1,12 +1,12 @@
 /* global module */
 module.exports = function(grunt) {
-    var port = grunt.option('port') || 3000;
-    // Project configuration
-
-    var js_src_files = ['public/js/global/**/*.js',
+    var port = grunt.option('port') || 3000,
+        js_src_files = ['public/js/global/**/*.js',
                         'shared/**/*.js',
-                        'public/js/src/**/*.js'];
+                        'public/js/src/**/*.js'],
+        less_src_files = ['public/css/src/**/*.less'];
 
+    // Project configuration
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         meta: {
@@ -43,7 +43,7 @@ module.exports = function(grunt) {
         less: {
             development: {
                 files: {
-                    'public/css/dist/all.css': [ 'public/css/src/**/*.less' ]
+                    'public/css/dist/all.css': less_src_files
                 }
             },
             production: {
@@ -51,7 +51,7 @@ module.exports = function(grunt) {
                     cleancss: true
                 },
                 files: {
-                    'public/css/dist/all.min.css': [ 'public/css/src/**/*.less' ]
+                    'public/css/dist/all.min.css': less_src_files
                 }
             }
         },
