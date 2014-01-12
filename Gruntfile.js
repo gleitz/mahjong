@@ -2,6 +2,11 @@
 module.exports = function(grunt) {
     var port = grunt.option('port') || 3000;
     // Project configuration
+
+    var js_src_files = ['public/js/global/**/*.js',
+                        'shared/**/*.js',
+                        'public/js/src/**/*.js'];
+
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         meta: {
@@ -20,9 +25,7 @@ module.exports = function(grunt) {
                 separator: ';\n'
             },
             dist: {
-                src: ['public/js/global/**/*.js',
-                      'shared/**/*.js',
-                      'public/js/src/**/*.js'],
+                src: js_src_files,
                 dest: 'public/js/dist/all.js'
             }
         },
@@ -32,9 +35,7 @@ module.exports = function(grunt) {
                 banner: '<%= meta.banner %>\n'
             },
             build: {
-                src: ['public/js/global/**/*.js',
-                      'shared/**/*.js',
-                      'public/js/src/**/*.js'],
+                src: js_src_files,
                 dest: 'public/js/dist/all.min.js'
             }
         },
