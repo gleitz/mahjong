@@ -39,14 +39,6 @@ app.configure(function(){
     app.use(express.favicon(path.join(__dirname, 'public/img/favicon.ico')));
     app.use(express.errorHandler({dumpExceptions: true,
                                   showStack: true}));
-    app.use(function (req, res, next) {
-        if ('/robots.txt' == req.url) {
-            res.type('text/plain')
-            res.send("User-agent: *\nDisallow: /play\nDisallow: /game");
-        } else {
-            next();
-        }
-    });
 
     // github hook reloading
     var github_hook_path = '/' + config.GITHUBHOOK_SECRET,
