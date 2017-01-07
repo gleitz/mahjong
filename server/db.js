@@ -7,7 +7,7 @@
 var MongoClient = require('mongodb').MongoClient,
     Server = require('mongodb').Server;
 
-require('dotenv').config()
+require('dotenv').config({path: '../.env'})
 
 module.exports.init = function (callback) {
     var mongoClient = new MongoClient(new Server('localhost', 27017));
