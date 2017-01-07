@@ -15,8 +15,10 @@ var argv = require('optimist').argv,
     shared = require('./shared/shared'),
     swig = require('swig');
 
+require('dotenv').config()
+
 var MongoStore = require('connect-mongo')(express),
-    sessionStore = new MongoStore({db: 'session'});
+    sessionStore = new MongoStore({db: 'session', username: process.env.DB_USER, password: process.env.DB_PASS});
 
 var app = express(),
     server = require('http').createServer(app),
