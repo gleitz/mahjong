@@ -25,6 +25,7 @@ To analyze a hand visit [http://localhost:3000/analyze/1p 123456789s BGR9](http:
 Development
 ------
 
+`sudo docker run -d --restart unless-stopped -p 27027-27029:27017-27019 --name mongodb-2.6.12 mongo:2.6.12`
 Install dev dependencies with `npm install` and start the application with `grunt`.
 
 

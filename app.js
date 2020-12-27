@@ -15,15 +15,24 @@ var argv = require('optimist').argv,
     shared = require('./shared/shared'),
     swig = require('swig');
 
-require('dotenv').config()
+var MongoStore = require('connect-mongo')(express)
 
-var MongoStore = require('connect-mongo')(express),
-    sessionStore = new MongoStore({db: 'session', username: process.env.DB_USER, password: process.env.DB_PASS});
+require('dotenv').config()
 
 var app = express(),
     server = require('http').createServer(app),
     io = require('socket.io').listen(server),
     cookieParser = express.cookieParser(config.EXPRESS_COOKIE_SECRET);
+
+io.set('log level',0);
+
+// Connect to the DB and then start the application
+db.init(function(error) {
+    if (error) {
+        throw error;
+    }
+
+var sessionStore = new MongoStore({db: db.session, auto_reconnect: true/*, username: process.env.DB_USER, password: process.env.DB_PASS*/});
 
 // TODO(gleitz): disable in production
 // io.set('log level', 1); // reduce logging
@@ -97,12 +106,7 @@ io.set('authorization', function (data, callback) {
     }
 });
 
-// Connect to the DB and then start the application
-db.init(function(error) {
-    if (error) {
-        throw error;
-    }
-    var port = argv.port || 3000;
+    var port = argv.port || 10003;
     server.listen(port);
     console.log('listening on ' + port);
 });
