@@ -14,7 +14,7 @@
     "moniker": "~0.1.2",
     "optimist": "~0.6.0",
     "q": "~0.9.7",
-    "socket.io": "~0.9.16",
+    "socket.io": "~2.4.0",
     "swig": "~1.1.0",
     "underscore": "~1.5.2"
   },
